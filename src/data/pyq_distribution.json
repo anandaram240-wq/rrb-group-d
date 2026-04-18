@@ -1,0 +1,531 @@
+{
+  "General Science": {
+    "count": 1145,
+    "topics": {
+      "Atomic Structure": {
+        "count": 264,
+        "sub_topics": {
+          "Bohr Model": 100,
+          "Isotopes & Isobars": 92,
+          "Electronic Configuration": 72
+        }
+      },
+      "Plant Physiology": {
+        "count": 38,
+        "sub_topics": {
+          "Photosynthesis": 16,
+          "Nutrition in Plants": 9,
+          "Transpiration": 13
+        }
+      },
+      "Matter": {
+        "count": 25,
+        "sub_topics": {
+          "Applied": 9,
+          "Conceptual": 10,
+          "Factual": 6
+        }
+      },
+      "Motion": {
+        "count": 106,
+        "sub_topics": {
+          "Circular Motion": 29,
+          "Graphs": 27,
+          "Equations of Motion": 25,
+          "Uniform vs Non-Uniform": 25
+        }
+      },
+      "Acids, Bases, Salts": {
+        "count": 102,
+        "sub_topics": {
+          "Properties": 20,
+          "pH": 27,
+          "Reactions": 29,
+          "Indicators": 26
+        }
+      },
+      "Work, Energy, Power": {
+        "count": 59,
+        "sub_topics": {
+          "Work": 16,
+          "Potential Energy": 13,
+          "Power": 15,
+          "Kinetic Energy": 15
+        }
+      },
+      "Sound": {
+        "count": 19,
+        "sub_topics": {
+          "Applied": 5,
+          "Factual": 5,
+          "Conceptual": 9
+        }
+      },
+      "Light": {
+        "count": 89,
+        "sub_topics": {
+          "Refraction": 24,
+          "Reflection": 22,
+          "Human Eye": 24,
+          "Lenses": 19
+        }
+      },
+      "Magnetism": {
+        "count": 10,
+        "sub_topics": {
+          "Applied": 7,
+          "Factual": 3
+        }
+      },
+      "Carbon Compounds": {
+        "count": 37,
+        "sub_topics": {
+          "Applied": 11,
+          "Conceptual": 17,
+          "Factual": 9
+        }
+      },
+      "Cell": {
+        "count": 67,
+        "sub_topics": {
+          "Conceptual": 22,
+          "Factual": 22,
+          "Applied": 23
+        }
+      },
+      "General Science": {
+        "count": 149,
+        "sub_topics": {
+          "Physics Facts": 55,
+          "Chemistry Facts": 46,
+          "Biology Facts": 48
+        }
+      },
+      "Metals & Non-metals": {
+        "count": 33,
+        "sub_topics": {
+          "Corrosion": 11,
+          "Reactivity Series": 12,
+          "Properties": 10
+        }
+      },
+      "Reproduction": {
+        "count": 5,
+        "sub_topics": {
+          "Factual": 2,
+          "Applied": 1,
+          "Conceptual": 2
+        }
+      },
+      "Force & Laws": {
+        "count": 46,
+        "sub_topics": {
+          "Factual": 16,
+          "Conceptual": 17,
+          "Applied": 13
+        }
+      },
+      "Electricity": {
+        "count": 51,
+        "sub_topics": {
+          "Circuits": 19,
+          "Heating Effect": 13,
+          "Power & Energy": 9,
+          "Ohm's Law": 10
+        }
+      },
+      "Human Body": {
+        "count": 15,
+        "sub_topics": {
+          "Digestive System": 4,
+          "Excretory System": 5,
+          "Circulatory System": 3,
+          "Nervous System": 3
+        }
+      },
+      "Heat": {
+        "count": 12,
+        "sub_topics": {
+          "Applied": 7,
+          "Conceptual": 3,
+          "Factual": 2
+        }
+      },
+      "Environment": {
+        "count": 1,
+        "sub_topics": {
+          "Factual": 1
+        }
+      },
+      "Classification": {
+        "count": 4,
+        "sub_topics": {
+          "Factual": 3,
+          "Conceptual": 1
+        }
+      },
+      "Chemical Reactions": {
+        "count": 2,
+        "sub_topics": {
+          "Displacement": 1,
+          "Redox": 1
+        }
+      },
+      "Diseases": {
+        "count": 4,
+        "sub_topics": {
+          "Applied": 2,
+          "Conceptual": 1,
+          "Factual": 1
+        }
+      },
+      "Genetics": {
+        "count": 5,
+        "sub_topics": {
+          "Conceptual": 4,
+          "Factual": 1
+        }
+      },
+      "Nutrition": {
+        "count": 2,
+        "sub_topics": {
+          "Factual": 1,
+          "Conceptual": 1
+        }
+      }
+    }
+  },
+  "Mathematics": {
+    "count": 896,
+    "topics": {
+      "3D (Volume, Surface Area)": {
+        "count": 40,
+        "sub_topics": {
+          "Sphere": 12,
+          "Cone": 8,
+          "Cylinder": 9,
+          "Cube & Cuboid": 11
+        }
+      },
+      "Time, Speed & Distance": {
+        "count": 67,
+        "sub_topics": {
+          "Basic STD": 21,
+          "Relative Speed": 11,
+          "Trains": 18,
+          "Boats & Streams": 17
+        }
+      },
+      "Pipes & Cisterns": {
+        "count": 54,
+        "sub_topics": {
+          "Three Pipe": 20,
+          "Two Pipe": 18,
+          "Leak Problems": 16
+        }
+      },
+      "Ages": {
+        "count": 28,
+        "sub_topics": {
+          "Two Person Ages": 14,
+          "Three Person Ages": 7,
+          "Ratio Ages": 7
+        }
+      },
+      "Ratio & Proportion": {
+        "count": 100,
+        "sub_topics": {
+          "Basic Ratio": 22,
+          "Partnership": 26,
+          "Mixture & Alligation": 27,
+          "Variation": 25
+        }
+      },
+      "Percentage": {
+        "count": 119,
+        "sub_topics": {
+          "Population": 35,
+          "Basic %": 30,
+          "Successive %": 32,
+          "Mixture": 22
+        }
+      },
+      "Average": {
+        "count": 69,
+        "sub_topics": {
+          "Change in Average": 25,
+          "Basic Average": 29,
+          "Weighted Average": 15
+        }
+      },
+      "Profit & Loss": {
+        "count": 150,
+        "sub_topics": {
+          "Dishonest Dealings": 24,
+          "Partnership": 47,
+          "Successive Discounts": 44,
+          "Basic P&L": 35
+        }
+      },
+      "Simple Interest": {
+        "count": 14,
+        "sub_topics": {
+          "Finding Principal": 2,
+          "Finding Rate": 5,
+          "Basic SI": 5,
+          "Finding Time": 2
+        }
+      },
+      "Number System": {
+        "count": 120,
+        "sub_topics": {
+          "Divisibility": 29,
+          "Remainders": 36,
+          "Unit Digits": 28,
+          "HCF & LCM": 27
+        }
+      },
+      "Quadrilaterals": {
+        "count": 14,
+        "sub_topics": {
+          "Application": 5,
+          "Problem Solving": 6,
+          "Computation": 3
+        }
+      },
+      "Basic Ratios": {
+        "count": 12,
+        "sub_topics": {
+          "Computation": 2,
+          "Problem Solving": 4,
+          "Application": 6
+        }
+      },
+      "Compound Interest": {
+        "count": 29,
+        "sub_topics": {
+          "CI vs SI Difference": 13,
+          "Basic CI": 7,
+          "Half-yearly": 9
+        }
+      },
+      "Time & Work": {
+        "count": 27,
+        "sub_topics": {
+          "Pipes & Work Combined": 6,
+          "Efficiency": 10,
+          "Two Person": 5,
+          "Three Person": 6
+        }
+      },
+      "LCM & HCF": {
+        "count": 11,
+        "sub_topics": {
+          "Problem Solving": 5,
+          "Application": 5,
+          "Computation": 1
+        }
+      },
+      "Lines & Angles": {
+        "count": 18,
+        "sub_topics": {
+          "Problem Solving": 7,
+          "Application": 8,
+          "Computation": 3
+        }
+      },
+      "Simplification": {
+        "count": 11,
+        "sub_topics": {
+          "Problem Solving": 2,
+          "Computation": 6,
+          "Application": 3
+        }
+      },
+      "Linear Equations": {
+        "count": 4,
+        "sub_topics": {
+          "Problem Solving": 2,
+          "Application": 2
+        }
+      },
+      "2D (Area, Perimeter)": {
+        "count": 3,
+        "sub_topics": {
+          "Problem Solving": 3
+        }
+      },
+      "Circles": {
+        "count": 6,
+        "sub_topics": {
+          "Computation": 4,
+          "Application": 1,
+          "Problem Solving": 1
+        }
+      }
+    }
+  },
+  "Reasoning": {
+    "count": 1356,
+    "topics": {
+      "Direction Sense": {
+        "count": 97,
+        "sub_topics": {
+          "Shadow Problems": 40,
+          "Linear Direction": 33,
+          "Circular": 24
+        }
+      },
+      "Alphabet Series": {
+        "count": 233,
+        "sub_topics": {
+          "Forward Series": 53,
+          "Backward Series": 55,
+          "Skip Series": 56,
+          "Mixed": 69
+        }
+      },
+      "Number Series": {
+        "count": 390,
+        "sub_topics": {
+          "Arithmetic Progression": 111,
+          "Prime Series": 91,
+          "Mixed Series": 109,
+          "Geometric Progression": 79
+        }
+      },
+      "Analogies": {
+        "count": 125,
+        "sub_topics": {
+          "Letter Analogy": 48,
+          "Number Analogy": 47,
+          "Word Analogy": 30
+        }
+      },
+      "Coding-Decoding": {
+        "count": 90,
+        "sub_topics": {
+          "Letter Coding": 27,
+          "Mixed": 23,
+          "Number Coding": 22,
+          "Symbol Coding": 18
+        }
+      },
+      "Seating Arrangement": {
+        "count": 175,
+        "sub_topics": {
+          "Circular": 56,
+          "Linear": 71,
+          "Double Row": 48
+        }
+      },
+      "Ranking & Arrangement": {
+        "count": 42,
+        "sub_topics": {
+          "Spatial": 17,
+          "Analytical": 15,
+          "Logical": 10
+        }
+      },
+      "Mathematical Operations": {
+        "count": 100,
+        "sub_topics": {
+          "BODMAS": 34,
+          "Symbol Substitution": 34,
+          "Operator Replacement": 32
+        }
+      },
+      "Syllogism": {
+        "count": 88,
+        "sub_topics": {
+          "Two Statement": 32,
+          "Three Statement": 31,
+          "Possibility Cases": 25
+        }
+      },
+      "Classification (Odd One Out)": {
+        "count": 16,
+        "sub_topics": {
+          "Letter Based": 6,
+          "Word Based": 9,
+          "Number Based": 1
+        }
+      }
+    }
+  },
+  "General Awareness": {
+    "count": 898,
+    "topics": {
+      "Current Affairs": {
+        "count": 267,
+        "sub_topics": {
+          "Awards": 59,
+          "National": 53,
+          "Appointments": 55,
+          "Sports": 50,
+          "International": 50
+        }
+      },
+      "Static GK": {
+        "count": 230,
+        "sub_topics": {
+          "History": 47,
+          "Indian Geography": 43,
+          "Culture": 50,
+          "Economy": 54,
+          "Polity": 36
+        }
+      },
+      "Sports": {
+        "count": 130,
+        "sub_topics": {
+          "Olympics": 35,
+          "Records": 42,
+          "National Sports": 29,
+          "Cricket": 24
+        }
+      },
+      "Economy": {
+        "count": 96,
+        "sub_topics": {
+          "Trade": 25,
+          "GDP": 21,
+          "Banking": 21,
+          "Government Schemes": 29
+        }
+      },
+      "Polity": {
+        "count": 54,
+        "sub_topics": {
+          "Dynamic": 22,
+          "Current": 19,
+          "Static": 13
+        }
+      },
+      "Awards & Honors": {
+        "count": 64,
+        "sub_topics": {
+          "Current": 25,
+          "Dynamic": 20,
+          "Static": 19
+        }
+      },
+      "Books & Authors": {
+        "count": 28,
+        "sub_topics": {
+          "Current": 13,
+          "Static": 8,
+          "Dynamic": 7
+        }
+      },
+      "Geography": {
+        "count": 29,
+        "sub_topics": {
+          "Current": 9,
+          "Dynamic": 13,
+          "Static": 7
+        }
+      }
+    }
+  }
+}
