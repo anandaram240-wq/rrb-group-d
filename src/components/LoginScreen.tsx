@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, LogIn } from 'lucide-react';
+import { firebaseSignInWithGoogle } from '../lib/firebase';
 
 interface LoginScreenProps {
   onLogin: (profile: { name: string; email: string; avatar: string }) => void;
@@ -14,7 +15,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [clientId] = useState(import.meta.env.VITE_GOOGLE_CLIENT_ID || '323884124313-at8muqdl5varliqhndj5cn914i19j6no.apps.googleusercontent.com');
 
   useEffect(() => {
-    // Wait for Google Identity Services to load
     const initGoogle = () => {
       if (window.google && clientId) {
         window.google.accounts.id.initialize({
@@ -24,7 +24,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
           cancel_on_tap_outside: true,
         });
 
-        // Render the official Google Sign-In button
         window.google.accounts.id.renderButton(
           document.getElementById('google-btn-container'),
           {
@@ -38,7 +37,6 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
       }
     };
 
-    // Poll until GIS script is ready
     if (window.google) {
       initGoogle();
     } else {
@@ -52,9 +50,11 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   }, [clientId]);
 
-  const handleCredentialResponse = (response: any) => {
+  const handleCredentialResponse = async (response: any) => {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      // Sign into Firebase Auth with the Google token — this enables secure Firestore rules
+      await firebaseSignInWithGoogle(response.credential);
       onLogin({
         name: payload.name || payload.email.split('@')[0],
         email: payload.email,

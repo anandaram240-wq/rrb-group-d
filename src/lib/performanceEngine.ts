@@ -16,9 +16,9 @@
  */
 
 import {
-  doc, getDoc, setDoc, updateDoc, serverTimestamp
+  doc, getDoc, setDoc, serverTimestamp
 } from 'firebase/firestore';
-import { db, emailToDocId } from './firebase';
+import { db, getFirebaseUid } from './firebase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -216,12 +216,12 @@ function mergePerformanceData(local: PerformanceData, cloud: PerformanceData): P
 // ─── FIRESTORE OPERATIONS ────────────────────────────────────────────────────
 
 /** Push local data to Firestore (non-blocking, fails silently) */
-async function pushToCloud(email: string, data: PerformanceData): Promise<void> {
+async function pushToCloud(data: PerformanceData): Promise<void> {
   try {
-    const docId = emailToDocId(email);
-    const ref = doc(db, 'users', docId);
+    const uid = getFirebaseUid();
+    if (!uid) return; // not authenticated yet
+    const ref = doc(db, 'users', uid);
     await setDoc(ref, {
-      email,
       performance: JSON.stringify(data),
       updatedAt: serverTimestamp(),
     }, { merge: true });
@@ -230,11 +230,12 @@ async function pushToCloud(email: string, data: PerformanceData): Promise<void> 
   }
 }
 
-/** Pull data from Firestore for this email */
-async function pullFromCloud(email: string): Promise<PerformanceData | null> {
+/** Pull data from Firestore for current user */
+async function pullFromCloud(): Promise<PerformanceData | null> {
   try {
-    const docId = emailToDocId(email);
-    const ref = doc(db, 'users', docId);
+    const uid = getFirebaseUid();
+    if (!uid) return null;
+    const ref = doc(db, 'users', uid);
     const snap = await getDoc(ref);
     if (snap.exists()) {
       const raw = snap.data()?.performance;
@@ -255,7 +256,7 @@ async function pullFromCloud(email: string): Promise<PerformanceData | null> {
  */
 export async function syncOnLogin(email: string): Promise<PerformanceData> {
   const local = readData();
-  const cloud = await pullFromCloud(email);
+  const cloud = await pullFromCloud();
 
   let merged: PerformanceData;
   if (cloud && (cloud.tests?.length ?? 0) > 0) {
@@ -266,11 +267,9 @@ export async function syncOnLogin(email: string): Promise<PerformanceData> {
 
   writeData(merged);
 
-  // If local had tests the cloud didn't know about, push merged up
-  if (cloud && local.tests.length > 0) {
-    pushToCloud(email, merged); // fire-and-forget
-  } else if (!cloud && local.tests.length > 0) {
-    pushToCloud(email, merged);
+  // Push merged data to cloud (covers local-only data)
+  if (local.tests.length > 0) {
+    pushToCloud(merged); // fire-and-forget
   }
 
   console.log(`[CloudSync] Synced ${merged.tests.length} tests for ${email}`);
@@ -369,10 +368,7 @@ export function finalizeSession(totalQuestions?: number): void {
   clearLiveSession();
 
   // Push to cloud (non-blocking)
-  const email = getCurrentEmail();
-  if (email) {
-    pushToCloud(email, data);
-  }
+  pushToCloud(data); // fire-and-forget cloud push
 }
 
 // ─── Read helpers ─────────────────────────────────────────────────────────────
@@ -401,8 +397,7 @@ export async function saveTestResult(result: TestResult): Promise<void> {
   recalcOverall(data);
   writeData(data);
 
-  const email = getCurrentEmail();
-  if (email) pushToCloud(email, data);
+  pushToCloud(data);
 }
 
 export { recalcOverall as recalculateOverall };

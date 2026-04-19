@@ -1,10 +1,14 @@
 /**
  * Firebase — Cross-Device Performance Sync
  * Project: rrb-group-d-mastery
+ * 
+ * Uses Firebase Auth (Google) so Firestore rules can verify identity.
+ * Each user can only read/write their own data.
  */
 
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
+import { getAuth, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey:            "AIzaSyD9qJUIdatMqFafpQGlnnxmD3E7Vc6lWf4",
@@ -18,25 +22,38 @@ const firebaseConfig = {
 
 // Initialize only once (React StrictMode safe)
 const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const db  = getFirestore(app);
+export const auth = getAuth(app);
 
-// Enable offline persistence → works without internet, auto-syncs on reconnect
+// Enable offline persistence → works without internet, syncs on reconnect
 enableIndexedDbPersistence(db).catch((err) => {
   if (err.code === 'failed-precondition') {
-    // Multiple tabs — only one can use IndexedDB persistence
     console.warn('[Firebase] Offline persistence: multiple tabs open');
   } else if (err.code === 'unimplemented') {
-    console.warn('[Firebase] Offline persistence: not supported by this browser');
+    console.warn('[Firebase] Offline persistence: not supported');
   }
 });
 
 /**
- * Convert email to a safe Firestore document ID.
- * e.g. ananda@gmail.com → ananda_gmail_com
+ * Sign into Firebase using the Google credential token from Google Identity Services.
+ * This gives us a verified Firebase user (auth.currentUser.uid).
+ * The uid is then used as the Firestore document key — so rules can enforce
+ * "only the real owner can read/write their data".
  */
-export function emailToDocId(email: string): string {
-  return email.toLowerCase()
-    .replace(/[@.]/g, '_')
-    .replace(/[^a-z0-9_]/g, '')
-    .substring(0, 100);
+export async function firebaseSignInWithGoogle(googleIdToken: string): Promise<string | null> {
+  try {
+    const credential = GoogleAuthProvider.credential(googleIdToken);
+    const result = await signInWithCredential(auth, credential);
+    return result.user.uid;
+  } catch (err) {
+    console.warn('[Firebase] Auth sign-in failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Get the current Firebase Auth UID (null if not signed in).
+ */
+export function getFirebaseUid(): string | null {
+  return auth.currentUser?.uid ?? null;
 }
