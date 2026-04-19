@@ -1,6 +1,6 @@
 {
   "General Science": {
-    "total": 1485,
+    "total": 1486,
     "topics": {
       "Carbon Compounds": {
         "total": 60,
@@ -84,14 +84,14 @@
         }
       },
       "Light": {
-        "total": 105,
+        "total": 106,
         "easy": 60,
-        "medium": 40,
+        "medium": 41,
         "hard": 5,
         "years": {
           "2025": 57,
           "2026": 29,
-          "2018": 4,
+          "2018": 5,
           "2022": 15
         }
       },
@@ -279,7 +279,7 @@
     }
   },
   "Mathematics": {
-    "total": 1268,
+    "total": 1252,
     "topics": {
       "3D (Volume, Surface Area)": {
         "total": 50,
@@ -388,14 +388,14 @@
         }
       },
       "Number System": {
-        "total": 218,
-        "easy": 85,
-        "medium": 126,
+        "total": 202,
+        "easy": 84,
+        "medium": 111,
         "hard": 7,
         "years": {
-          "2026": 49,
+          "2026": 48,
           "2025": 84,
-          "2018": 68,
+          "2018": 53,
           "2022": 17
         }
       },
@@ -501,7 +501,7 @@
     }
   },
   "Reasoning": {
-    "total": 1711,
+    "total": 1712,
     "topics": {
       "Direction Sense": {
         "total": 136,
@@ -588,14 +588,14 @@
         }
       },
       "Mathematical Operations": {
-        "total": 148,
+        "total": 149,
         "easy": 2,
-        "medium": 143,
+        "medium": 144,
         "hard": 3,
         "years": {
           "2026": 33,
           "2025": 67,
-          "2018": 38,
+          "2018": 39,
           "2022": 10
         }
       },
@@ -625,7 +625,7 @@
     }
   },
   "General Awareness": {
-    "total": 1251,
+    "total": 1265,
     "topics": {
       "Current Affairs": {
         "total": 712,
@@ -676,14 +676,14 @@
         }
       },
       "Static GK": {
-        "total": 174,
-        "easy": 62,
-        "medium": 110,
+        "total": 187,
+        "easy": 63,
+        "medium": 122,
         "hard": 2,
         "years": {
           "2025": 43,
-          "2026": 23,
-          "2018": 90,
+          "2026": 24,
+          "2018": 102,
           "2022": 18
         }
       },
@@ -711,14 +711,14 @@
         }
       },
       "Geography": {
-        "total": 29,
+        "total": 30,
         "easy": 12,
-        "medium": 17,
+        "medium": 18,
         "hard": 0,
         "years": {
           "2025": 2,
           "2026": 1,
-          "2018": 13,
+          "2018": 14,
           "2022": 13
         }
       }
