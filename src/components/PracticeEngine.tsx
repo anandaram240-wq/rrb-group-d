@@ -23,7 +23,26 @@ interface PYQ {
 
 export function PracticeEngine() {
   const allQuestions = pyqsData as PYQ[];
-  
+
+  // ── ALL useState FIRST (React rules of hooks) ──────────────────────────────
+  const subjects = useMemo(() => {
+    const subjs: string[] = [];
+    allQuestions.forEach(q => { if (!subjs.includes(q.subject)) subjs.push(q.subject); });
+    return subjs;
+  }, [allQuestions]);
+
+  const [selectedSubject, setSelectedSubject] = useState(() => subjects[0] || '');
+  const [selectedTopic, setSelectedTopic] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showSolution, setShowSolution] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
+  const [isPracticing, setIsPracticing] = useState(false);
+
+  // ── useMemo AFTER state declarations ──────────────────────────────────────
   // Build dynamic syllabus from actual data
   const syllabus = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
@@ -35,28 +54,13 @@ export function PracticeEngine() {
     return map;
   }, [allQuestions]);
 
-  // Questions filtered by ONLY year+difficulty (not topic) — used for topic card counts & discovery
+  // Questions filtered by year+difficulty only (NOT topic) — drives topic card counts
   const baseFilteredQuestions = useMemo(() => {
     let qs = allQuestions.filter(q => q.subject === selectedSubject);
     if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
     if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
     return qs;
   }, [allQuestions, selectedSubject, difficultyFilter, yearFilter]);
-
-  const subjects = Object.keys(syllabus);
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '');
-  const [selectedTopic, setSelectedTopic] = useState('all');
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [yearFilter, setYearFilter] = useState('all');
-  
-  // Practice state
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showSolution, setShowSolution] = useState(false);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
-  const [isPracticing, setIsPracticing] = useState(false);
 
   // Only show topics that have questions matching current year+difficulty filters
   const topics = useMemo(() => {
