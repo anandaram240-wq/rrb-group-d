@@ -15,7 +15,9 @@ interface PYQ {
   solution: string;
   difficulty: string;
   exam_year: string;
+  exam_date?: string;
   shift: string;
+  source?: string;
   tags: string[];
 }
 
@@ -39,6 +41,7 @@ export function PracticeEngine() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
   
   // Practice state
   const [currentQIndex, setCurrentQIndex] = useState(0);
@@ -54,12 +57,13 @@ export function PracticeEngine() {
     let qs = allQuestions.filter(q => q.subject === selectedSubject);
     if (selectedTopic !== 'all') qs = qs.filter(q => q.topic === selectedTopic);
     if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
+    if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       qs = qs.filter(q => q.question.toLowerCase().includes(query));
     }
     return qs;
-  }, [allQuestions, selectedSubject, selectedTopic, difficultyFilter, searchQuery]);
+  }, [allQuestions, selectedSubject, selectedTopic, difficultyFilter, yearFilter, searchQuery]);
 
   const currentQ = filteredQuestions[currentQIndex];
   
@@ -178,7 +182,12 @@ export function PracticeEngine() {
               </span>
               {currentQ.exam_year && (
                 <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
-                  {currentQ.exam_year} • {currentQ.shift}
+                  {currentQ.exam_date ? currentQ.exam_date : currentQ.exam_year} • {currentQ.shift}
+                </span>
+              )}
+              {currentQ.source && currentQ.source.includes('2018') && (
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                  📋 2018 Official PYQ
                 </span>
               )}
             </div>
@@ -265,7 +274,7 @@ export function PracticeEngine() {
         <div>
           <h2 className="text-3xl font-bold text-primary tracking-tight">Practice Engine</h2>
           <p className="text-on-surface-variant text-sm mt-2">
-            {allQuestions.length.toLocaleString()} Real PYQs • Subject → Topic drill-down
+            {allQuestions.length.toLocaleString()} Real PYQs (2018–2026) • Subject → Topic drill-down
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -359,6 +368,25 @@ export function PracticeEngine() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Year Filter */}
+            <div className="mb-4">
+              <label className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 block">📋 Exam Year</label>
+              <select
+                className="w-full bg-surface-container p-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-primary outline-none"
+                value={yearFilter}
+                onChange={e => setYearFilter(e.target.value)}
+              >
+                <option value="all">All Years</option>
+                {[...new Set(allQuestions.filter(q => q.subject === selectedSubject).map(q => q.exam_year))]
+                  .sort((a, b) => b.localeCompare(a))
+                  .map(yr => {
+                    const count = allQuestions.filter(q => q.subject === selectedSubject && q.exam_year === yr).length;
+                    return <option key={yr} value={yr}>{yr} ({count} Qs)</option>;
+                  })
+                }
+              </select>
             </div>
 
             {/* Stats */}
