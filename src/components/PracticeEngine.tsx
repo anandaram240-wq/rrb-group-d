@@ -3,7 +3,7 @@ import { BookOpen, ChevronRight, CheckCircle2, XCircle, Search, BarChart3, Zap, 
 import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
-import { saveTestResult } from './PerformanceTracker';
+import { startLiveSession, trackAnswer, finalizeSession } from '../lib/performanceEngine';
 import pyqsData from '../data/pyqs.json';
 
 interface PYQ {
@@ -97,6 +97,8 @@ export function PracticeEngine() {
     setSelectedAnswer(idx);
     const isCorrect = idx === currentQ.correctAnswer;
     setAnsweredQuestions(prev => ({ ...prev, [currentQ.id]: { selected: idx, correct: isCorrect } }));
+    // ── REAL-TIME SAVE: every single answer click → localStorage immediately ──
+    trackAnswer(currentQ.id, currentQ.subject, currentQ.topic, isCorrect);
   };
 
   const handleNext = () => {
@@ -116,8 +118,10 @@ export function PracticeEngine() {
   };
 
   const startPractice = () => {
-    setIsPracticing(true);
+    // Start a new live session — tracked from this moment
+    startLiveSession('Subject Practice', selectedSubject, selectedTopic === 'all' ? 'All' : selectedTopic);
     practiceStartTime.current = Date.now();
+    setIsPracticing(true);
     setCurrentQIndex(0);
     setSelectedAnswer(null);
     setShowSolution(false);
@@ -125,44 +129,8 @@ export function PracticeEngine() {
   };
 
   const exitPractice = () => {
-    // Save session if at least 3 questions were answered
-    const answered = Object.keys(answeredQuestions).length;
-    if (answered >= 3) {
-      const correct = Object.values(answeredQuestions).filter(a => a.correct).length;
-      const wrong = answered - correct;
-      const pct = Math.round((correct / answered) * 100);
-      const now = new Date();
-      const dateStr = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
-      const timeSeconds = Math.round((Date.now() - practiceStartTime.current) / 1000);
-
-      // Build topic breakdown from answered questions
-      const topicBreakdown: Record<string, { correct: number; wrong: number; total: number }> = {};
-      Object.entries(answeredQuestions).forEach(([idStr, result]) => {
-        const qId = parseInt(idStr);
-        const q = filteredQuestions.find(fq => fq.id === qId);
-        if (!q) return;
-        if (!topicBreakdown[q.topic]) topicBreakdown[q.topic] = { correct: 0, wrong: 0, total: 0 };
-        topicBreakdown[q.topic].total++;
-        if (result.correct) topicBreakdown[q.topic].correct++;
-        else topicBreakdown[q.topic].wrong++;
-      });
-
-      saveTestResult({
-        test_id: `practice_${Date.now()}`,
-        type: 'Subject Practice',
-        subject: selectedSubject,
-        topic: selectedTopic === 'all' ? 'All' : selectedTopic,
-        date: dateStr,
-        score: correct,
-        total: answered,
-        percentage: pct,
-        time_seconds: timeSeconds,
-        subject_breakdown: {
-          [selectedSubject]: { correct, wrong, total: answered },
-        },
-        topic_breakdown: topicBreakdown,
-      });
-    }
+    // Finalize and save the live session — all answers already saved in real-time
+    finalizeSession(filteredQuestions.length);
     setIsPracticing(false);
   };
 

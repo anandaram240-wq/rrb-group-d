@@ -5,134 +5,18 @@ import {
 } from 'recharts';
 import {
   Trophy, TrendingUp, TrendingDown, Target, AlertCircle, CheckCircle,
-  BookOpen, FlaskConical, Brain, Globe, Clock, BarChart3, Star, Zap
+  BookOpen, FlaskConical, Brain, Globe, Clock, BarChart3, Star, Zap, Activity
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface SubjectBreakdown {
-  correct: number;
-  wrong: number;
-  total: number;
-}
-
-export interface TestResult {
-  test_id: string;
-  type: 'Mock Test' | 'Subject Practice';
-  subject: string;
-  topic: string;
-  date: string;
-  score: number;
-  total: number;
-  percentage: number;
-  time_seconds: number;
-  subject_breakdown: Record<string, SubjectBreakdown>;
-  topic_breakdown: Record<string, SubjectBreakdown>;
-}
-
-export interface PerformanceData {
-  tests: TestResult[];
-  overall: {
-    total_tests: number;
-    total_questions: number;
-    total_correct: number;
-    overall_accuracy: number;
-    best_score_percentage: number;
-    last_score_percentage: number;
-    subject_accuracy: Record<string, number>;
-    topic_accuracy: Record<string, number>;
-  };
-}
-
-// ─── Storage helpers (localStorage-based, matches window.storage API shape) ───
-
-const STORAGE_KEY = 'rrb_performance_data';
-
-export async function loadPerformanceData(): Promise<PerformanceData | null> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as PerformanceData;
-  } catch (e) {
-    console.error('Performance load error:', e);
-    return null;
-  }
-}
-
-export function recalculateOverall(data: PerformanceData): void {
-  const { tests } = data;
-  if (tests.length === 0) {
-    data.overall = {
-      total_tests: 0,
-      total_questions: 0,
-      total_correct: 0,
-      overall_accuracy: 0,
-      best_score_percentage: 0,
-      last_score_percentage: 0,
-      subject_accuracy: {},
-      topic_accuracy: {},
-    };
-    return;
-  }
-
-  const subjectTotals: Record<string, { correct: number; total: number }> = {};
-  const topicTotals: Record<string, { correct: number; total: number }> = {};
-  let totalQ = 0;
-  let totalC = 0;
-
-  for (const t of tests) {
-    totalQ += t.total;
-    totalC += t.score;
-
-    // Subject breakdown
-    for (const [subj, bd] of Object.entries(t.subject_breakdown || {})) {
-      if (!subjectTotals[subj]) subjectTotals[subj] = { correct: 0, total: 0 };
-      subjectTotals[subj].correct += bd.correct;
-      subjectTotals[subj].total += bd.total;
-    }
-
-    // Topic breakdown
-    for (const [topic, bd] of Object.entries(t.topic_breakdown || {})) {
-      if (!topicTotals[topic]) topicTotals[topic] = { correct: 0, total: 0 };
-      topicTotals[topic].correct += bd.correct;
-      topicTotals[topic].total += bd.total;
-    }
-  }
-
-  const subject_accuracy: Record<string, number> = {};
-  for (const [subj, v] of Object.entries(subjectTotals)) {
-    subject_accuracy[subj] = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
-  }
-
-  const topic_accuracy: Record<string, number> = {};
-  for (const [topic, v] of Object.entries(topicTotals)) {
-    topic_accuracy[topic] = v.total > 0 ? Math.round((v.correct / v.total) * 100) : 0;
-  }
-
-  data.overall = {
-    total_tests: tests.length,
-    total_questions: totalQ,
-    total_correct: totalC,
-    overall_accuracy: totalQ > 0 ? Math.round((totalC / totalQ) * 100) : 0,
-    best_score_percentage: Math.max(...tests.map(t => t.percentage)),
-    last_score_percentage: tests[tests.length - 1]?.percentage ?? 0,
-    subject_accuracy,
-    topic_accuracy,
-  };
-}
-
-export async function saveTestResult(result: TestResult): Promise<void> {
-  try {
-    const existing = await loadPerformanceData();
-    const data: PerformanceData = existing ?? { tests: [], overall: {} as PerformanceData['overall'] };
-    data.tests.push(result);
-    recalculateOverall(data);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Performance save error:', e);
-  }
-}
+import {
+  loadPerformanceData,
+  readLiveSession,
+  getLiveStats,
+  saveTestResult,
+  recalculateOverall,
+} from '../lib/performanceEngine';
+export type { TestResult, PerformanceData, SubjectBreakdown } from '../lib/performanceEngine';
+export { saveTestResult, recalculateOverall };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -150,15 +34,9 @@ const formatDate = (dateStr: string) => {
 };
 
 const accuracyColor = (pct: number) => {
-  if (pct >= 80) return '#16a34a';   // green-600
-  if (pct >= 60) return '#d97706';   // amber-600
-  return '#dc2626';                  // red-600
-};
-
-const accuracyBg = (pct: number) => {
-  if (pct >= 80) return 'bg-green-50 text-green-700 border-green-200';
-  if (pct >= 60) return 'bg-amber-50 text-amber-700 border-amber-200';
-  return 'bg-red-50 text-red-700 border-red-200';
+  if (pct >= 80) return '#16a34a';
+  if (pct >= 60) return '#d97706';
+  return '#dc2626';
 };
 
 const SUBJECT_META: Record<string, { icon: React.ComponentType<{ size?: number; className?: string }>; color: string; bg: string }> = {
@@ -168,7 +46,7 @@ const SUBJECT_META: Record<string, { icon: React.ComponentType<{ size?: number; 
   'General Awareness': { icon: Globe,        color: '#f59e0b', bg: 'bg-amber-50' },
 };
 
-// ─── Custom Tooltip for Line Chart ───────────────────────────────────────────
+// ─── Custom Tooltips ──────────────────────────────────────────────────────────
 
 const LineTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -263,6 +141,45 @@ function LoadingSkeleton() {
   );
 }
 
+// ─── Live Session Banner ──────────────────────────────────────────────────────
+
+import type { PerformanceData } from '../lib/performanceEngine';
+
+function LiveSessionBanner() {
+  const [live, setLive] = useState<{ answered: number; correct: number; accuracy: number; type: string; subject: string } | null>(null);
+
+  useEffect(() => {
+    const check = () => {
+      const session = readLiveSession();
+      if (!session) { setLive(null); return; }
+      const stats = getLiveStats();
+      if (stats) setLive({ ...stats, type: session.type, subject: session.subject });
+      else setLive(null);
+    };
+    check();
+    const id = setInterval(check, 2000); // refresh every 2 sec
+    return () => clearInterval(id);
+  }, []);
+
+  if (!live) return null;
+
+  return (
+    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3 mb-4 animate-pulse-slow">
+      <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-ping" />
+      <div className="flex-1">
+        <p className="text-xs font-black text-green-800">
+          LIVE — {live.type} in Progress
+          <span className="font-normal text-green-600 ml-2">{live.subject}</span>
+        </p>
+        <p className="text-[10px] text-green-600 mt-0.5">
+          {live.answered} answered • {live.correct} correct • {live.accuracy}% accuracy — saved automatically
+        </p>
+      </div>
+      <Activity size={16} className="text-green-600 shrink-0" />
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 interface PerformanceTrackerProps {
@@ -273,7 +190,7 @@ export default function PerformanceTracker({ onNavigateTo }: PerformanceTrackerP
   const [data, setData] = useState<PerformanceData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load from storage on mount
+  // Reload from storage every 3 seconds to pick up live data
   useEffect(() => {
     const load = async () => {
       try {
@@ -286,13 +203,18 @@ export default function PerformanceTracker({ onNavigateTo }: PerformanceTrackerP
       }
     };
     load();
+    const id = setInterval(load, 3000);
+    return () => clearInterval(id);
   }, []);
 
   if (loading) return <LoadingSkeleton />;
 
   if (!data || data.tests.length === 0) {
     return (
-      <EmptyState onNavigate={() => onNavigateTo?.('practice')} />
+      <>
+        <LiveSessionBanner />
+        <EmptyState onNavigate={() => onNavigateTo?.('practice')} />
+      </>
     );
   }
 
@@ -344,6 +266,9 @@ export default function PerformanceTracker({ onNavigateTo }: PerformanceTrackerP
 
   return (
     <div className="space-y-6 pb-8">
+
+      {/* ── Live Session Indicator ─────────────────────────────────── */}
+      <LiveSessionBanner />
 
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
