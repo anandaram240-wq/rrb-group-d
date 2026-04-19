@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { BookOpen, ChevronRight, CheckCircle2, XCircle, Search, BarChart3, Zap, Filter } from 'lucide-react';
 import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
+import { saveTestResult } from './PerformanceTracker';
 import pyqsData from '../data/pyqs.json';
 
 interface PYQ {
@@ -41,6 +42,7 @@ export function PracticeEngine() {
   const [showSolution, setShowSolution] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
   const [isPracticing, setIsPracticing] = useState(false);
+  const practiceStartTime = useRef<number>(Date.now());
 
   // ── useMemo AFTER state declarations ──────────────────────────────────────
   // Build dynamic syllabus from actual data
@@ -115,10 +117,53 @@ export function PracticeEngine() {
 
   const startPractice = () => {
     setIsPracticing(true);
+    practiceStartTime.current = Date.now();
     setCurrentQIndex(0);
     setSelectedAnswer(null);
     setShowSolution(false);
     setAnsweredQuestions({});
+  };
+
+  const exitPractice = () => {
+    // Save session if at least 3 questions were answered
+    const answered = Object.keys(answeredQuestions).length;
+    if (answered >= 3) {
+      const correct = Object.values(answeredQuestions).filter(a => a.correct).length;
+      const wrong = answered - correct;
+      const pct = Math.round((correct / answered) * 100);
+      const now = new Date();
+      const dateStr = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+      const timeSeconds = Math.round((Date.now() - practiceStartTime.current) / 1000);
+
+      // Build topic breakdown from answered questions
+      const topicBreakdown: Record<string, { correct: number; wrong: number; total: number }> = {};
+      Object.entries(answeredQuestions).forEach(([idStr, result]) => {
+        const qId = parseInt(idStr);
+        const q = filteredQuestions.find(fq => fq.id === qId);
+        if (!q) return;
+        if (!topicBreakdown[q.topic]) topicBreakdown[q.topic] = { correct: 0, wrong: 0, total: 0 };
+        topicBreakdown[q.topic].total++;
+        if (result.correct) topicBreakdown[q.topic].correct++;
+        else topicBreakdown[q.topic].wrong++;
+      });
+
+      saveTestResult({
+        test_id: `practice_${Date.now()}`,
+        type: 'Subject Practice',
+        subject: selectedSubject,
+        topic: selectedTopic === 'all' ? 'All' : selectedTopic,
+        date: dateStr,
+        score: correct,
+        total: answered,
+        percentage: pct,
+        time_seconds: timeSeconds,
+        subject_breakdown: {
+          [selectedSubject]: { correct, wrong, total: answered },
+        },
+        topic_breakdown: topicBreakdown,
+      });
+    }
+    setIsPracticing(false);
   };
 
   const getSubjectColor = (subject: string) => {
@@ -155,7 +200,7 @@ export function PracticeEngine() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsPracticing(false)}
+              onClick={exitPractice}
               className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"
             >
               <ChevronRight size={18} className="rotate-180 text-primary" />

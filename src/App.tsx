@@ -6,6 +6,7 @@ import { Dashboard } from './components/Dashboard';
 import { PracticeEngine } from './components/PracticeEngine';
 import { MockTests } from './components/MockTests';
 import { AnalyticsEngine } from './components/AnalyticsEngine';
+import PerformanceTracker from './components/PerformanceTracker';
 import { LoginScreen } from './components/LoginScreen';
 import { StudyRoadmap } from './components/StudyRoadmap';
 import { ExamPlanner } from './components/ExamPlanner';
@@ -74,6 +75,7 @@ export default function App() {
           {activeTab === 'practice' && <PracticeEngine />}
           {activeTab === 'papers' && <MockTests />}
           {activeTab === 'analytics' && <AnalyticsEngine />}
+          {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
           {activeTab === 'roadmap' && <StudyRoadmap />}
           {activeTab === 'planner' && <ExamPlanner />}
         </main>

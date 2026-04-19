@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, Map, CalendarDays } from 'lucide-react';
+import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, Map, CalendarDays, BarChart2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SidebarProps {
@@ -16,7 +16,8 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
     { id: 'roadmap', label: 'Study Roadmap', icon: Map },
     { id: 'practice', label: 'Subject Mastery', icon: BookOpen },
     { id: 'papers', label: 'Mock Tests', icon: History },
-    { id: 'analytics', label: 'Performance', icon: TrendingUp },
+    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+    { id: 'performance', label: 'Performance', icon: BarChart2 },
     { id: 'planner', label: 'Exam Planner', icon: CalendarDays },
   ];
 

@@ -3,6 +3,7 @@ import { Clock, AlertCircle, CheckCircle2, ChevronRight, ChevronLeft, XCircle, E
 import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
+import { saveTestResult } from './PerformanceTracker';
 
 interface PYQ {
   id: number;
@@ -76,6 +77,43 @@ export function TakeTest({ title, questions, duration, subject, onClose, onCompl
     setIsSubmitted(true);
     const score = calculateScore();
     onComplete(score.correct);
+
+    // ── Auto-save to Performance Tracker ──────────────────────────────
+    const now = new Date();
+    const dateStr = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}`;
+    const subjectBreakdown: Record<string, { correct: number; wrong: number; total: number }> = {};
+    const topicBreakdown: Record<string, { correct: number; wrong: number; total: number }> = {};
+
+    questions.forEach((q, i) => {
+      // Subject breakdown
+      if (!subjectBreakdown[q.subject]) subjectBreakdown[q.subject] = { correct: 0, wrong: 0, total: 0 };
+      subjectBreakdown[q.subject].total++;
+      if (answers[i] === q.correctAnswer) subjectBreakdown[q.subject].correct++;
+      else if (answers[i] !== undefined) subjectBreakdown[q.subject].wrong++;
+
+      // Topic breakdown
+      if (!topicBreakdown[q.topic]) topicBreakdown[q.topic] = { correct: 0, wrong: 0, total: 0 };
+      topicBreakdown[q.topic].total++;
+      if (answers[i] === q.correctAnswer) topicBreakdown[q.topic].correct++;
+      else if (answers[i] !== undefined) topicBreakdown[q.topic].wrong++;
+    });
+
+    const timeSpent = duration * 60 - timeLeft;
+    const pct = Math.round((score.correct / questions.length) * 100);
+
+    saveTestResult({
+      test_id: `mock_${Date.now()}`,
+      type: 'Mock Test',
+      subject: subject || 'All',
+      topic: 'All',
+      date: dateStr,
+      score: score.correct,
+      total: questions.length,
+      percentage: pct,
+      time_seconds: timeSpent,
+      subject_breakdown: subjectBreakdown,
+      topic_breakdown: topicBreakdown,
+    });
   };
 
   const calculateScore = () => {
