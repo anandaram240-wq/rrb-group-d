@@ -1,529 +1,1054 @@
 {
   "General Science": {
-    "count": 1145,
+    "total": 1439,
     "topics": {
-      "Atomic Structure": {
-        "count": 264,
-        "sub_topics": {
-          "Bohr Model": 100,
-          "Isotopes & Isobars": 92,
-          "Electronic Configuration": 72
+      "Carbon Compounds": {
+        "total": 55,
+        "easy": 38,
+        "medium": 17,
+        "hard": 0,
+        "years": {
+          "2026": 16,
+          "2025": 31,
+          "2018": 8
         }
       },
       "Plant Physiology": {
-        "count": 38,
-        "sub_topics": {
-          "Photosynthesis": 16,
-          "Nutrition in Plants": 9,
-          "Transpiration": 13
+        "total": 58,
+        "easy": 37,
+        "medium": 21,
+        "hard": 0,
+        "years": {
+          "2026": 19,
+          "2025": 24,
+          "2018": 15
         }
       },
       "Matter": {
-        "count": 25,
-        "sub_topics": {
-          "Applied": 9,
-          "Conceptual": 10,
-          "Factual": 6
+        "total": 34,
+        "easy": 26,
+        "medium": 8,
+        "hard": 0,
+        "years": {
+          "2026": 10,
+          "2025": 18,
+          "2018": 6
         }
       },
       "Motion": {
-        "count": 106,
-        "sub_topics": {
-          "Circular Motion": 29,
-          "Graphs": 27,
-          "Equations of Motion": 25,
-          "Uniform vs Non-Uniform": 25
+        "total": 106,
+        "easy": 60,
+        "medium": 46,
+        "hard": 0,
+        "years": {
+          "2025": 55,
+          "2026": 34,
+          "2018": 17
         }
       },
       "Acids, Bases, Salts": {
-        "count": 102,
-        "sub_topics": {
-          "Properties": 20,
-          "pH": 27,
-          "Reactions": 29,
-          "Indicators": 26
+        "total": 117,
+        "easy": 66,
+        "medium": 51,
+        "hard": 0,
+        "years": {
+          "2025": 50,
+          "2026": 42,
+          "2018": 25
         }
       },
       "Work, Energy, Power": {
-        "count": 59,
-        "sub_topics": {
-          "Work": 16,
-          "Potential Energy": 13,
-          "Power": 15,
-          "Kinetic Energy": 15
+        "total": 75,
+        "easy": 42,
+        "medium": 33,
+        "hard": 0,
+        "years": {
+          "2025": 35,
+          "2026": 18,
+          "2018": 22
         }
       },
       "Sound": {
-        "count": 19,
-        "sub_topics": {
-          "Applied": 5,
-          "Factual": 5,
-          "Conceptual": 9
+        "total": 42,
+        "easy": 19,
+        "medium": 23,
+        "hard": 0,
+        "years": {
+          "2025": 19,
+          "2026": 8,
+          "2018": 15
         }
       },
       "Light": {
-        "count": 89,
-        "sub_topics": {
-          "Refraction": 24,
-          "Reflection": 22,
-          "Human Eye": 24,
-          "Lenses": 19
+        "total": 90,
+        "easy": 55,
+        "medium": 35,
+        "hard": 0,
+        "years": {
+          "2025": 57,
+          "2026": 29,
+          "2018": 4
         }
       },
       "Magnetism": {
-        "count": 10,
-        "sub_topics": {
-          "Applied": 7,
-          "Factual": 3
+        "total": 24,
+        "easy": 14,
+        "medium": 10,
+        "hard": 0,
+        "years": {
+          "2026": 12,
+          "2025": 10,
+          "2018": 2
         }
       },
-      "Carbon Compounds": {
-        "count": 37,
-        "sub_topics": {
-          "Applied": 11,
-          "Conceptual": 17,
-          "Factual": 9
+      "Atomic Structure": {
+        "total": 183,
+        "easy": 127,
+        "medium": 56,
+        "hard": 0,
+        "years": {
+          "2026": 55,
+          "2025": 89,
+          "2018": 39
         }
       },
       "Cell": {
-        "count": 67,
-        "sub_topics": {
-          "Conceptual": 22,
-          "Factual": 22,
-          "Applied": 23
-        }
-      },
-      "General Science": {
-        "count": 149,
-        "sub_topics": {
-          "Physics Facts": 55,
-          "Chemistry Facts": 46,
-          "Biology Facts": 48
+        "total": 80,
+        "easy": 65,
+        "medium": 15,
+        "hard": 0,
+        "years": {
+          "2025": 53,
+          "2026": 22,
+          "2018": 5
         }
       },
       "Metals & Non-metals": {
-        "count": 33,
-        "sub_topics": {
-          "Corrosion": 11,
-          "Reactivity Series": 12,
-          "Properties": 10
+        "total": 54,
+        "easy": 41,
+        "medium": 13,
+        "hard": 0,
+        "years": {
+          "2025": 29,
+          "2026": 19,
+          "2018": 6
+        }
+      },
+      "General Science": {
+        "total": 129,
+        "easy": 121,
+        "medium": 8,
+        "hard": 0,
+        "years": {
+          "2025": 78,
+          "2026": 51
         }
       },
       "Reproduction": {
-        "count": 5,
-        "sub_topics": {
-          "Factual": 2,
-          "Applied": 1,
-          "Conceptual": 2
-        }
-      },
-      "Force & Laws": {
-        "count": 46,
-        "sub_topics": {
-          "Factual": 16,
-          "Conceptual": 17,
-          "Applied": 13
-        }
-      },
-      "Electricity": {
-        "count": 51,
-        "sub_topics": {
-          "Circuits": 19,
-          "Heating Effect": 13,
-          "Power & Energy": 9,
-          "Ohm's Law": 10
-        }
-      },
-      "Human Body": {
-        "count": 15,
-        "sub_topics": {
-          "Digestive System": 4,
-          "Excretory System": 5,
-          "Circulatory System": 3,
-          "Nervous System": 3
-        }
-      },
-      "Heat": {
-        "count": 12,
-        "sub_topics": {
-          "Applied": 7,
-          "Conceptual": 3,
-          "Factual": 2
+        "total": 58,
+        "easy": 36,
+        "medium": 22,
+        "hard": 0,
+        "years": {
+          "2025": 26,
+          "2026": 19,
+          "2018": 13
         }
       },
       "Environment": {
-        "count": 1,
-        "sub_topics": {
-          "Factual": 1
-        }
-      },
-      "Classification": {
-        "count": 4,
-        "sub_topics": {
-          "Factual": 3,
-          "Conceptual": 1
+        "total": 12,
+        "easy": 7,
+        "medium": 5,
+        "hard": 0,
+        "years": {
+          "2026": 4,
+          "2025": 4,
+          "2018": 4
         }
       },
       "Chemical Reactions": {
-        "count": 2,
-        "sub_topics": {
-          "Displacement": 1,
-          "Redox": 1
+        "total": 38,
+        "easy": 26,
+        "medium": 12,
+        "hard": 0,
+        "years": {
+          "2025": 20,
+          "2026": 14,
+          "2018": 4
         }
       },
-      "Diseases": {
-        "count": 4,
-        "sub_topics": {
-          "Applied": 2,
-          "Conceptual": 1,
-          "Factual": 1
+      "Force & Laws": {
+        "total": 62,
+        "easy": 27,
+        "medium": 35,
+        "hard": 0,
+        "years": {
+          "2025": 30,
+          "2026": 9,
+          "2018": 23
+        }
+      },
+      "Electricity": {
+        "total": 70,
+        "easy": 31,
+        "medium": 39,
+        "hard": 0,
+        "years": {
+          "2025": 36,
+          "2026": 16,
+          "2018": 18
+        }
+      },
+      "Heat": {
+        "total": 15,
+        "easy": 11,
+        "medium": 4,
+        "hard": 0,
+        "years": {
+          "2025": 8,
+          "2026": 7
         }
       },
       "Genetics": {
-        "count": 5,
-        "sub_topics": {
-          "Conceptual": 4,
-          "Factual": 1
+        "total": 31,
+        "easy": 22,
+        "medium": 9,
+        "hard": 0,
+        "years": {
+          "2026": 11,
+          "2025": 14,
+          "2018": 6
+        }
+      },
+      "Diseases": {
+        "total": 8,
+        "easy": 7,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2026": 4,
+          "2025": 4
+        }
+      },
+      "Human Body": {
+        "total": 41,
+        "easy": 21,
+        "medium": 20,
+        "hard": 0,
+        "years": {
+          "2025": 17,
+          "2026": 11,
+          "2018": 13
+        }
+      },
+      "Classification": {
+        "total": 7,
+        "easy": 7,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2025": 4,
+          "2026": 3
         }
       },
       "Nutrition": {
-        "count": 2,
-        "sub_topics": {
-          "Factual": 1,
-          "Conceptual": 1
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2025": 1
+        }
+      },
+      "Magnetic Effects of Current": {
+        "total": 3,
+        "easy": 2,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Periodic Table": {
+        "total": 4,
+        "easy": 3,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2022": 4
+        }
+      },
+      "Plant Kingdom & Photosynthesis": {
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 1
+        }
+      },
+      "Human Digestive System": {
+        "total": 2,
+        "easy": 2,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Electrochemistry": {
+        "total": 2,
+        "easy": 2,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Ecology & Environment": {
+        "total": 2,
+        "easy": 0,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Human Respiratory System": {
+        "total": 3,
+        "easy": 3,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Current Electricity": {
+        "total": 6,
+        "easy": 4,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 6
+        }
+      },
+      "Light & Optics": {
+        "total": 8,
+        "easy": 2,
+        "medium": 3,
+        "hard": 3,
+        "years": {
+          "2022": 8
+        }
+      },
+      "Environmental Chemistry": {
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 1
+        }
+      },
+      "Chemical Reactions & Equations": {
+        "total": 3,
+        "easy": 2,
+        "medium": 0,
+        "hard": 1,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Carbon & Its Compounds": {
+        "total": 3,
+        "easy": 2,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Human Circulatory System": {
+        "total": 3,
+        "easy": 2,
+        "medium": 0,
+        "hard": 1,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Genetics & Heredity": {
+        "total": 3,
+        "easy": 1,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Metals & Non-Metals": {
+        "total": 2,
+        "easy": 2,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Acids Bases & Salts": {
+        "total": 2,
+        "easy": 2,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Electricity & Magnetism": {
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 1
         }
       }
     }
   },
   "Mathematics": {
-    "count": 896,
+    "total": 1227,
     "topics": {
       "3D (Volume, Surface Area)": {
-        "count": 40,
-        "sub_topics": {
-          "Sphere": 12,
-          "Cone": 8,
-          "Cylinder": 9,
-          "Cube & Cuboid": 11
+        "total": 41,
+        "easy": 9,
+        "medium": 32,
+        "hard": 0,
+        "years": {
+          "2025": 18,
+          "2026": 15,
+          "2018": 8
         }
       },
       "Time, Speed & Distance": {
-        "count": 67,
-        "sub_topics": {
-          "Basic STD": 21,
-          "Relative Speed": 11,
-          "Trains": 18,
-          "Boats & Streams": 17
+        "total": 86,
+        "easy": 24,
+        "medium": 62,
+        "hard": 0,
+        "years": {
+          "2026": 26,
+          "2025": 37,
+          "2018": 23
         }
       },
       "Pipes & Cisterns": {
-        "count": 54,
-        "sub_topics": {
-          "Three Pipe": 20,
-          "Two Pipe": 18,
-          "Leak Problems": 16
+        "total": 63,
+        "easy": 2,
+        "medium": 61,
+        "hard": 0,
+        "years": {
+          "2025": 31,
+          "2026": 21,
+          "2018": 11
         }
       },
       "Ages": {
-        "count": 28,
-        "sub_topics": {
-          "Two Person Ages": 14,
-          "Three Person Ages": 7,
-          "Ratio Ages": 7
-        }
-      },
-      "Ratio & Proportion": {
-        "count": 100,
-        "sub_topics": {
-          "Basic Ratio": 22,
-          "Partnership": 26,
-          "Mixture & Alligation": 27,
-          "Variation": 25
-        }
-      },
-      "Percentage": {
-        "count": 119,
-        "sub_topics": {
-          "Population": 35,
-          "Basic %": 30,
-          "Successive %": 32,
-          "Mixture": 22
-        }
-      },
-      "Average": {
-        "count": 69,
-        "sub_topics": {
-          "Change in Average": 25,
-          "Basic Average": 29,
-          "Weighted Average": 15
-        }
-      },
-      "Profit & Loss": {
-        "count": 150,
-        "sub_topics": {
-          "Dishonest Dealings": 24,
-          "Partnership": 47,
-          "Successive Discounts": 44,
-          "Basic P&L": 35
-        }
-      },
-      "Simple Interest": {
-        "count": 14,
-        "sub_topics": {
-          "Finding Principal": 2,
-          "Finding Rate": 5,
-          "Basic SI": 5,
-          "Finding Time": 2
-        }
-      },
-      "Number System": {
-        "count": 120,
-        "sub_topics": {
-          "Divisibility": 29,
-          "Remainders": 36,
-          "Unit Digits": 28,
-          "HCF & LCM": 27
+        "total": 48,
+        "easy": 11,
+        "medium": 37,
+        "hard": 0,
+        "years": {
+          "2025": 25,
+          "2026": 14,
+          "2018": 9
         }
       },
       "Quadrilaterals": {
-        "count": 14,
-        "sub_topics": {
-          "Application": 5,
-          "Problem Solving": 6,
-          "Computation": 3
+        "total": 35,
+        "easy": 3,
+        "medium": 32,
+        "hard": 0,
+        "years": {
+          "2025": 23,
+          "2026": 12
         }
       },
-      "Basic Ratios": {
-        "count": 12,
-        "sub_topics": {
-          "Computation": 2,
-          "Problem Solving": 4,
-          "Application": 6
+      "Percentage": {
+        "total": 130,
+        "easy": 45,
+        "medium": 85,
+        "hard": 0,
+        "years": {
+          "2025": 69,
+          "2026": 39,
+          "2018": 21,
+          "2022": 1
+        }
+      },
+      "Average": {
+        "total": 82,
+        "easy": 41,
+        "medium": 40,
+        "hard": 1,
+        "years": {
+          "2025": 45,
+          "2026": 25,
+          "2018": 9,
+          "2022": 3
+        }
+      },
+      "Profit & Loss": {
+        "total": 163,
+        "easy": 63,
+        "medium": 99,
+        "hard": 1,
+        "years": {
+          "2026": 52,
+          "2025": 99,
+          "2018": 10,
+          "2022": 2
+        }
+      },
+      "Simple Interest": {
+        "total": 18,
+        "easy": 0,
+        "medium": 17,
+        "hard": 1,
+        "years": {
+          "2025": 8,
+          "2026": 6,
+          "2018": 3,
+          "2022": 1
+        }
+      },
+      "Number System": {
+        "total": 167,
+        "easy": 71,
+        "medium": 94,
+        "hard": 2,
+        "years": {
+          "2026": 43,
+          "2025": 76,
+          "2018": 42,
+          "2022": 6
+        }
+      },
+      "Trigonometry": {
+        "total": 18,
+        "easy": 6,
+        "medium": 12,
+        "hard": 0,
+        "years": {
+          "2025": 3,
+          "2026": 8,
+          "2018": 5,
+          "2022": 2
+        }
+      },
+      "Ratio & Proportion": {
+        "total": 100,
+        "easy": 29,
+        "medium": 69,
+        "hard": 2,
+        "years": {
+          "2025": 47,
+          "2026": 35,
+          "2018": 15,
+          "2022": 3
         }
       },
       "Compound Interest": {
-        "count": 29,
-        "sub_topics": {
-          "CI vs SI Difference": 13,
-          "Basic CI": 7,
-          "Half-yearly": 9
-        }
-      },
-      "Time & Work": {
-        "count": 27,
-        "sub_topics": {
-          "Pipes & Work Combined": 6,
-          "Efficiency": 10,
-          "Two Person": 5,
-          "Three Person": 6
-        }
-      },
-      "LCM & HCF": {
-        "count": 11,
-        "sub_topics": {
-          "Problem Solving": 5,
-          "Application": 5,
-          "Computation": 1
-        }
-      },
-      "Lines & Angles": {
-        "count": 18,
-        "sub_topics": {
-          "Problem Solving": 7,
-          "Application": 8,
-          "Computation": 3
-        }
-      },
-      "Simplification": {
-        "count": 11,
-        "sub_topics": {
-          "Problem Solving": 2,
-          "Computation": 6,
-          "Application": 3
+        "total": 38,
+        "easy": 0,
+        "medium": 37,
+        "hard": 1,
+        "years": {
+          "2026": 8,
+          "2025": 21,
+          "2018": 7,
+          "2022": 2
         }
       },
       "Linear Equations": {
-        "count": 4,
-        "sub_topics": {
-          "Problem Solving": 2,
-          "Application": 2
+        "total": 21,
+        "easy": 2,
+        "medium": 18,
+        "hard": 1,
+        "years": {
+          "2025": 8,
+          "2026": 3,
+          "2018": 10
+        }
+      },
+      "Time & Work": {
+        "total": 46,
+        "easy": 1,
+        "medium": 42,
+        "hard": 3,
+        "years": {
+          "2025": 19,
+          "2026": 12,
+          "2018": 12,
+          "2022": 3
+        }
+      },
+      "LCM & HCF": {
+        "total": 17,
+        "easy": 12,
+        "medium": 4,
+        "hard": 1,
+        "years": {
+          "2025": 8,
+          "2026": 6,
+          "2022": 3
+        }
+      },
+      "Lines & Angles": {
+        "total": 25,
+        "easy": 13,
+        "medium": 12,
+        "hard": 0,
+        "years": {
+          "2025": 7,
+          "2026": 11,
+          "2018": 7
+        }
+      },
+      "Simplification": {
+        "total": 61,
+        "easy": 9,
+        "medium": 52,
+        "hard": 0,
+        "years": {
+          "2025": 7,
+          "2026": 4,
+          "2018": 50
         }
       },
       "2D (Area, Perimeter)": {
-        "count": 3,
-        "sub_topics": {
-          "Problem Solving": 3
+        "total": 3,
+        "easy": 1,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2026": 3
         }
       },
       "Circles": {
-        "count": 6,
-        "sub_topics": {
-          "Computation": 4,
-          "Application": 1,
-          "Problem Solving": 1
+        "total": 2,
+        "easy": 0,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2025": 1,
+          "2026": 1
+        }
+      },
+      "Number Series": {
+        "total": 33,
+        "easy": 0,
+        "medium": 33,
+        "hard": 0,
+        "years": {
+          "2018": 33
+        }
+      },
+      "Ranking & Arrangement": {
+        "total": 1,
+        "easy": 0,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2018": 1
+        }
+      },
+      "Algebra": {
+        "total": 12,
+        "easy": 3,
+        "medium": 6,
+        "hard": 3,
+        "years": {
+          "2022": 12
+        }
+      },
+      "Data Interpretation": {
+        "total": 4,
+        "easy": 2,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 4
+        }
+      },
+      "Mensuration": {
+        "total": 3,
+        "easy": 1,
+        "medium": 1,
+        "hard": 1,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Mixture & Alligation": {
+        "total": 1,
+        "easy": 0,
+        "medium": 0,
+        "hard": 1,
+        "years": {
+          "2022": 1
+        }
+      },
+      "Geometry": {
+        "total": 5,
+        "easy": 3,
+        "medium": 1,
+        "hard": 1,
+        "years": {
+          "2022": 5
+        }
+      },
+      "Bodmas & Simplification": {
+        "total": 2,
+        "easy": 2,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Speed Distance & Time": {
+        "total": 1,
+        "easy": 0,
+        "medium": 0,
+        "hard": 1,
+        "years": {
+          "2022": 1
+        }
+      },
+      "Squares & Cube Roots": {
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 1
         }
       }
     }
   },
   "Reasoning": {
-    "count": 1356,
+    "total": 1666,
     "topics": {
       "Direction Sense": {
-        "count": 97,
-        "sub_topics": {
-          "Shadow Problems": 40,
-          "Linear Direction": 33,
-          "Circular": 24
+        "total": 132,
+        "easy": 12,
+        "medium": 117,
+        "hard": 3,
+        "years": {
+          "2025": 66,
+          "2026": 47,
+          "2018": 15,
+          "2022": 4
         }
       },
       "Alphabet Series": {
-        "count": 233,
-        "sub_topics": {
-          "Forward Series": 53,
-          "Backward Series": 55,
-          "Skip Series": 56,
-          "Mixed": 69
+        "total": 257,
+        "easy": 71,
+        "medium": 186,
+        "hard": 0,
+        "years": {
+          "2026": 98,
+          "2025": 153,
+          "2018": 6
         }
       },
       "Number Series": {
-        "count": 390,
-        "sub_topics": {
-          "Arithmetic Progression": 111,
-          "Prime Series": 91,
-          "Mixed Series": 109,
-          "Geometric Progression": 79
+        "total": 423,
+        "easy": 133,
+        "medium": 289,
+        "hard": 1,
+        "years": {
+          "2026": 145,
+          "2025": 237,
+          "2018": 37,
+          "2022": 4
         }
       },
       "Analogies": {
-        "count": 125,
-        "sub_topics": {
-          "Letter Analogy": 48,
-          "Number Analogy": 47,
-          "Word Analogy": 30
+        "total": 94,
+        "easy": 9,
+        "medium": 85,
+        "hard": 0,
+        "years": {
+          "2025": 39,
+          "2026": 27,
+          "2018": 28
         }
       },
       "Coding-Decoding": {
-        "count": 90,
-        "sub_topics": {
-          "Letter Coding": 27,
-          "Mixed": 23,
-          "Number Coding": 22,
-          "Symbol Coding": 18
+        "total": 115,
+        "easy": 36,
+        "medium": 78,
+        "hard": 1,
+        "years": {
+          "2026": 37,
+          "2025": 53,
+          "2018": 21,
+          "2022": 4
         }
       },
       "Seating Arrangement": {
-        "count": 175,
-        "sub_topics": {
-          "Circular": 56,
-          "Linear": 71,
-          "Double Row": 48
+        "total": 182,
+        "easy": 27,
+        "medium": 150,
+        "hard": 5,
+        "years": {
+          "2025": 90,
+          "2026": 82,
+          "2018": 3,
+          "2022": 7
         }
       },
       "Ranking & Arrangement": {
-        "count": 42,
-        "sub_topics": {
-          "Spatial": 17,
-          "Analytical": 15,
-          "Logical": 10
+        "total": 53,
+        "easy": 0,
+        "medium": 53,
+        "hard": 0,
+        "years": {
+          "2025": 26,
+          "2026": 17,
+          "2018": 10
         }
       },
       "Mathematical Operations": {
-        "count": 100,
-        "sub_topics": {
-          "BODMAS": 34,
-          "Symbol Substitution": 34,
-          "Operator Replacement": 32
+        "total": 144,
+        "easy": 1,
+        "medium": 143,
+        "hard": 0,
+        "years": {
+          "2026": 33,
+          "2025": 67,
+          "2018": 39,
+          "2022": 5
+        }
+      },
+      "Blood Relations": {
+        "total": 66,
+        "easy": 0,
+        "medium": 66,
+        "hard": 0,
+        "years": {
+          "2025": 28,
+          "2026": 18,
+          "2018": 20
         }
       },
       "Syllogism": {
-        "count": 88,
-        "sub_topics": {
-          "Two Statement": 32,
-          "Three Statement": 31,
-          "Possibility Cases": 25
+        "total": 175,
+        "easy": 0,
+        "medium": 175,
+        "hard": 0,
+        "years": {
+          "2025": 58,
+          "2026": 35,
+          "2018": 76,
+          "2022": 6
         }
       },
-      "Classification (Odd One Out)": {
-        "count": 16,
-        "sub_topics": {
-          "Letter Based": 6,
-          "Word Based": 9,
-          "Number Based": 1
+      "Ranking & Order": {
+        "total": 5,
+        "easy": 1,
+        "medium": 4,
+        "hard": 0,
+        "years": {
+          "2022": 5
+        }
+      },
+      "Letter Series": {
+        "total": 2,
+        "easy": 0,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 2
+        }
+      },
+      "Analogy": {
+        "total": 6,
+        "easy": 0,
+        "medium": 6,
+        "hard": 0,
+        "years": {
+          "2022": 6
+        }
+      },
+      "Alphabet Test": {
+        "total": 7,
+        "easy": 0,
+        "medium": 7,
+        "hard": 0,
+        "years": {
+          "2022": 7
+        }
+      },
+      "Statement & Conclusion": {
+        "total": 4,
+        "easy": 0,
+        "medium": 3,
+        "hard": 1,
+        "years": {
+          "2022": 4
+        }
+      },
+      "Calendar & Clock": {
+        "total": 1,
+        "easy": 0,
+        "medium": 1,
+        "hard": 0,
+        "years": {
+          "2022": 1
         }
       }
     }
   },
   "General Awareness": {
-    "count": 898,
+    "total": 1200,
     "topics": {
       "Current Affairs": {
-        "count": 267,
-        "sub_topics": {
-          "Awards": 59,
-          "National": 53,
-          "Appointments": 55,
-          "Sports": 50,
-          "International": 50
-        }
-      },
-      "Static GK": {
-        "count": 230,
-        "sub_topics": {
-          "History": 47,
-          "Indian Geography": 43,
-          "Culture": 50,
-          "Economy": 54,
-          "Polity": 36
-        }
-      },
-      "Sports": {
-        "count": 130,
-        "sub_topics": {
-          "Olympics": 35,
-          "Records": 42,
-          "National Sports": 29,
-          "Cricket": 24
+        "total": 694,
+        "easy": 331,
+        "medium": 363,
+        "hard": 0,
+        "years": {
+          "2026": 241,
+          "2025": 377,
+          "2018": 73,
+          "2022": 3
         }
       },
       "Economy": {
-        "count": 96,
-        "sub_topics": {
-          "Trade": 25,
-          "GDP": 21,
-          "Banking": 21,
-          "Government Schemes": 29
+        "total": 65,
+        "easy": 24,
+        "medium": 41,
+        "hard": 0,
+        "years": {
+          "2026": 17,
+          "2025": 28,
+          "2018": 14,
+          "2022": 6
         }
       },
-      "Polity": {
-        "count": 54,
-        "sub_topics": {
-          "Dynamic": 22,
-          "Current": 19,
-          "Static": 13
+      "Sports": {
+        "total": 111,
+        "easy": 53,
+        "medium": 58,
+        "hard": 0,
+        "years": {
+          "2025": 50,
+          "2026": 36,
+          "2018": 23,
+          "2022": 2
         }
       },
       "Awards & Honors": {
-        "count": 64,
-        "sub_topics": {
-          "Current": 25,
-          "Dynamic": 20,
-          "Static": 19
+        "total": 71,
+        "easy": 29,
+        "medium": 42,
+        "hard": 0,
+        "years": {
+          "2026": 14,
+          "2025": 29,
+          "2018": 28
+        }
+      },
+      "Static GK": {
+        "total": 156,
+        "easy": 53,
+        "medium": 103,
+        "hard": 0,
+        "years": {
+          "2025": 43,
+          "2026": 22,
+          "2018": 88,
+          "2022": 3
+        }
+      },
+      "Polity": {
+        "total": 47,
+        "easy": 17,
+        "medium": 30,
+        "hard": 0,
+        "years": {
+          "2025": 21,
+          "2026": 10,
+          "2018": 16
         }
       },
       "Books & Authors": {
-        "count": 28,
-        "sub_topics": {
-          "Current": 13,
-          "Static": 8,
-          "Dynamic": 7
+        "total": 13,
+        "easy": 4,
+        "medium": 9,
+        "hard": 0,
+        "years": {
+          "2026": 3,
+          "2025": 4,
+          "2018": 6
         }
       },
       "Geography": {
-        "count": 29,
-        "sub_topics": {
-          "Current": 9,
-          "Dynamic": 13,
-          "Static": 7
+        "total": 22,
+        "easy": 7,
+        "medium": 15,
+        "hard": 0,
+        "years": {
+          "2025": 2,
+          "2026": 1,
+          "2018": 13,
+          "2022": 6
+        }
+      },
+      "Government Schemes": {
+        "total": 3,
+        "easy": 3,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 3
+        }
+      },
+      "Awards & Honours": {
+        "total": 1,
+        "easy": 1,
+        "medium": 0,
+        "hard": 0,
+        "years": {
+          "2022": 1
+        }
+      },
+      "History": {
+        "total": 5,
+        "easy": 2,
+        "medium": 3,
+        "hard": 0,
+        "years": {
+          "2022": 5
+        }
+      },
+      "Science & Technology": {
+        "total": 4,
+        "easy": 2,
+        "medium": 2,
+        "hard": 0,
+        "years": {
+          "2022": 4
+        }
+      },
+      "Indian Polity & Constitution": {
+        "total": 8,
+        "easy": 5,
+        "medium": 3,
+        "hard": 0,
+        "years": {
+          "2022": 8
         }
       }
     }

@@ -83,7 +83,7 @@ export function PracticeEngine() {
   }, [allQuestions, selectedSubject, selectedTopic, difficultyFilter, yearFilter, searchQuery]);
 
   const currentQ = filteredQuestions[currentQIndex];
-  
+
   const stats = useMemo(() => {
     const answered = Object.keys(answeredQuestions).length;
     const correct = Object.values(answeredQuestions).filter(a => a.correct).length;
@@ -154,7 +154,7 @@ export function PracticeEngine() {
         {/* Practice Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setIsPracticing(false)}
               className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"
             >
@@ -205,10 +205,10 @@ export function PracticeEngine() {
                   currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
                 )}>
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                   <span>{currentQ.exam_date}</span>
                 </div>
@@ -220,8 +220,8 @@ export function PracticeEngine() {
                   currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
                 )}>
                   <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
                   </svg>
                   <span>{currentQ.shift}</span>
                 </div>
@@ -232,9 +232,9 @@ export function PracticeEngine() {
                 currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
               )}>
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                  <path d="M2 17l10 5 10-5"/>
-                  <path d="M2 12l10 5 10-5"/>
+                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                  <path d="M2 17l10 5 10-5" />
+                  <path d="M2 12l10 5 10-5" />
                 </svg>
                 <span>RRB Group D {currentQ.exam_year}</span>
               </div>
@@ -285,8 +285,8 @@ export function PracticeEngine() {
                     <span className={cn(
                       "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0",
                       selectedAnswer !== null && idx === currentQ.correctAnswer ? "bg-tertiary text-white" :
-                      selectedAnswer !== null && idx === selectedAnswer ? "bg-error text-white" :
-                      "bg-surface-container text-on-surface-variant"
+                        selectedAnswer !== null && idx === selectedAnswer ? "bg-error text-white" :
+                          "bg-surface-container text-on-surface-variant"
                     )}>
                       {String.fromCharCode(65 + idx)}
                     </span>
@@ -382,8 +382,8 @@ export function PracticeEngine() {
               }}
               className={cn(
                 "relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 border-2",
-                isActive 
-                  ? "border-primary shadow-lg scale-[1.02]" 
+                isActive
+                  ? "border-primary shadow-lg scale-[1.02]"
                   : "border-transparent shadow-sm hover:shadow-md hover:scale-[1.01]"
               )}
             >
