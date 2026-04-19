@@ -341,7 +341,7 @@ export function PracticeEngine() {
         <div>
           <h2 className="text-3xl font-bold text-primary tracking-tight">Practice Engine</h2>
           <p className="text-on-surface-variant text-sm mt-2">
-            {allQuestions.length.toLocaleString()} Real PYQs (2018–2026) • Subject → Topic drill-down
+            {allQuestions.length.toLocaleString()} Real PYQs (2018, 2022, 2025-2026) • Subject → Topic drill-down
           </p>
         </div>
         <div className="flex items-center gap-3">
