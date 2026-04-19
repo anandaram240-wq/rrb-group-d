@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, LogIn } from 'lucide-react';
-import { firebaseSignInWithGoogle } from '../lib/firebase';
 
 interface LoginScreenProps {
   onLogin: (profile: { name: string; email: string; avatar: string }) => void;
@@ -50,11 +49,9 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   }, [clientId]);
 
-  const handleCredentialResponse = async (response: any) => {
+  const handleCredentialResponse = (response: any) => {
     try {
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      // Sign into Firebase Auth with the Google token — this enables secure Firestore rules
-      await firebaseSignInWithGoogle(response.credential);
       onLogin({
         name: payload.name || payload.email.split('@')[0],
         email: payload.email,
