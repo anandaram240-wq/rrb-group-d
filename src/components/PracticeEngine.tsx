@@ -35,6 +35,14 @@ export function PracticeEngine() {
     return map;
   }, [allQuestions]);
 
+  // Questions filtered by ONLY year+difficulty (not topic) — used for topic card counts & discovery
+  const baseFilteredQuestions = useMemo(() => {
+    let qs = allQuestions.filter(q => q.subject === selectedSubject);
+    if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
+    if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
+    return qs;
+  }, [allQuestions, selectedSubject, difficultyFilter, yearFilter]);
+
   const subjects = Object.keys(syllabus);
   const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '');
   const [selectedTopic, setSelectedTopic] = useState('all');
@@ -50,7 +58,12 @@ export function PracticeEngine() {
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
   const [isPracticing, setIsPracticing] = useState(false);
 
-  const topics = selectedSubject ? Object.keys(syllabus[selectedSubject] || {}) : [];
+  // Only show topics that have questions matching current year+difficulty filters
+  const topics = useMemo(() => {
+    if (!selectedSubject) return [];
+    const topicSet = new Set(baseFilteredQuestions.map(q => q.topic));
+    return Object.keys(syllabus[selectedSubject] || {}).filter(t => topicSet.has(t));
+  }, [selectedSubject, syllabus, baseFilteredQuestions]);
 
   // Filter questions
   const filteredQuestions = useMemo(() => {
@@ -294,9 +307,17 @@ export function PracticeEngine() {
       {/* Subject Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {subjects.map(subject => {
-          const count = allQuestions.filter(q => q.subject === subject).length;
+          // Count respects year+difficulty filters for the badge
+          const filteredCount = (() => {
+            let qs = allQuestions.filter(q => q.subject === subject);
+            if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
+            if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
+            return qs.length;
+          })();
+          const totalCount = allQuestions.filter(q => q.subject === subject).length;
           const topicCount = Object.keys(syllabus[subject]).length;
           const isActive = selectedSubject === subject;
+          const hasFilter = yearFilter !== 'all' || difficultyFilter !== 'all';
 
           return (
             <button
@@ -316,7 +337,13 @@ export function PracticeEngine() {
               <div className="relative z-10">
                 <div className="text-3xl mb-3">{getSubjectIcon(subject)}</div>
                 <h3 className="font-bold text-primary text-sm mb-1">{subject}</h3>
-                <p className="text-xs text-on-surface-variant">{count.toLocaleString()} PYQs • {topicCount} Topics</p>
+                <p className="text-xs text-on-surface-variant">
+                  {hasFilter ? (
+                    <><span className="font-bold text-primary">{filteredCount.toLocaleString()}</span> / {totalCount.toLocaleString()} PYQs • {topicCount} Topics</>
+                  ) : (
+                    <>{totalCount.toLocaleString()} PYQs • {topicCount} Topics</>
+                  )}
+                </p>
               </div>
               {isActive && (
                 <div className="absolute top-3 right-3 w-3 h-3 bg-primary rounded-full animate-pulse"></div>
@@ -342,9 +369,9 @@ export function PracticeEngine() {
                 value={selectedTopic}
                 onChange={e => { setSelectedTopic(e.target.value); }}
               >
-                <option value="all">All Topics ({allQuestions.filter(q => q.subject === selectedSubject).length})</option>
+                <option value="all">All Topics ({baseFilteredQuestions.length})</option>
                 {topics.map(topic => {
-                  const count = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic).length;
+                  const count = baseFilteredQuestions.filter(q => q.topic === topic).length;
                   return <option key={topic} value={topic}>{topic} ({count})</option>;
                 })}
               </select>
@@ -376,14 +403,14 @@ export function PracticeEngine() {
               <select
                 className="w-full bg-surface-container p-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-primary outline-none"
                 value={yearFilter}
-                onChange={e => setYearFilter(e.target.value)}
+                onChange={e => { setYearFilter(e.target.value); setSelectedTopic('all'); }}
               >
-                <option value="all">All Years</option>
+                <option value="all">All Years ({allQuestions.filter(q => q.subject === selectedSubject).length} Qs)</option>
                 {[...new Set(allQuestions.filter(q => q.subject === selectedSubject).map(q => q.exam_year))]
                   .sort((a, b) => b.localeCompare(a))
                   .map(yr => {
                     const count = allQuestions.filter(q => q.subject === selectedSubject && q.exam_year === yr).length;
-                    return <option key={yr} value={yr}>{yr} ({count} Qs)</option>;
+                    return <option key={yr} value={yr}>{yr} — {count} Qs</option>;
                   })
                 }
               </select>
@@ -410,34 +437,47 @@ export function PracticeEngine() {
           )}
         </div>
 
-        {/* Topic Cards */}
+        {/* Topic Cards — counts always match active year+difficulty filter */}
         <div className="lg:col-span-3">
+          {topics.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
+              <span className="text-5xl mb-4">🔍</span>
+              <p className="font-bold text-primary">No questions match the selected filters</p>
+              <p className="text-sm mt-1">Try selecting a different year or difficulty</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {topics.map(topic => {
-              const topicQs = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic);
+              // Counts respect year + difficulty filters
+              const topicQs = baseFilteredQuestions.filter(q => q.topic === topic);
+              const allTopicQs = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic);
               const easy = topicQs.filter(q => q.difficulty === 'easy').length;
               const medium = topicQs.filter(q => q.difficulty === 'medium').length;
               const hard = topicQs.filter(q => q.difficulty === 'hard').length;
               const isSelected = selectedTopic === topic;
+              const hasFilter = yearFilter !== 'all' || difficultyFilter !== 'all';
 
               return (
                 <div
                   key={topic}
-                  onClick={() => {
-                    setSelectedTopic(topic);
-                  }}
+                  onClick={() => setSelectedTopic(topic)}
                   className={cn(
                     "bg-surface-container-lowest rounded-xl p-5 shadow-sm border-2 cursor-pointer transition-all hover:shadow-md",
                     isSelected ? "border-primary bg-primary/[0.02]" : "border-surface-container-high hover:border-primary/30"
                   )}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-bold text-primary text-sm">{topic}</h4>
-                    <span className="text-lg font-black text-primary">{topicQs.length}</span>
+                    <h4 className="font-bold text-primary text-sm leading-snug flex-1 pr-2">{topic}</h4>
+                    <div className="text-right shrink-0">
+                      <span className="text-lg font-black text-primary">{topicQs.length}</span>
+                      {hasFilter && topicQs.length !== allTopicQs.length && (
+                        <p className="text-[9px] text-on-surface-variant">of {allTopicQs.length}</p>
+                      )}
+                    </div>
                   </div>
-                  
+
                   <p className="text-[10px] text-on-surface-variant mb-3">
-                    {topicQs.length} Questions
+                    {topicQs.length} {hasFilter && yearFilter !== 'all' ? `${yearFilter} ` : ''}Questions
                   </p>
 
                   {/* Difficulty Bar */}
