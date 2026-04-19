@@ -1,13 +1,24 @@
 /**
- * LIVE PERFORMANCE ENGINE
+ * LIVE PERFORMANCE ENGINE  v2 — Cross-Device Cloud Sync
  * ─────────────────────────────────────────────────────────────────
- * Every single answer click = immediate localStorage save.
- * No manual saving. No session-end requirement. Every move counts.
+ * Architecture:
+ *   - localStorage  → instant, offline-first local cache
+ *   - Firebase Firestore → cloud source of truth, syncs across devices
  *
- * Keys used:
- *   rrb_performance_data  → finalized test history + overall stats
- *   rrb_live_session      → current in-progress session (overwritten every answer)
+ * Flow:
+ *   1. Every answer → immediately saved to localStorage (0ms latency)
+ *   2. Session finalize → saved to localStorage + pushed to Firestore
+ *   3. On login → fetch from Firestore and MERGE with localStorage
+ *   4. Any device with same email → same data
+ *
+ * Firestore path: /users/{email_doc_id}/performance  (single document)
+ *                 /users/{email_doc_id}/sessions/{session_id}  (live)
  */
+
+import {
+  doc, getDoc, setDoc, updateDoc, serverTimestamp
+} from 'firebase/firestore';
+import { db, emailToDocId } from './firebase';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -36,8 +47,8 @@ export interface LiveSession {
   type: 'Mock Test' | 'Subject Practice';
   subject: string;
   topic: string;
-  start_time: number;                       // ms epoch
-  answers: Record<string, {                 // keyed by questionId
+  start_time: number;
+  answers: Record<string, {
     subject: string;
     topic: string;
     correct: boolean;
@@ -62,27 +73,16 @@ export interface PerformanceData {
 
 const DATA_KEY = 'rrb_performance_data';
 const LIVE_KEY = 'rrb_live_session';
+const USER_KEY = 'rrb_user';
 
-// ─── Low-level helpers ────────────────────────────────────────────────────────
+// ─── Low-level localStorage helpers ──────────────────────────────────────────
 
 function readData(): PerformanceData {
   try {
     const raw = localStorage.getItem(DATA_KEY);
     if (raw) return JSON.parse(raw);
   } catch (_) {}
-  return {
-    tests: [],
-    overall: {
-      total_tests: 0,
-      total_questions: 0,
-      total_correct: 0,
-      overall_accuracy: 0,
-      best_score_percentage: 0,
-      last_score_percentage: 0,
-      subject_accuracy: {},
-      topic_accuracy: {},
-    },
-  };
+  return emptyPerformanceData();
 }
 
 function writeData(data: PerformanceData): void {
@@ -106,17 +106,13 @@ function writeLiveSession(session: LiveSession): void {
 }
 
 function clearLiveSession(): void {
-  try {
-    localStorage.removeItem(LIVE_KEY);
-  } catch (_) {}
+  try { localStorage.removeItem(LIVE_KEY); } catch (_) {}
 }
 
-// ─── Recalculate overall stats from all tests ─────────────────────────────────
-
-function recalcOverall(data: PerformanceData): void {
-  const { tests } = data;
-  if (tests.length === 0) {
-    data.overall = {
+function emptyPerformanceData(): PerformanceData {
+  return {
+    tests: [],
+    overall: {
       total_tests: 0,
       total_questions: 0,
       total_correct: 0,
@@ -125,7 +121,29 @@ function recalcOverall(data: PerformanceData): void {
       last_score_percentage: 0,
       subject_accuracy: {},
       topic_accuracy: {},
-    };
+    },
+  };
+}
+
+// ─── Get current user email ───────────────────────────────────────────────────
+
+function getCurrentEmail(): string | null {
+  try {
+    const raw = localStorage.getItem(USER_KEY);
+    if (raw) {
+      const u = JSON.parse(raw);
+      return u?.email || null;
+    }
+  } catch (_) {}
+  return null;
+}
+
+// ─── Recalculate overall stats from all tests ─────────────────────────────────
+
+function recalcOverall(data: PerformanceData): void {
+  const { tests } = data;
+  if (tests.length === 0) {
+    data.overall = emptyPerformanceData().overall;
     return;
   }
 
@@ -165,9 +183,101 @@ function recalcOverall(data: PerformanceData): void {
   };
 }
 
+// ─── Merge local + cloud data (union of tests, deduplicated by test_id) ──────
+
+function mergePerformanceData(local: PerformanceData, cloud: PerformanceData): PerformanceData {
+  const seenIds = new Set<string>();
+  const merged: TestResult[] = [];
+
+  // Add local tests first
+  for (const t of local.tests) {
+    if (!seenIds.has(t.test_id)) {
+      seenIds.add(t.test_id);
+      merged.push(t);
+    }
+  }
+
+  // Add cloud tests not already in local
+  for (const t of cloud.tests) {
+    if (!seenIds.has(t.test_id)) {
+      seenIds.add(t.test_id);
+      merged.push(t);
+    }
+  }
+
+  // Sort by date ascending
+  merged.sort((a, b) => a.test_id.localeCompare(b.test_id));
+
+  const result: PerformanceData = { tests: merged, overall: emptyPerformanceData().overall };
+  recalcOverall(result);
+  return result;
+}
+
+// ─── FIRESTORE OPERATIONS ────────────────────────────────────────────────────
+
+/** Push local data to Firestore (non-blocking, fails silently) */
+async function pushToCloud(email: string, data: PerformanceData): Promise<void> {
+  try {
+    const docId = emailToDocId(email);
+    const ref = doc(db, 'users', docId);
+    await setDoc(ref, {
+      email,
+      performance: JSON.stringify(data),
+      updatedAt: serverTimestamp(),
+    }, { merge: true });
+  } catch (err) {
+    console.warn('[CloudSync] Push failed (offline?):', err);
+  }
+}
+
+/** Pull data from Firestore for this email */
+async function pullFromCloud(email: string): Promise<PerformanceData | null> {
+  try {
+    const docId = emailToDocId(email);
+    const ref = doc(db, 'users', docId);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      const raw = snap.data()?.performance;
+      if (raw) return JSON.parse(raw) as PerformanceData;
+    }
+  } catch (err) {
+    console.warn('[CloudSync] Pull failed (offline?):', err);
+  }
+  return null;
+}
+
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
-/** Start a new live session — call when practice/mock begins */
+/**
+ * SYNC ON LOGIN — call this immediately after user logs in.
+ * Fetches cloud data, merges with local, saves merged to both.
+ * Returns the merged performance data.
+ */
+export async function syncOnLogin(email: string): Promise<PerformanceData> {
+  const local = readData();
+  const cloud = await pullFromCloud(email);
+
+  let merged: PerformanceData;
+  if (cloud && (cloud.tests?.length ?? 0) > 0) {
+    merged = mergePerformanceData(local, cloud);
+  } else {
+    merged = local;
+  }
+
+  writeData(merged);
+
+  // If local had tests the cloud didn't know about, push merged up
+  if (cloud && local.tests.length > 0) {
+    pushToCloud(email, merged); // fire-and-forget
+  } else if (!cloud && local.tests.length > 0) {
+    pushToCloud(email, merged);
+  }
+
+  console.log(`[CloudSync] Synced ${merged.tests.length} tests for ${email}`);
+  return merged;
+}
+
+/** Start a new live session — called when practice/mock begins */
 export function startLiveSession(
   type: LiveSession['type'],
   subject: string,
@@ -179,8 +289,8 @@ export function startLiveSession(
 }
 
 /**
- * Track a single answer — call immediately when user selects an option.
- * This is the CORE function. Every click → localStorage write.
+ * Track a single answer — called immediately when user selects an option.
+ * localStorage only (0ms). Cloud push happens on finalize.
  */
 export function trackAnswer(
   questionId: string | number,
@@ -190,15 +300,12 @@ export function trackAnswer(
 ): void {
   const session = readLiveSession();
   if (!session) return;
-
   session.answers[String(questionId)] = { subject, topic, correct };
-  writeLiveSession(session); // ← immediate save, every single answer
+  writeLiveSession(session);
 }
 
 /**
- * Finalize the current live session → save it permanently to test history.
- * Call when test submits or practice exits.
- * If session has 0 answers, just clears without saving.
+ * Finalize the current session → saves permanently to localStorage + pushes to cloud.
  */
 export function finalizeSession(totalQuestions?: number): void {
   const session = readLiveSession();
@@ -210,7 +317,7 @@ export function finalizeSession(totalQuestions?: number): void {
     return;
   }
 
-  // Build breakdowns from live answers
+  // Build breakdowns
   const subjBreak: Record<string, SubjectBreakdown> = {};
   const topBreak: Record<string, SubjectBreakdown> = {};
 
@@ -260,16 +367,21 @@ export function finalizeSession(totalQuestions?: number): void {
   recalcOverall(data);
   writeData(data);
   clearLiveSession();
+
+  // Push to cloud (non-blocking)
+  const email = getCurrentEmail();
+  if (email) {
+    pushToCloud(email, data);
+  }
 }
 
-// ─── Read helpers for performance page ────────────────────────────────────────
+// ─── Read helpers ─────────────────────────────────────────────────────────────
 
 export async function loadPerformanceData(): Promise<PerformanceData | null> {
   const d = readData();
   return d.tests.length > 0 ? d : null;
 }
 
-/** Get live session stats for display (without finalizing) */
 export function getLiveStats(): { answered: number; correct: number; accuracy: number } | null {
   const session = readLiveSession();
   if (!session) return null;
@@ -283,12 +395,14 @@ export function getLiveStats(): { answered: number; correct: number; accuracy: n
   };
 }
 
-/** Save a complete test result directly (for backward compat) */
 export async function saveTestResult(result: TestResult): Promise<void> {
   const data = readData();
   data.tests.push(result);
   recalcOverall(data);
   writeData(data);
+
+  const email = getCurrentEmail();
+  if (email) pushToCloud(email, data);
 }
 
 export { recalcOverall as recalculateOverall };

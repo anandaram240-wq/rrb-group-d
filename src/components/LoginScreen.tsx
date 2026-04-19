@@ -130,7 +130,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
 
           <div className="mt-6 text-center">
             <p className="text-blue-200/50 text-xs">
-              Your progress data is saved to your browser
+              ☁️ Progress syncs across all your devices automatically
             </p>
           </div>
         </div>
