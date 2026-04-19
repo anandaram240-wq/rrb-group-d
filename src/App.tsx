@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import localforage from 'localforage';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
 import { Dashboard } from './components/Dashboard';
@@ -10,6 +11,7 @@ import PerformanceTracker from './components/PerformanceTracker';
 import { LoginScreen } from './components/LoginScreen';
 import { StudyRoadmap } from './components/StudyRoadmap';
 import { ExamPlanner } from './components/ExamPlanner';
+import { auth } from './lib/firebase';
 import { syncOnLogin } from './lib/performanceEngine';
 import pyqsData from './data/pyqs.json';
 
@@ -24,6 +26,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('rrb_user');
     if (saved) try { return JSON.parse(saved); } catch { return null; }
@@ -32,24 +35,8 @@ export default function App() {
 
   // Initialize offline storage
   useEffect(() => {
-    localforage.config({
-      name: 'RRB_D_Mastery_Pro',
-      storeName: 'pyqs_data'
-    });
-    
-    localforage.setItem('cached_pyqs', pyqsData).then(() => {
-      console.log('PYQs cached for offline use');
-    }).catch((err) => {
-      console.error('Error caching PYQs:', err);
-    });
-  }, []);
-
-  // Sync from cloud on first load if user already logged in
-  useEffect(() => {
-    if (user?.email) {
-      setSyncing(true);
-      syncOnLogin(user.email).finally(() => setSyncing(false));
-    }
+    localforage.config({ name: 'RRB_D_Mastery_Pro', storeName: 'pyqs_data' });
+    localforage.setItem('cached_pyqs', pyqsData).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -60,21 +47,45 @@ export default function App() {
     }
   }, [isDarkMode]);
 
+  /**
+   * Wait for Firebase Auth to restore its session (auto-restored on page load).
+   * When Firebase Auth is ready AND we have a saved user profile → sync from cloud.
+   * This handles:
+   *   - Fresh logins (firebaseSignInWithGoogle ran in LoginScreen)
+   *   - Page refreshes (Firebase Auth auto-restores from IndexedDB)
+   *   - Existing sessions that were saved before cloud sync was added
+   */
+  useEffect(() => {
+    if (!user?.email || syncDone) return;
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        // Firebase Auth restored — now safe to sync (getFirebaseUid() will work)
+        setSyncing(true);
+        syncOnLogin(user.email)
+          .then(() => setSyncDone(true))
+          .finally(() => setSyncing(false));
+      }
+      // If firebaseUser is null: user hasn't re-authenticated yet via the new flow.
+      // They'll get a full sync on next login.
+    });
+
+    return () => unsubscribe();
+  }, [user?.email, syncDone]);
+
   const handleLogin = async (profile: UserProfile) => {
     setUser(profile);
     localStorage.setItem('rrb_user', JSON.stringify(profile));
-    // Immediately fetch + merge cloud data after login
-    setSyncing(true);
-    try {
-      await syncOnLogin(profile.email);
-    } finally {
-      setSyncing(false);
-    }
+    // Firebase Auth is already established in LoginScreen (firebaseSignInWithGoogle).
+    // onAuthStateChanged above will fire immediately and trigger sync.
+    setSyncDone(false); // allow a fresh sync
   };
 
   const handleLogout = () => {
     setUser(null);
+    setSyncDone(false);
     localStorage.removeItem('rrb_user');
+    auth.signOut().catch(() => {});
   };
 
   // Show login screen if not authenticated
@@ -98,7 +109,7 @@ export default function App() {
             borderRadius: '50%', background: '#4ade80',
             animation: 'pulse 1s infinite',
           }} />
-          Syncing your performance across all devices…
+          ☁️ Syncing your performance across all devices…
         </div>
       )}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} user={user} onLogout={handleLogout} />
