@@ -2642,7 +2642,7 @@
   {
     "id": 4406,
     "subject": "General Science",
-    "topic": "Human Body",
+    "topic": "Genetics",
     "question": "________ is a part of DNA, which provides information for a protein.",
     "options": [
       "Chromosome",
@@ -2659,7 +2659,7 @@
     "source": "RRB Group D 2018",
     "tags": [
       "General Science",
-      "Human Body",
+      "Genetics",
       "2018"
     ]
   },
@@ -4081,8 +4081,8 @@
   },
   {
     "id": 4466,
-    "subject": "Mathematics",
-    "topic": "Number Series",
+    "subject": "General Awareness",
+    "topic": "Current Affairs",
     "question": "The 2017 Deaflympics was held in ________.",
     "options": [
       "Istanbul, Turkey",
@@ -4098,8 +4098,8 @@
     "shift": "Shift 1",
     "source": "RRB Group D 2018",
     "tags": [
-      "Mathematics",
-      "Number Series",
+      "General Awareness",
+      "Current Affairs",
       "2018"
     ]
   },
@@ -4321,8 +4321,8 @@
   },
   {
     "id": 4476,
-    "subject": "Mathematics",
-    "topic": "Number Series",
+    "subject": "General Awareness",
+    "topic": "Static GK",
     "question": "Murshid Quli Khan declared himself the Nawab of Bengal and shifted his capital from Dhaka to ________.",
     "options": [
       "Giria",
@@ -4338,8 +4338,8 @@
     "shift": "Shift 2",
     "source": "RRB Group D 2018",
     "tags": [
-      "Mathematics",
-      "Number Series",
+      "General Awareness",
+      "Static GK",
       "2018"
     ]
   },
@@ -4778,7 +4778,7 @@
   {
     "id": 4495,
     "subject": "General Awareness",
-    "topic": "Static GK",
+    "topic": "Current Affairs",
     "question": "Mahatma Gandhi Rural Employment Guarantee Act was launched on ________.",
     "options": [
       "2 February 2006",
@@ -4795,7 +4795,7 @@
     "source": "RRB Group D 2018",
     "tags": [
       "General Awareness",
-      "Static GK",
+      "Current Affairs",
       "2018"
     ]
   },
@@ -5042,7 +5042,7 @@
   {
     "id": 4506,
     "subject": "General Awareness",
-    "topic": "Static GK",
+    "topic": "Polity",
     "question": "The Bahujan Samaj Party is recognized by the symbol of ________.",
     "options": [
       "Hand",
@@ -5059,7 +5059,7 @@
     "source": "RRB Group D 2018",
     "tags": [
       "General Awareness",
-      "Static GK",
+      "Polity",
       "2018"
     ]
   },
@@ -10346,7 +10346,7 @@
   {
     "id": 4727,
     "subject": "General Awareness",
-    "topic": "Awards & Honors",
+    "topic": "Sports",
     "question": "Defense Minister Nirmala Sitharaman presented the best Tableau Award at the Republic Day 2018 parade to ________.",
     "options": [
       "Maharashtra",
@@ -10363,7 +10363,7 @@
     "source": "RRB Group D 2018",
     "tags": [
       "General Awareness",
-      "Awards & Honors",
+      "Sports",
       "2018"
     ]
   },
@@ -18558,11 +18558,11 @@
     "question": "The chemical formula of Iron (III) oxide is ___.",
     "options": [
       "FeO",
-      "FeO",
-      "FeO",
-      "FeO"
+      "Fe₂O₃",
+      "Fe₃O₄",
+      "Fe(OH)₃"
     ],
-    "correctAnswer": 0,
+    "correctAnswer": 1,
     "solution": "GK Fact: Current Affairs\nThis is a factual question from Current Affairs.\nAnswer: (A) FeO",
     "difficulty": "medium",
     "exam_year": "2018",
@@ -22373,12 +22373,12 @@
     "topic": "Electricity",
     "question": "1 kWH = _____ J",
     "options": [
-      "3.6 × 10",
-      "3.6 × 10",
-      "3.6 × 10",
-      "3.6 × 10"
+      "3.6 × 10³ J",
+      "3.6 × 10⁴ J",
+      "3.6 × 10⁶ J",
+      "3.6 × 10⁷ J"
     ],
-    "correctAnswer": 0,
+    "correctAnswer": 2,
     "solution": "Concept: Electricity\nRecall the key definition or formula related to this topic.\nAnswer: (A) 3.6 × 10",
     "difficulty": "medium",
     "exam_year": "2018",
