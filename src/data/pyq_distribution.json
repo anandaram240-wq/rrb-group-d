@@ -3,15 +3,15 @@
     "total": 1486,
     "topics": {
       "Carbon Compounds": {
-        "total": 60,
-        "easy": 42,
+        "total": 59,
+        "easy": 41,
         "medium": 18,
         "hard": 0,
         "years": {
           "2026": 16,
           "2025": 31,
           "2018": 8,
-          "2022": 5
+          "2022": 4
         }
       },
       "Plant Physiology": {
@@ -27,120 +27,120 @@
         }
       },
       "Matter": {
-        "total": 34,
+        "total": 33,
         "easy": 26,
-        "medium": 8,
+        "medium": 7,
         "hard": 0,
         "years": {
           "2026": 10,
           "2025": 18,
-          "2018": 6
+          "2018": 5
         }
       },
       "Motion": {
-        "total": 106,
-        "easy": 60,
-        "medium": 46,
+        "total": 108,
+        "easy": 61,
+        "medium": 47,
         "hard": 0,
         "years": {
           "2025": 55,
           "2026": 34,
-          "2018": 17
+          "2018": 18,
+          "2022": 1
         }
       },
       "Acids, Bases, Salts": {
-        "total": 123,
+        "total": 126,
         "easy": 71,
-        "medium": 52,
+        "medium": 55,
         "hard": 0,
         "years": {
           "2025": 50,
           "2026": 42,
-          "2018": 25,
-          "2022": 6
+          "2018": 27,
+          "2022": 7
         }
       },
       "Work, Energy, Power": {
-        "total": 76,
-        "easy": 43,
-        "medium": 33,
+        "total": 74,
+        "easy": 42,
+        "medium": 32,
         "hard": 0,
         "years": {
           "2025": 35,
           "2026": 18,
-          "2018": 22,
-          "2022": 1
+          "2018": 21
         }
       },
       "Sound": {
-        "total": 42,
+        "total": 41,
         "easy": 19,
-        "medium": 23,
+        "medium": 22,
         "hard": 0,
         "years": {
           "2025": 19,
           "2026": 8,
-          "2018": 15
+          "2018": 14
         }
       },
       "Light": {
-        "total": 106,
-        "easy": 60,
+        "total": 107,
+        "easy": 61,
         "medium": 41,
         "hard": 5,
         "years": {
           "2025": 57,
           "2026": 29,
           "2018": 5,
-          "2022": 15
+          "2022": 16
         }
       },
       "Magnetism": {
-        "total": 31,
-        "easy": 18,
+        "total": 32,
+        "easy": 19,
         "medium": 12,
         "hard": 1,
         "years": {
           "2026": 12,
           "2025": 10,
           "2018": 2,
-          "2022": 7
+          "2022": 8
         }
       },
       "Atomic Structure": {
-        "total": 193,
+        "total": 192,
         "easy": 134,
-        "medium": 59,
+        "medium": 58,
         "hard": 0,
         "years": {
           "2026": 55,
           "2025": 89,
-          "2018": 39,
+          "2018": 38,
           "2022": 10
         }
       },
       "Cell": {
-        "total": 81,
+        "total": 82,
         "easy": 65,
-        "medium": 16,
+        "medium": 17,
         "hard": 0,
         "years": {
           "2025": 53,
           "2026": 22,
-          "2018": 5,
+          "2018": 6,
           "2022": 1
         }
       },
       "Metals & Non-metals": {
-        "total": 56,
-        "easy": 43,
+        "total": 57,
+        "easy": 44,
         "medium": 13,
         "hard": 0,
         "years": {
           "2025": 29,
           "2026": 19,
           "2018": 6,
-          "2022": 2
+          "2022": 3
         }
       },
       "General Science": {
@@ -154,125 +154,128 @@
         }
       },
       "Reproduction": {
-        "total": 58,
+        "total": 53,
         "easy": 36,
-        "medium": 22,
+        "medium": 17,
         "hard": 0,
         "years": {
           "2025": 26,
           "2026": 19,
-          "2018": 13
+          "2018": 8
         }
       },
       "Environment": {
-        "total": 17,
-        "easy": 9,
+        "total": 16,
+        "easy": 8,
         "medium": 8,
         "hard": 0,
         "years": {
           "2026": 4,
           "2025": 4,
           "2018": 4,
-          "2022": 5
+          "2022": 4
         }
       },
       "Chemical Reactions": {
-        "total": 45,
-        "easy": 30,
-        "medium": 14,
+        "total": 51,
+        "easy": 31,
+        "medium": 19,
         "hard": 1,
         "years": {
           "2025": 20,
           "2026": 14,
-          "2018": 4,
-          "2022": 7
+          "2018": 9,
+          "2022": 8
         }
       },
       "Force & Laws": {
-        "total": 61,
+        "total": 60,
         "easy": 26,
-        "medium": 35,
+        "medium": 34,
         "hard": 0,
         "years": {
           "2025": 30,
           "2026": 8,
-          "2018": 23
+          "2018": 22
         }
       },
       "Electricity": {
-        "total": 84,
-        "easy": 41,
-        "medium": 41,
+        "total": 81,
+        "easy": 39,
+        "medium": 40,
         "hard": 2,
         "years": {
           "2025": 36,
           "2026": 16,
-          "2018": 18,
-          "2022": 14
+          "2018": 17,
+          "2022": 12
         }
       },
       "Heat": {
-        "total": 15,
+        "total": 17,
         "easy": 11,
-        "medium": 4,
+        "medium": 6,
         "hard": 0,
         "years": {
           "2025": 8,
-          "2026": 7
+          "2026": 7,
+          "2018": 2
         }
       },
       "Genetics": {
-        "total": 37,
+        "total": 36,
         "easy": 23,
-        "medium": 13,
+        "medium": 12,
         "hard": 1,
         "years": {
           "2026": 11,
           "2025": 14,
-          "2018": 6,
-          "2022": 6
+          "2018": 7,
+          "2022": 4
         }
       },
       "Diseases": {
-        "total": 8,
+        "total": 9,
         "easy": 7,
-        "medium": 1,
+        "medium": 2,
         "hard": 0,
         "years": {
           "2026": 4,
-          "2025": 4
+          "2025": 4,
+          "2022": 1
         }
       },
       "Human Body": {
-        "total": 53,
+        "total": 49,
         "easy": 31,
-        "medium": 21,
+        "medium": 17,
         "hard": 1,
         "years": {
           "2025": 17,
           "2026": 11,
-          "2018": 13,
-          "2022": 12
+          "2018": 10,
+          "2022": 11
         }
       },
       "Classification": {
-        "total": 8,
+        "total": 9,
         "easy": 7,
-        "medium": 1,
+        "medium": 2,
         "hard": 0,
         "years": {
           "2025": 4,
           "2026": 3,
-          "2022": 1
+          "2022": 2
         }
       },
       "Nutrition": {
-        "total": 2,
+        "total": 4,
         "easy": 2,
-        "medium": 0,
+        "medium": 2,
         "hard": 0,
         "years": {
           "2025": 1,
+          "2018": 2,
           "2022": 1
         }
       }
@@ -282,226 +285,211 @@
     "total": 1252,
     "topics": {
       "3D (Volume, Surface Area)": {
-        "total": 50,
-        "easy": 11,
-        "medium": 36,
-        "hard": 3,
+        "total": 48,
+        "easy": 10,
+        "medium": 37,
+        "hard": 1,
         "years": {
           "2025": 18,
           "2026": 18,
-          "2018": 8,
-          "2022": 6
+          "2018": 10,
+          "2022": 2
         }
       },
       "Time, Speed & Distance": {
-        "total": 89,
+        "total": 69,
         "easy": 24,
-        "medium": 64,
+        "medium": 44,
         "hard": 1,
         "years": {
           "2026": 26,
           "2025": 37,
-          "2018": 23,
-          "2022": 3
-        }
-      },
-      "Pipes & Cisterns": {
-        "total": 63,
-        "easy": 2,
-        "medium": 61,
-        "hard": 0,
-        "years": {
-          "2025": 31,
-          "2026": 21,
-          "2018": 11
-        }
-      },
-      "Ages": {
-        "total": 48,
-        "easy": 11,
-        "medium": 37,
-        "hard": 0,
-        "years": {
-          "2025": 25,
-          "2026": 14,
-          "2018": 9
-        }
-      },
-      "Lines & Angles": {
-        "total": 72,
-        "easy": 20,
-        "medium": 49,
-        "hard": 3,
-        "years": {
-          "2025": 31,
-          "2026": 24,
-          "2018": 7,
-          "2022": 10
-        }
-      },
-      "Percentage": {
-        "total": 131,
-        "easy": 45,
-        "medium": 86,
-        "hard": 0,
-        "years": {
-          "2025": 69,
-          "2026": 39,
-          "2018": 21,
+          "2018": 4,
           "2022": 2
         }
       },
-      "Average": {
-        "total": 84,
-        "easy": 42,
-        "medium": 41,
+      "Pipes & Cisterns": {
+        "total": 65,
+        "easy": 2,
+        "medium": 59,
+        "hard": 4,
+        "years": {
+          "2025": 31,
+          "2026": 21,
+          "2018": 9,
+          "2022": 4
+        }
+      },
+      "Ages": {
+        "total": 63,
+        "easy": 14,
+        "medium": 48,
         "hard": 1,
+        "years": {
+          "2025": 25,
+          "2026": 14,
+          "2018": 16,
+          "2022": 8
+        }
+      },
+      "Lines & Angles": {
+        "total": 69,
+        "easy": 20,
+        "medium": 48,
+        "hard": 1,
+        "years": {
+          "2025": 31,
+          "2026": 24,
+          "2018": 5,
+          "2022": 9
+        }
+      },
+      "Percentage": {
+        "total": 120,
+        "easy": 46,
+        "medium": 73,
+        "hard": 1,
+        "years": {
+          "2025": 69,
+          "2026": 39,
+          "2018": 9,
+          "2022": 3
+        }
+      },
+      "Average": {
+        "total": 78,
+        "easy": 41,
+        "medium": 37,
+        "hard": 0,
         "years": {
           "2025": 45,
           "2026": 25,
-          "2018": 9,
-          "2022": 5
+          "2018": 7,
+          "2022": 1
         }
       },
       "Profit & Loss": {
-        "total": 166,
-        "easy": 63,
-        "medium": 101,
-        "hard": 2,
+        "total": 223,
+        "easy": 65,
+        "medium": 149,
+        "hard": 9,
         "years": {
           "2026": 52,
           "2025": 99,
-          "2018": 10,
-          "2022": 5
+          "2018": 50,
+          "2022": 22
         }
       },
       "Simple Interest": {
         "total": 19,
         "easy": 0,
-        "medium": 17,
-        "hard": 2,
+        "medium": 18,
+        "hard": 1,
         "years": {
           "2025": 8,
           "2026": 6,
-          "2018": 3,
-          "2022": 2
+          "2018": 4,
+          "2022": 1
         }
       },
       "Number System": {
-        "total": 202,
-        "easy": 84,
-        "medium": 111,
+        "total": 201,
+        "easy": 85,
+        "medium": 109,
         "hard": 7,
         "years": {
           "2026": 48,
           "2025": 84,
-          "2018": 53,
-          "2022": 17
+          "2018": 50,
+          "2022": 19
         }
       },
       "Trigonometry": {
-        "total": 20,
+        "total": 25,
         "easy": 6,
-        "medium": 12,
+        "medium": 17,
         "hard": 2,
         "years": {
           "2025": 3,
           "2026": 8,
-          "2018": 5,
-          "2022": 4
+          "2018": 11,
+          "2022": 3
         }
       },
       "Ratio & Proportion": {
-        "total": 103,
+        "total": 93,
         "easy": 29,
-        "medium": 71,
-        "hard": 3,
+        "medium": 63,
+        "hard": 1,
         "years": {
           "2025": 47,
           "2026": 35,
-          "2018": 15,
-          "2022": 6
+          "2018": 7,
+          "2022": 4
         }
       },
       "Compound Interest": {
-        "total": 39,
+        "total": 43,
         "easy": 0,
-        "medium": 37,
+        "medium": 41,
         "hard": 2,
         "years": {
           "2026": 8,
           "2025": 21,
-          "2018": 7,
+          "2018": 11,
           "2022": 3
         }
       },
       "Linear Equations": {
-        "total": 39,
-        "easy": 5,
-        "medium": 29,
-        "hard": 5,
+        "total": 29,
+        "easy": 3,
+        "medium": 20,
+        "hard": 6,
         "years": {
           "2025": 8,
           "2026": 3,
-          "2018": 10,
-          "2022": 18
+          "2018": 6,
+          "2022": 12
         }
       },
       "Time & Work": {
-        "total": 49,
+        "total": 42,
         "easy": 1,
-        "medium": 43,
-        "hard": 5,
+        "medium": 41,
+        "hard": 0,
         "years": {
           "2025": 19,
           "2026": 12,
-          "2018": 12,
-          "2022": 6
+          "2018": 10,
+          "2022": 1
         }
       },
       "Simplification": {
-        "total": 69,
+        "total": 60,
         "easy": 14,
-        "medium": 55,
+        "medium": 46,
         "hard": 0,
         "years": {
           "2025": 7,
           "2026": 4,
-          "2018": 50,
+          "2018": 41,
           "2022": 8
         }
       },
-      "Ranking & Arrangement": {
-        "total": 1,
-        "easy": 0,
-        "medium": 1,
-        "hard": 0,
-        "years": {
-          "2018": 1
-        }
-      },
       "Data Interpretation": {
-        "total": 7,
-        "easy": 3,
-        "medium": 3,
-        "hard": 1,
-        "years": {
-          "2022": 7
-        }
-      },
-      "Squares & Cube Roots": {
-        "total": 1,
+        "total": 5,
         "easy": 1,
-        "medium": 0,
+        "medium": 4,
         "hard": 0,
         "years": {
+          "2018": 4,
           "2022": 1
         }
       }
     }
   },
   "Reasoning": {
-    "total": 1712,
+    "total": 1711,
     "topics": {
       "Direction Sense": {
         "total": 136,
@@ -516,51 +504,51 @@
         }
       },
       "Alphabet Series": {
-        "total": 271,
+        "total": 277,
         "easy": 71,
-        "medium": 196,
-        "hard": 4,
+        "medium": 201,
+        "hard": 5,
         "years": {
           "2026": 98,
           "2025": 153,
-          "2018": 6,
-          "2022": 14
+          "2018": 10,
+          "2022": 16
         }
       },
       "Number Series": {
-        "total": 428,
+        "total": 424,
         "easy": 135,
-        "medium": 292,
-        "hard": 1,
+        "medium": 286,
+        "hard": 3,
         "years": {
           "2026": 145,
           "2025": 237,
-          "2018": 37,
-          "2022": 9
+          "2018": 31,
+          "2022": 11
         }
       },
       "Analogies": {
-        "total": 103,
+        "total": 102,
         "easy": 9,
-        "medium": 94,
+        "medium": 93,
         "hard": 0,
         "years": {
           "2025": 39,
           "2026": 27,
           "2018": 28,
-          "2022": 9
+          "2022": 8
         }
       },
       "Coding-Decoding": {
-        "total": 120,
+        "total": 119,
         "easy": 36,
         "medium": 81,
-        "hard": 3,
+        "hard": 2,
         "years": {
           "2026": 37,
           "2025": 53,
           "2018": 21,
-          "2022": 9
+          "2022": 8
         }
       },
       "Seating Arrangement": {
@@ -576,150 +564,160 @@
         }
       },
       "Ranking & Arrangement": {
-        "total": 61,
+        "total": 60,
         "easy": 1,
         "medium": 58,
-        "hard": 2,
+        "hard": 1,
         "years": {
           "2025": 26,
           "2026": 17,
-          "2018": 10,
-          "2022": 8
+          "2018": 11,
+          "2022": 6
         }
       },
       "Mathematical Operations": {
-        "total": 149,
+        "total": 146,
         "easy": 2,
-        "medium": 144,
-        "hard": 3,
+        "medium": 143,
+        "hard": 1,
         "years": {
           "2026": 33,
           "2025": 67,
-          "2018": 39,
-          "2022": 10
+          "2018": 38,
+          "2022": 8
         }
       },
       "Blood Relations": {
-        "total": 65,
+        "total": 67,
         "easy": 0,
-        "medium": 65,
-        "hard": 0,
+        "medium": 66,
+        "hard": 1,
         "years": {
           "2025": 28,
           "2026": 18,
-          "2018": 19
+          "2018": 19,
+          "2022": 2
         }
       },
       "Syllogism": {
-        "total": 188,
+        "total": 176,
         "easy": 0,
-        "medium": 181,
+        "medium": 169,
         "hard": 7,
         "years": {
           "2025": 58,
           "2026": 35,
-          "2018": 75,
+          "2018": 63,
           "2022": 20
+        }
+      },
+      "Classification": {
+        "total": 13,
+        "easy": 0,
+        "medium": 13,
+        "hard": 0,
+        "years": {
+          "2018": 13
         }
       }
     }
   },
   "General Awareness": {
-    "total": 1265,
+    "total": 1266,
     "topics": {
       "Current Affairs": {
-        "total": 712,
-        "easy": 337,
-        "medium": 374,
+        "total": 659,
+        "easy": 338,
+        "medium": 320,
         "hard": 1,
         "years": {
           "2026": 241,
           "2025": 377,
-          "2018": 78,
-          "2022": 16
+          "2018": 24,
+          "2022": 17
         }
       },
       "Economy": {
-        "total": 70,
-        "easy": 26,
-        "medium": 44,
+        "total": 55,
+        "easy": 21,
+        "medium": 34,
         "hard": 0,
         "years": {
           "2026": 17,
           "2025": 28,
-          "2018": 14,
-          "2022": 11
+          "2018": 7,
+          "2022": 3
         }
       },
       "Sports": {
-        "total": 117,
-        "easy": 57,
-        "medium": 60,
+        "total": 113,
+        "easy": 55,
+        "medium": 58,
         "hard": 0,
         "years": {
           "2025": 50,
           "2026": 36,
-          "2018": 24,
-          "2022": 7
+          "2018": 23,
+          "2022": 4
         }
       },
       "Awards & Honors": {
-        "total": 73,
-        "easy": 30,
-        "medium": 43,
-        "hard": 0,
+        "total": 64,
+        "easy": 29,
+        "medium": 34,
+        "hard": 1,
         "years": {
           "2026": 14,
           "2025": 29,
-          "2018": 29,
-          "2022": 1
+          "2018": 19,
+          "2022": 2
         }
       },
       "Static GK": {
-        "total": 187,
-        "easy": 63,
-        "medium": 122,
-        "hard": 2,
+        "total": 297,
+        "easy": 80,
+        "medium": 216,
+        "hard": 1,
         "years": {
           "2025": 43,
           "2026": 24,
-          "2018": 102,
-          "2022": 18
+          "2018": 186,
+          "2022": 44
         }
       },
       "Polity": {
-        "total": 63,
-        "easy": 26,
-        "medium": 37,
+        "total": 48,
+        "easy": 19,
+        "medium": 29,
         "hard": 0,
         "years": {
           "2025": 21,
           "2026": 10,
-          "2018": 17,
-          "2022": 15
+          "2018": 14,
+          "2022": 3
         }
       },
       "Books & Authors": {
-        "total": 13,
+        "total": 12,
         "easy": 4,
-        "medium": 9,
+        "medium": 8,
         "hard": 0,
         "years": {
           "2026": 3,
           "2025": 4,
-          "2018": 6
+          "2018": 5
         }
       },
       "Geography": {
-        "total": 30,
-        "easy": 12,
-        "medium": 18,
+        "total": 18,
+        "easy": 9,
+        "medium": 9,
         "hard": 0,
         "years": {
           "2025": 2,
           "2026": 1,
-          "2018": 14,
-          "2022": 13
+          "2018": 7,
+          "2022": 8
         }
       }
     }
