@@ -1,20 +1,20 @@
 {
   "Mathematics": {
-    "3D (Volume, Surface Area)": 67,
+    "3D (Volume, Surface Area)": 68,
     "Ages": 117,
     "Average": 49,
     "Compound Interest": 42,
     "Data Interpretation": 23,
     "Linear Equations": 49,
     "Lines & Angles": 49,
-    "Number System": 143,
-    "Percentage": 105,
+    "Number System": 140,
+    "Percentage": 106,
     "Pipes & Cisterns": 66,
     "Profit & Loss": 173,
     "Ratio & Proportion": 105,
     "Simple Interest": 21,
     "Simplification": 64,
-    "Time & Work": 52,
+    "Time & Work": 54,
     "Time, Speed & Distance": 85,
     "Trigonometry": 38
   },
@@ -61,10 +61,10 @@
     "Awards & Honors": 96,
     "Books & Authors": 18,
     "Current Affairs": 256,
-    "Economy": 99,
+    "Economy": 101,
     "Geography": 89,
-    "Polity": 92,
+    "Polity": 93,
     "Sports": 218,
-    "Static GK": 437
+    "Static GK": 433
   }
 }
