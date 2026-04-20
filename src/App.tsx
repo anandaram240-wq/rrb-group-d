@@ -10,7 +10,7 @@ import PerformanceTracker from './components/PerformanceTracker';
 import { LoginScreen } from './components/LoginScreen';
 import { StudyRoadmap } from './components/StudyRoadmap';
 import { ExamPlanner } from './components/ExamPlanner';
-import { syncOnLogin } from './lib/performanceEngine';
+import { syncOnLogin, onSyncStatusChange, type SyncStatus } from './lib/performanceEngine';
 import pyqsData from './data/pyqs.json';
 
 interface UserProfile {
@@ -23,7 +23,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('rrb_user');
     if (saved) try { return JSON.parse(saved); } catch { return null; }
@@ -41,24 +41,27 @@ export default function App() {
     else document.documentElement.classList.remove('dark');
   }, [isDarkMode]);
 
+  // Subscribe to sync status changes
+  useEffect(() => {
+    const unsub = onSyncStatusChange(s => {
+      setSyncStatus(s);
+      // Auto-hide success/error after 3s
+      if (s === 'success' || s === 'error' || s === 'offline') {
+        setTimeout(() => setSyncStatus('idle'), 3000);
+      }
+    });
+    return unsub;
+  }, []);
+
   // On app load: if user is already saved, sync their cloud data immediately
   useEffect(() => {
-    if (user?.email) {
-      setSyncing(true);
-      syncOnLogin(user.email).finally(() => setSyncing(false));
-    }
+    if (user?.email) syncOnLogin(user.email);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogin = async (profile: UserProfile) => {
     setUser(profile);
     localStorage.setItem('rrb_user', JSON.stringify(profile));
-    // Pull cloud data immediately on login
-    setSyncing(true);
-    try {
-      await syncOnLogin(profile.email);
-    } finally {
-      setSyncing(false);
-    }
+    syncOnLogin(profile.email); // non-blocking — status shown via banner
   };
 
   const handleLogout = () => {
@@ -71,19 +74,25 @@ export default function App() {
   return (
     <div className="min-h-screen bg-surface text-on-surface font-sans antialiased flex transition-colors duration-300">
       {/* Cloud Sync Banner */}
-      {syncing && (
+      {syncStatus !== 'idle' && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999,
-          background: 'linear-gradient(90deg, #1a365d, #2563eb)',
+          background: syncStatus === 'success' ? 'linear-gradient(90deg,#166534,#16a34a)'
+                    : syncStatus === 'error'   ? 'linear-gradient(90deg,#7f1d1d,#dc2626)'
+                    : syncStatus === 'offline' ? 'linear-gradient(90deg,#374151,#6b7280)'
+                    : 'linear-gradient(90deg,#1a365d,#2563eb)',
           color: 'white', fontSize: '12px', fontWeight: 600,
           textAlign: 'center', padding: '6px 12px',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+          transition: 'background 0.3s',
         }}>
-          <span style={{
-            display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
-            background: '#4ade80', animation: 'pulse 1s infinite',
-          }} />
-          ☁️ Syncing your performance across all devices…
+          {syncStatus === 'syncing' && (
+            <span style={{ display:'inline-block', width:10, height:10, borderRadius:'50%', background:'#60a5fa', animation:'pulse 1s infinite' }} />
+          )}
+          {syncStatus === 'syncing' && '☁️ Syncing your performance across all devices…'}
+          {syncStatus === 'success' && '✅ Cloud sync complete — data saved across all devices!'}
+          {syncStatus === 'error'   && '⚠️ Sync failed — working offline. Your progress is saved locally.'}
+          {syncStatus === 'offline' && '📴 You are offline — working locally. Will sync when reconnected.'}
         </div>
       )}
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} user={user} onLogout={handleLogout} />

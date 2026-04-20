@@ -176,37 +176,73 @@ function mergeData(local: PerformanceData, cloud: PerformanceData): PerformanceD
   return result;
 }
 
-// ─── Firestore cloud operations ───────────────────────────────────────────────
+// ─── Sync status (observable) ────────────────────────────────────────────────
 
-async function pushToCloud(email: string, data: PerformanceData): Promise<void> {
-  try {
-    const ref = doc(db, 'users', emailToDocId(email));
-    await setDoc(ref, {
-      email,
-      performance: JSON.stringify(data),
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    console.log(`[CloudSync] ✅ Pushed ${data.tests.length} tests to cloud`);
-  } catch (err) {
-    console.warn('[CloudSync] Push failed:', err);
+export type SyncStatus = 'idle' | 'syncing' | 'success' | 'error' | 'offline';
+let _syncStatus: SyncStatus = 'idle';
+const _syncListeners: Array<(s: SyncStatus) => void> = [];
+
+function setSyncStatus(s: SyncStatus) {
+  _syncStatus = s;
+  _syncListeners.forEach(fn => fn(s));
+}
+
+export function getSyncStatus(): SyncStatus { return _syncStatus; }
+export function onSyncStatusChange(fn: (s: SyncStatus) => void): () => void {
+  _syncListeners.push(fn);
+  return () => { const i = _syncListeners.indexOf(fn); if (i !== -1) _syncListeners.splice(i, 1); };
+}
+
+// ─── Firestore cloud operations (with retry + status) ────────────────────────
+
+async function pushToCloud(email: string, data: PerformanceData): Promise<boolean> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const ref = doc(db, 'users', emailToDocId(email));
+      await setDoc(ref, {
+        email,
+        performance: JSON.stringify(data),
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+      console.log(`[CloudSync] ✅ Pushed ${data.tests.length} tests (attempt ${attempt})`);
+      return true;
+    } catch (err: any) {
+      const isPermission = err?.code === 'permission-denied';
+      const isOffline    = err?.code === 'unavailable' || !navigator.onLine;
+      console.warn(`[CloudSync] Push attempt ${attempt} failed:`, err?.code, err?.message);
+      if (isPermission) {
+        console.error('[CloudSync] ❌ Firestore permission denied — check security rules.');
+        return false;
+      }
+      if (isOffline || attempt === 3) return false;
+      await new Promise(r => setTimeout(r, 800 * attempt));
+    }
   }
+  return false;
 }
 
 async function pullFromCloud(email: string): Promise<PerformanceData | null> {
-  try {
-    const ref = doc(db, 'users', emailToDocId(email));
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-      const raw = snap.data()?.performance;
-      if (raw) {
-        const data = JSON.parse(raw) as PerformanceData;
-        console.log(`[CloudSync] ✅ Pulled ${data.tests.length} tests from cloud`);
-        return data;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const ref  = doc(db, 'users', emailToDocId(email));
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const raw = snap.data()?.performance;
+        if (raw) {
+          const data = JSON.parse(raw) as PerformanceData;
+          console.log(`[CloudSync] ✅ Pulled ${data.tests.length} tests`);
+          return data;
+        }
       }
+      console.log('[CloudSync] No cloud data yet for this user');
+      return null;
+    } catch (err: any) {
+      const isPermission = err?.code === 'permission-denied';
+      const isOffline    = err?.code === 'unavailable' || !navigator.onLine;
+      console.warn(`[CloudSync] Pull attempt ${attempt} failed:`, err?.code, err?.message);
+      if (isPermission || isOffline || attempt === 3) return null;
+      await new Promise(r => setTimeout(r, 800 * attempt));
     }
-    console.log('[CloudSync] No cloud data found for this user');
-  } catch (err) {
-    console.warn('[CloudSync] Pull failed:', err);
   }
   return null;
 }
@@ -214,22 +250,34 @@ async function pullFromCloud(email: string): Promise<PerformanceData | null> {
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
- * SYNC ON LOGIN — fetch cloud data, merge with local, save both.
- * Call this immediately after user logs in.
+ * SYNC ON LOGIN — pull cloud, merge with local, push back.
+ * Always resolves (never throws) — offline safe.
  */
 export async function syncOnLogin(email: string): Promise<PerformanceData> {
+  if (!navigator.onLine) {
+    setSyncStatus('offline');
+    console.log('[CloudSync] Offline — using local data only');
+    return readData();
+  }
+
+  setSyncStatus('syncing');
   console.log(`[CloudSync] Starting sync for ${email}…`);
-  const local = readData();
-  const cloud = await pullFromCloud(email);
 
-  const merged = cloud ? mergeData(local, cloud) : local;
-  writeData(merged);
+  try {
+    const local  = readData();
+    const cloud  = await pullFromCloud(email);
+    const merged = cloud ? mergeData(local, cloud) : local;
+    writeData(merged);
 
-  // Always push to ensure cloud is up to date
-  await pushToCloud(email, merged);
-
-  console.log(`[CloudSync] Sync complete — ${merged.tests.length} total tests`);
-  return merged;
+    const ok = await pushToCloud(email, merged);
+    setSyncStatus(ok ? 'success' : 'error');
+    console.log(`[CloudSync] Done — ${merged.tests.length} tests (push: ${ok ? '✅' : '❌'})`);
+    return merged;
+  } catch (err) {
+    console.error('[CloudSync] Unexpected error:', err);
+    setSyncStatus('error');
+    return readData();
+  }
 }
 
 /** Start a new live session.  */
