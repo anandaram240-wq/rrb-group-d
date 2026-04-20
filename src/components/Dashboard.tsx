@@ -137,64 +137,55 @@ export function Dashboard({ userName }: DashboardProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div className="flex flex-col gap-3 mb-1">
         <div>
-          <p className="text-on-surface-variant text-sm font-medium mb-1">Welcome back, {firstName}</p>
-          <h2 className="text-3xl font-bold text-primary tracking-tight">Your Dashboard</h2>
+          <p className="text-on-surface-variant text-xs font-medium mb-0.5">Welcome back, {firstName}</p>
+          <h2 className="text-2xl font-bold text-primary tracking-tight">Your Dashboard</h2>
         </div>
-        <div className="bg-surface-container-lowest p-4 rounded-xl shadow-sm max-w-md border-l-4 border-primary">
-          <p className="text-sm italic text-on-surface-variant">
+        <div className="bg-surface-container-lowest p-3 rounded-xl shadow-sm border-l-4 border-primary">
+          <p className="text-xs italic text-on-surface-variant">
             "Success is the sum of small efforts, repeated day in and day out."
           </p>
-          <p className="text-xs font-bold text-primary mt-2">— Robert Collier</p>
+          <p className="text-[10px] font-bold text-primary mt-1">— Robert Collier</p>
         </div>
       </div>
 
       {/* PYQ Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {Object.entries(stats.subjectMap).map(([subject, data]) => (
-          <div key={subject} className="relative overflow-hidden bg-surface-container-lowest rounded-2xl p-5 shadow-sm border border-surface-container-high">
+          <div key={subject} className="relative overflow-hidden bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-container-high">
             <div className={cn("absolute inset-0 bg-gradient-to-br opacity-5", getSubjectGradient(subject))}></div>
             <div className="relative z-10">
-              <div className="text-2xl mb-2">{getSubjectIcon(subject)}</div>
-              <p className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1">{subject}</p>
-              <p className="text-2xl font-black text-primary">{data.count.toLocaleString()}</p>
-              <p className="text-[10px] text-on-surface-variant mt-1">{data.topics.size} Topics</p>
+              <div className="text-xl mb-1">{getSubjectIcon(subject)}</div>
+              <p className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-0.5 leading-tight">{subject}</p>
+              <p className="text-xl font-black text-primary">{data.count.toLocaleString()}</p>
+              <p className="text-[10px] text-on-surface-variant">{data.topics.size} Topics</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* Total PYQs Banner */}
-      <div className="bg-gradient-to-r from-primary to-primary-container text-white rounded-2xl p-6 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center">
-            <BookOpen size={28} />
+      <div className="bg-gradient-to-r from-primary to-primary-container text-white rounded-xl p-4 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
+            <BookOpen size={22} />
           </div>
           <div>
-            <p className="text-xs font-bold text-white/60 uppercase tracking-wider">Total PYQ Database</p>
-            <p className="text-3xl font-black">{stats.total.toLocaleString()} Questions</p>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Total PYQ Database</p>
+            <p className="text-2xl font-black">{stats.total.toLocaleString()} Questions</p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-6 text-right">
-          <div>
-            <p className="text-xs text-white/60 mb-1">Easy</p>
-            <p className="font-black text-lg">{stats.difficultyBreakdown.easy}</p>
-          </div>
-          <div className="w-px h-10 bg-white/20"></div>
-          <div>
-            <p className="text-xs text-white/60 mb-1">Medium</p>
-            <p className="font-black text-lg">{stats.difficultyBreakdown.medium}</p>
-          </div>
-          <div className="w-px h-10 bg-white/20"></div>
-          <div>
-            <p className="text-xs text-white/60 mb-1">Hard</p>
-            <p className="font-black text-lg">{stats.difficultyBreakdown.hard}</p>
-          </div>
+        <div className="hidden sm:flex items-center gap-4 text-right">
+          <div><p className="text-xs text-white/60 mb-0.5">Easy</p><p className="font-black">{stats.difficultyBreakdown.easy}</p></div>
+          <div className="w-px h-8 bg-white/20" />
+          <div><p className="text-xs text-white/60 mb-0.5">Medium</p><p className="font-black">{stats.difficultyBreakdown.medium}</p></div>
+          <div className="w-px h-8 bg-white/20" />
+          <div><p className="text-xs text-white/60 mb-0.5">Hard</p><p className="font-black">{stats.difficultyBreakdown.hard}</p></div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left Column: Daily Goals & Streak */}
         <div className="lg:col-span-1 space-y-8">
           {/* Daily Goals */}
@@ -271,14 +262,15 @@ export function Dashboard({ userName }: DashboardProps) {
                 <span>Last 30 Days</span>
                 <span>{format(subDays(today, 29), 'MMM d')} - {format(today, 'MMM d')}</span>
               </div>
-              <div className="grid grid-cols-7 gap-1.5">
-                {streakDays.map((day, i) => {
-                  const intensities = ['bg-surface-container-high', 'bg-tertiary-fixed-dim', 'bg-tertiary-fixed', 'bg-tertiary'];
-                  return (
-                    <div key={i} className={cn("aspect-square rounded-sm", intensities[day.intensity])} title={format(day.date, 'MMM d')}></div>
-                  );
-                })}
-              </div>
+              {/* Streak Calendar */}
+            <div className="grid grid-cols-10 gap-1">
+              {streakDays.map((day, i) => {
+                const intensities = ['bg-surface-container-high', 'bg-tertiary-fixed-dim', 'bg-tertiary-fixed', 'bg-tertiary'];
+                return (
+                  <div key={i} className={cn("w-full aspect-square rounded-sm", intensities[day.intensity])} title={format(day.date, 'MMM d')} />
+                );
+              })}
+            </div>
               <div className="flex justify-between items-center mt-3 text-[10px] text-on-surface-variant">
                 <span>Less</span>
                 <div className="flex gap-1">

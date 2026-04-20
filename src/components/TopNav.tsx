@@ -1,6 +1,16 @@
 import { Search, Menu, Moon, Sun } from 'lucide-react';
 import { cn } from '../lib/utils';
 
+const TAB_LABELS: Record<string, string> = {
+  dashboard:   'Dashboard',
+  practice:    'Subject Mastery',
+  papers:      'Mock Tests',
+  analytics:   'Analytics',
+  performance: 'Performance',
+  roadmap:     'Study Roadmap',
+  planner:     'Exam Planner',
+};
+
 interface TopNavProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -12,90 +22,66 @@ interface TopNavProps {
 
 export function TopNav({ activeTab, setActiveTab, setSidebarOpen, isDarkMode, setIsDarkMode, user }: TopNavProps) {
   return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 bg-surface/70 backdrop-blur-xl shadow-sm transition-colors duration-300">
-      <div className="flex items-center justify-between px-4 lg:px-8 py-3 max-w-full mx-auto">
-        <div className="flex items-center gap-4 lg:gap-8">
-          <button className="lg:hidden text-on-surface-variant" onClick={() => setSidebarOpen(true)}>
-            <Menu size={24} />
+    <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-14 bg-surface/80 backdrop-blur-xl border-b border-surface-container-high shadow-sm transition-colors duration-300">
+      <div className="flex items-center justify-between h-full px-3 sm:px-4 lg:px-8">
+        {/* Left */}
+        <div className="flex items-center gap-2 lg:gap-6 min-w-0">
+          <button
+            className="lg:hidden text-on-surface-variant p-1.5 rounded-lg hover:bg-surface-container transition-colors"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu size={22} />
           </button>
-          <span className="text-lg lg:text-xl font-bold tracking-tighter text-primary truncate max-w-[150px] lg:max-w-none">
-            {activeTab === 'analytics' ? 'Performance' : 
-             activeTab === 'dashboard' ? 'Dashboard' :
-             activeTab === 'roadmap' ? 'Study Roadmap' :
-             activeTab === 'papers' ? 'Mock Tests' : 'Subject Practice'}
+          <span className="text-base font-bold tracking-tight text-primary truncate">
+            {TAB_LABELS[activeTab] || 'Dashboard'}
           </span>
-          <nav className="hidden md:flex items-center gap-6 font-medium text-sm tracking-tight">
-            <button
-              onClick={() => setActiveTab('roadmap')}
-              className={cn(
-                "transition-colors pb-1",
-                activeTab === 'roadmap' ? "text-primary font-bold border-b-2 border-primary" : "text-on-surface-variant hover:text-primary"
-              )}
-            >
-              Roadmap
-            </button>
-            <button
-              onClick={() => setActiveTab('practice')}
-              className={cn(
-                "transition-colors pb-1",
-                activeTab === 'practice' ? "text-primary font-bold border-b-2 border-primary" : "text-on-surface-variant hover:text-primary"
-              )}
-            >
-              Practice
-            </button>
-            <button 
-              onClick={() => setActiveTab('papers')}
-              className={cn(
-                "transition-colors pb-1",
-                activeTab === 'papers' ? "text-primary font-bold border-b-2 border-primary" : "text-on-surface-variant hover:text-primary"
-              )}
-            >
-              Mock Tests
-            </button>
-            <button
-              onClick={() => setActiveTab('analytics')}
-              className={cn(
-                "transition-colors pb-1",
-                activeTab === 'analytics' ? "text-primary font-bold border-b-2 border-primary" : "text-on-surface-variant hover:text-primary"
-              )}
-            >
-              Analytics
-            </button>
+          {/* Desktop quick-nav */}
+          <nav className="hidden lg:flex items-center gap-5 font-medium text-sm">
+            {(['practice','papers','analytics','roadmap'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'transition-colors pb-0.5',
+                  activeTab === tab
+                    ? 'text-primary font-bold border-b-2 border-primary'
+                    : 'text-on-surface-variant hover:text-primary'
+                )}
+              >
+                {TAB_LABELS[tab]}
+              </button>
+            ))}
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 lg:gap-4">
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={16} />
+        {/* Right */}
+        <div className="flex items-center gap-1 lg:gap-3 shrink-0">
+          {/* Search — desktop only */}
+          <div className="relative hidden lg:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" size={15} />
             <input
               type="text"
               placeholder="Search topics..."
-              className="pl-10 pr-4 py-2 bg-surface-container-lowest border-none rounded-full text-sm w-48 lg:w-64 focus:ring-2 focus:ring-primary/20 transition-all outline-none text-on-surface"
+              className="pl-9 pr-4 py-1.5 bg-surface-container-lowest border-none rounded-full text-sm w-52 focus:ring-2 focus:ring-primary/20 outline-none text-on-surface"
             />
           </div>
-          <div className="flex items-center gap-1 lg:gap-2">
-            <button className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all active:scale-95 sm:hidden">
-              <Search size={18} />
-            </button>
-            
-            <button 
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all active:scale-95"
-              aria-label="Toggle dark mode"
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-
-            <div className="h-8 w-[1px] bg-surface-container-high mx-1 lg:mx-2"></div>
-            <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-8 h-8 rounded-full border border-surface-container bg-surface-container-lowest"
-              referrerPolicy="no-referrer"
-            />
-          </div>
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="p-2 text-on-surface-variant hover:bg-surface-container rounded-lg transition-all active:scale-95"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+          <div className="h-7 w-px bg-surface-container-high mx-0.5 lg:mx-1" />
+          <img
+            src={user.avatar}
+            alt={user.name}
+            className="w-7 h-7 lg:w-8 lg:h-8 rounded-full border border-surface-container bg-surface-container-lowest"
+            referrerPolicy="no-referrer"
+          />
         </div>
       </div>
     </header>
   );
 }
+

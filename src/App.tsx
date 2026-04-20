@@ -295,18 +295,20 @@ export default function App() {
         installPrompt={installPrompt}
         onSyncNow={forceSyncNow}
       />
-      <div className="flex-1 flex flex-col w-full lg:ml-64">
+      <div className="flex-1 flex flex-col w-full lg:ml-64 min-w-0">
         <TopNav activeTab={activeTab} setActiveTab={setActiveTab} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />
-        <main className="pt-20 px-4 lg:px-8 pb-12 min-h-screen w-full overflow-x-hidden">
-          <Suspense fallback={<TabSpinner />}>
-            {activeTab === 'dashboard'   && <Dashboard userName={user.name} />}
-            {activeTab === 'practice'    && <PracticeEngine />}
-            {activeTab === 'papers'      && <MockTests />}
-            {activeTab === 'analytics'  && <AnalyticsEngine />}
-            {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
-            {activeTab === 'roadmap'     && <StudyRoadmap />}
-            {activeTab === 'planner'     && <ExamPlanner />}
-          </Suspense>
+        <main className="pt-16 px-3 sm:px-4 lg:px-8 pb-12 w-full min-w-0 overflow-x-hidden">
+          <div className="max-w-screen-xl mx-auto">
+            <Suspense fallback={<TabSpinner />}>
+              {activeTab === 'dashboard'   && <Dashboard userName={user.name} />}
+              {activeTab === 'practice'    && <PracticeEngine />}
+              {activeTab === 'papers'      && <MockTests />}
+              {activeTab === 'analytics'  && <AnalyticsEngine />}
+              {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
+              {activeTab === 'roadmap'     && <StudyRoadmap />}
+              {activeTab === 'planner'     && <ExamPlanner />}
+            </Suspense>
+          </div>
         </main>
       </div>
     </div>
