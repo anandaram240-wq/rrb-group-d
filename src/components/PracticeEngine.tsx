@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   BookOpen, ChevronRight, CheckCircle2, XCircle,
   Search, BarChart3, Zap, Filter, Pencil, X, Save, CheckCircle
@@ -266,6 +266,20 @@ export function PracticeEngine() {
   const [showSolution, setShowSolution] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
   const [isPracticing, setIsPracticing] = useState(false);
+
+  // ── Auto-finalize if user switches tabs while practicing ──────────────────
+  // Store isPracticing in a ref so the cleanup can read the latest value
+  const isPracticingRef = useRef(false);
+  useEffect(() => { isPracticingRef.current = isPracticing; }, [isPracticing]);
+
+  useEffect(() => {
+    return () => {
+      // Component unmounting (user left via sidebar) — save whatever was answered
+      if (isPracticingRef.current) {
+        finalizeSession();
+      }
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const topics = selectedSubject ? Object.keys(syllabus[selectedSubject] || {}) : [];
 
