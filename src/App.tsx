@@ -41,6 +41,10 @@ export default function App() {
   const [showInstallBanner, setShowInstallBanner] = useState(false);
   const installDismissed = useRef(false);
 
+  // PWA update
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const waitingSWRef = useRef<ServiceWorker | null>(null);
+
   const [user, setUser] = useState<UserProfile | null>(() => {
     const saved = localStorage.getItem('rrb_user');
     if (saved) try { return JSON.parse(saved); } catch { return null; }
@@ -81,6 +85,39 @@ export default function App() {
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
+
+  // PWA update detection
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    navigator.serviceWorker.ready.then(reg => {
+      // Check immediately if a SW is already waiting
+      if (reg.waiting) {
+        waitingSWRef.current = reg.waiting;
+        setUpdateAvailable(true);
+      }
+      // Listen for future updates
+      reg.addEventListener('updatefound', () => {
+        const newSW = reg.installing;
+        if (!newSW) return;
+        newSW.addEventListener('statechange', () => {
+          if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
+            waitingSWRef.current = newSW;
+            setUpdateAvailable(true);
+          }
+        });
+      });
+    });
+    // When SW activates a new version, reload this page
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) { refreshing = true; window.location.reload(); }
+    });
+  }, []);
+
+  const handleUpdate = () => {
+    waitingSWRef.current?.postMessage({ type: 'SKIP_WAITING' });
+  };
+
 
   const handleInstall = async () => {
     if (!installPrompt) return;
@@ -191,6 +228,60 @@ export default function App() {
               padding: '2px 4px', flexShrink: 0,
             }}
           >×</button>
+        </div>
+      )}
+
+      {/* ── 🆕 Update Available Banner ────────────────────────── */}
+      {updateAvailable && (
+        <div style={{
+          position: 'fixed', bottom: showInstallBanner ? 100 : 20,
+          left: '50%', transform: 'translateX(-50%)',
+          zIndex: 9997, maxWidth: 400, width: 'calc(100% - 32px)',
+          background: 'linear-gradient(135deg, #065f46, #059669)',
+          borderRadius: 18, padding: '14px 16px',
+          display: 'flex', alignItems: 'center', gap: 12,
+          boxShadow: '0 8px 40px rgba(5,150,105,0.45), 0 0 0 1px rgba(255,255,255,0.15)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          backdropFilter: 'blur(12px)',
+          animation: 'slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+          {/* Pulse dot */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: 12,
+              background: 'rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 20,
+            }}>🚀</div>
+            <div style={{
+              position: 'absolute', top: -3, right: -3,
+              width: 10, height: 10, borderRadius: '50%',
+              background: '#fbbf24',
+              boxShadow: '0 0 0 0 rgba(251,191,36,0.4)',
+              animation: 'pulseDot 1.5s infinite',
+            }} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ color: '#fff', fontWeight: 800, fontSize: 13, margin: 0 }}>
+              New Version Available!
+            </p>
+            <p style={{ color: '#a7f3d0', fontSize: 11, margin: '3px 0 0' }}>
+              Questions, fixes & improvements ready to install
+            </p>
+          </div>
+          <button
+            onClick={handleUpdate}
+            style={{
+              background: 'linear-gradient(135deg,#fbbf24,#f59e0b)',
+              color: '#1a1a1a', fontWeight: 800,
+              fontSize: 12, border: 'none', borderRadius: 10,
+              padding: '9px 14px', cursor: 'pointer', flexShrink: 0,
+              boxShadow: '0 2px 12px rgba(251,191,36,0.5)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            ⬆️ Update Now
+          </button>
         </div>
       )}
 
