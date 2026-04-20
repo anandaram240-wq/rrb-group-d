@@ -157,7 +157,7 @@ function LiveSessionBanner() {
       else setLive(null);
     };
     check();
-    const id = setInterval(check, 2000); // refresh every 2 sec
+    const id = setInterval(check, 5000); // refresh every 5 sec (was 2s)
     return () => clearInterval(id);
   }, []);
 
@@ -190,7 +190,7 @@ export default function PerformanceTracker({ onNavigateTo }: PerformanceTrackerP
   const [data, setData] = useState<PerformanceData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Reload from storage every 3 seconds to pick up live data
+  // Instant update: listen for custom event fired by finalizeSession/saveTestResult
   useEffect(() => {
     const load = async () => {
       try {
@@ -202,9 +202,28 @@ export default function PerformanceTracker({ onNavigateTo }: PerformanceTrackerP
         setLoading(false);
       }
     };
+
+    // Initial load
     load();
-    const id = setInterval(load, 3000);
-    return () => clearInterval(id);
+
+    // Instant refresh when any session is saved (0ms latency)
+    const onPerfUpdated = () => load();
+    window.addEventListener('rrb_perf_updated', onPerfUpdated);
+
+    // Cross-tab sync via storage event
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'rrb_performance_data') load();
+    };
+    window.addEventListener('storage', onStorage);
+
+    // Safety-net: lightweight 30s poll (catches edge cases)
+    const id = setInterval(load, 30_000);
+
+    return () => {
+      window.removeEventListener('rrb_perf_updated', onPerfUpdated);
+      window.removeEventListener('storage', onStorage);
+      clearInterval(id);
+    };
   }, []);
 
   if (loading) return <LoadingSkeleton />;

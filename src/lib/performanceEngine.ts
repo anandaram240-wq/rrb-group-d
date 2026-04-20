@@ -345,6 +345,9 @@ export function finalizeSession(totalQuestions?: number): void {
   writeData(data);
   clearLiveSession();
 
+  // ── Notify UI instantly (0ms) ─────────────────────────────────────
+  window.dispatchEvent(new CustomEvent('rrb_perf_updated'));
+
   // Push to cloud non-blocking
   const email = getCurrentEmail();
   if (email) pushToCloud(email, data);
@@ -371,6 +374,8 @@ export async function saveTestResult(result: TestResult): Promise<void> {
   data.tests.push(result);
   recalcOverall(data);
   writeData(data);
+  // Notify UI instantly
+  window.dispatchEvent(new CustomEvent('rrb_perf_updated'));
   const email = getCurrentEmail();
   if (email) pushToCloud(email, data);
 }

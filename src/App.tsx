@@ -1,17 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
-import { Dashboard } from './components/Dashboard';
-import { PracticeEngine } from './components/PracticeEngine';
-import { MockTests } from './components/MockTests';
-import { AnalyticsEngine } from './components/AnalyticsEngine';
-import PerformanceTracker from './components/PerformanceTracker';
-import { LoginScreen } from './components/LoginScreen';
-import { StudyRoadmap } from './components/StudyRoadmap';
-import { ExamPlanner } from './components/ExamPlanner';
 import { syncOnLogin, onSyncStatusChange, type SyncStatus } from './lib/performanceEngine';
 import pyqsData from './data/pyqs.json';
+
+// ── Lazy-loaded tab components (code-split: loads only what's needed) ──────────
+const Dashboard         = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const PracticeEngine    = lazy(() => import('./components/PracticeEngine').then(m => ({ default: m.PracticeEngine })));
+const MockTests         = lazy(() => import('./components/MockTests').then(m => ({ default: m.MockTests })));
+const AnalyticsEngine   = lazy(() => import('./components/AnalyticsEngine').then(m => ({ default: m.AnalyticsEngine })));
+const PerformanceTracker= lazy(() => import('./components/PerformanceTracker'));
+const LoginScreen       = lazy(() => import('./components/LoginScreen').then(m => ({ default: m.LoginScreen })));
+const StudyRoadmap      = lazy(() => import('./components/StudyRoadmap').then(m => ({ default: m.StudyRoadmap })));
+const ExamPlanner       = lazy(() => import('./components/ExamPlanner').then(m => ({ default: m.ExamPlanner })));
+
+// ── Tiny tab fallback spinner ──────────────────────────────────────────────────
+function TabSpinner() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 interface UserProfile {
   name: string;
@@ -103,7 +114,11 @@ export default function App() {
     localStorage.removeItem('rrb_user');
   };
 
-  if (!user) return <LoginScreen onLogin={handleLogin} />;
+  if (!user) return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <LoginScreen onLogin={handleLogin} />
+    </Suspense>
+  );
 
   return (
     <div className="min-h-screen bg-surface text-on-surface font-sans antialiased flex transition-colors duration-300">
@@ -183,13 +198,15 @@ export default function App() {
       <div className="flex-1 flex flex-col w-full lg:ml-64">
         <TopNav activeTab={activeTab} setActiveTab={setActiveTab} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />
         <main className="pt-20 px-4 lg:px-8 pb-12 min-h-screen w-full overflow-x-hidden">
-          {activeTab === 'dashboard'   && <Dashboard userName={user.name} />}
-          {activeTab === 'practice'    && <PracticeEngine />}
-          {activeTab === 'papers'      && <MockTests />}
-          {activeTab === 'analytics'   && <AnalyticsEngine />}
-          {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
-          {activeTab === 'roadmap'     && <StudyRoadmap />}
-          {activeTab === 'planner'     && <ExamPlanner />}
+          <Suspense fallback={<TabSpinner />}>
+            {activeTab === 'dashboard'   && <Dashboard userName={user.name} />}
+            {activeTab === 'practice'    && <PracticeEngine />}
+            {activeTab === 'papers'      && <MockTests />}
+            {activeTab === 'analytics'  && <AnalyticsEngine />}
+            {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
+            {activeTab === 'roadmap'     && <StudyRoadmap />}
+            {activeTab === 'planner'     && <ExamPlanner />}
+          </Suspense>
         </main>
       </div>
     </div>
