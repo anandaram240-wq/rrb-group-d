@@ -1,5 +1,6 @@
-import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, Map, CalendarDays, BarChart2 } from 'lucide-react';
+import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, Map, CalendarDays, BarChart2, Download, CloudUpload, CheckCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { useState } from 'react';
 
 interface SidebarProps {
   activeTab: string;
@@ -8,9 +9,33 @@ interface SidebarProps {
   setIsOpen: (isOpen: boolean) => void;
   user: { name: string; email: string; avatar: string };
   onLogout: () => void;
+  installPrompt?: any;           // BeforeInstallPromptEvent
+  onSyncNow?: () => Promise<void>; // force cloud sync
 }
 
-export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout, installPrompt, onSyncNow }: SidebarProps) {
+  const [syncing, setSyncing] = useState(false);
+  const [syncDone, setSyncDone] = useState(false);
+
+  const handleSyncNow = async () => {
+    if (!onSyncNow || syncing) return;
+    setSyncing(true);
+    setSyncDone(false);
+    await onSyncNow();
+    setSyncing(false);
+    setSyncDone(true);
+    setTimeout(() => setSyncDone(false), 3000);
+  };
+
+  const handleInstall = () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+    } else {
+      // iOS / already installed — show guidance
+      alert('📲 To install on iPhone/iPad: tap the Share button → "Add to Home Screen"\n\nOn Android Chrome: tap menu (⋮) → "Add to Home Screen" or "Install App"');
+    }
+  };
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'roadmap', label: 'Study Roadmap', icon: Map },
@@ -91,6 +116,30 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
               </div>
             </div>
           </div>
+
+          {/* ── Install App Button (always shown) ────────── */}
+          <button
+            onClick={handleInstall}
+            className="w-full flex items-center gap-3 px-4 py-2.5 mb-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-bold transition-all hover:from-blue-700 hover:to-indigo-700 active:scale-95 shadow-sm"
+          >
+            <Download size={16} />
+            📲 Install App
+          </button>
+
+          {/* ── Sync Now Button ────────────────────────────── */}
+          <button
+            onClick={handleSyncNow}
+            disabled={syncing}
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-2.5 mb-3 rounded-xl text-sm font-bold transition-all active:scale-95 shadow-sm",
+              syncDone
+                ? "bg-green-500 text-white"
+                : "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600"
+            )}
+          >
+            {syncDone ? <CheckCircle size={16} /> : <CloudUpload size={16} className={syncing ? 'animate-pulse' : ''} />}
+            {syncing ? '⏳ Syncing...' : syncDone ? '✅ Synced!' : '☁️ Sync Now'}
+          </button>
 
           <div className="space-y-1">
             <button 

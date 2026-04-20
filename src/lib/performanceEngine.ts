@@ -381,3 +381,30 @@ export async function saveTestResult(result: TestResult): Promise<void> {
 }
 
 export { recalcOverall as recalculateOverall };
+
+/**
+ * FORCE SYNC — push ALL local data to Firestore immediately.
+ * Called by the "Sync Now" button. Always resolves, never throws.
+ */
+export async function forceSyncNow(): Promise<boolean> {
+  const email = getCurrentEmail();
+  if (!email) { console.warn('[ForceSync] No user email found'); return false; }
+
+  setSyncStatus('syncing');
+  const local = readData();
+
+  // Also pull from cloud first to avoid overwriting newer cloud data
+  const cloud = await pullFromCloud(email);
+  const merged = cloud ? mergeData(local, cloud) : local;
+  writeData(merged);
+
+  const ok = await pushToCloud(email, merged);
+  setSyncStatus(ok ? 'success' : 'error');
+
+  // Notify UI instantly
+  window.dispatchEvent(new CustomEvent('rrb_perf_updated'));
+
+  console.log(`[ForceSync] ${ok ? '✅ Success' : '❌ Failed'} — ${merged.tests.length} tests`);
+  if (ok) setTimeout(() => setSyncStatus('idle'), 3000);
+  return ok;
+}

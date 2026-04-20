@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
-import { syncOnLogin, onSyncStatusChange, type SyncStatus } from './lib/performanceEngine';
+import { syncOnLogin, onSyncStatusChange, forceSyncNow, type SyncStatus } from './lib/performanceEngine';
 import pyqsData from './data/pyqs.json';
 
 // ── Lazy-loaded tab components (code-split: loads only what's needed) ──────────
@@ -285,7 +285,16 @@ export default function App() {
         </div>
       )}
 
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} isOpen={sidebarOpen} setIsOpen={setSidebarOpen} user={user} onLogout={handleLogout} />
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isOpen={sidebarOpen}
+        setIsOpen={setSidebarOpen}
+        user={user}
+        onLogout={handleLogout}
+        installPrompt={installPrompt}
+        onSyncNow={forceSyncNow}
+      />
       <div className="flex-1 flex flex-col w-full lg:ml-64">
         <TopNav activeTab={activeTab} setActiveTab={setActiveTab} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />
         <main className="pt-20 px-4 lg:px-8 pb-12 min-h-screen w-full overflow-x-hidden">
