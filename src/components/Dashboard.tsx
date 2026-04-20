@@ -9,6 +9,7 @@ interface PYQ {
   id: number;
   subject: string;
   topic: string;
+  branch?: string;
   question: string;
   options: string[];
   correctAnswer: number;

@@ -7,6 +7,7 @@ interface PYQ {
   id: number;
   subject: string;
   topic: string;
+  branch?: string;
   sub_topic?: string;
   difficulty?: string;
   exam_year?: string;
@@ -218,7 +219,7 @@ export function SubjectDistribution() {
       <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
           <span className="font-semibold text-gray-700">Exam Years in Dataset:</span>
-          {['2018', '2019', '2021', '2022'].map(yr => {
+          {['2018', '2025', '2026'].map(yr => {
             const cnt = allQuestions.filter(q => q.exam_year === yr).length;
             return cnt > 0 ? (
               <span key={yr} className="flex items-center gap-1">

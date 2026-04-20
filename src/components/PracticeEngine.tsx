@@ -1,15 +1,15 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { BookOpen, ChevronRight, CheckCircle2, XCircle, Search, BarChart3, Zap, Filter } from 'lucide-react';
 import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
-import { startLiveSession, trackAnswer, finalizeSession } from '../lib/performanceEngine';
 import pyqsData from '../data/pyqs.json';
 
 interface PYQ {
   id: number;
   subject: string;
   topic: string;
+  branch?: string;
   question: string;
   options: string[];
   correctAnswer: number;
@@ -24,27 +24,7 @@ interface PYQ {
 
 export function PracticeEngine() {
   const allQuestions = pyqsData as PYQ[];
-
-  // ── ALL useState FIRST (React rules of hooks) ──────────────────────────────
-  const subjects = useMemo(() => {
-    const subjs: string[] = [];
-    allQuestions.forEach(q => { if (!subjs.includes(q.subject)) subjs.push(q.subject); });
-    return subjs;
-  }, [allQuestions]);
-
-  const [selectedSubject, setSelectedSubject] = useState(() => subjects[0] || '');
-  const [selectedTopic, setSelectedTopic] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [difficultyFilter, setDifficultyFilter] = useState('all');
-  const [yearFilter, setYearFilter] = useState('all');
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showSolution, setShowSolution] = useState(false);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
-  const [isPracticing, setIsPracticing] = useState(false);
-  const practiceStartTime = useRef<number>(Date.now());
-
-  // ── useMemo AFTER state declarations ──────────────────────────────────────
+  
   // Build dynamic syllabus from actual data
   const syllabus = useMemo(() => {
     const map: Record<string, Record<string, number>> = {};
@@ -56,24 +36,28 @@ export function PracticeEngine() {
     return map;
   }, [allQuestions]);
 
-  // Questions filtered by year+difficulty only (NOT topic) — drives topic card counts
-  const baseFilteredQuestions = useMemo(() => {
-    let qs = allQuestions.filter(q => q.subject === selectedSubject);
-    if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
-    if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
-    return qs;
-  }, [allQuestions, selectedSubject, difficultyFilter, yearFilter]);
+  const subjects = Object.keys(syllabus);
+  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '');
+  const [selectedTopic, setSelectedTopic] = useState('all');
 
-  // Only show topics that have questions matching current year+difficulty filters
-  const topics = useMemo(() => {
-    if (!selectedSubject) return [];
-    const topicSet = new Set(baseFilteredQuestions.map(q => q.topic));
-    return Object.keys(syllabus[selectedSubject] || {}).filter(t => topicSet.has(t));
-  }, [selectedSubject, syllabus, baseFilteredQuestions]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState('all');
+  const [yearFilter, setYearFilter] = useState('all');
+  const [branchFilter, setBranchFilter] = useState('all');
+  
+  // Practice state
+  const [currentQIndex, setCurrentQIndex] = useState(0);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showSolution, setShowSolution] = useState(false);
+  const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
+  const [isPracticing, setIsPracticing] = useState(false);
+
+  const topics = selectedSubject ? Object.keys(syllabus[selectedSubject] || {}) : [];
 
   // Filter questions
   const filteredQuestions = useMemo(() => {
     let qs = allQuestions.filter(q => q.subject === selectedSubject);
+    if (branchFilter !== 'all') qs = qs.filter(q => q.branch === branchFilter);
     if (selectedTopic !== 'all') qs = qs.filter(q => q.topic === selectedTopic);
     if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
     if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
@@ -82,10 +66,10 @@ export function PracticeEngine() {
       qs = qs.filter(q => q.question.toLowerCase().includes(query));
     }
     return qs;
-  }, [allQuestions, selectedSubject, selectedTopic, difficultyFilter, yearFilter, searchQuery]);
+  }, [allQuestions, selectedSubject, selectedTopic, branchFilter, difficultyFilter, yearFilter, searchQuery]);
 
   const currentQ = filteredQuestions[currentQIndex];
-
+  
   const stats = useMemo(() => {
     const answered = Object.keys(answeredQuestions).length;
     const correct = Object.values(answeredQuestions).filter(a => a.correct).length;
@@ -97,8 +81,6 @@ export function PracticeEngine() {
     setSelectedAnswer(idx);
     const isCorrect = idx === currentQ.correctAnswer;
     setAnsweredQuestions(prev => ({ ...prev, [currentQ.id]: { selected: idx, correct: isCorrect } }));
-    // ── REAL-TIME SAVE: every single answer click → localStorage immediately ──
-    trackAnswer(currentQ.id, currentQ.subject, currentQ.topic, isCorrect);
   };
 
   const handleNext = () => {
@@ -118,20 +100,11 @@ export function PracticeEngine() {
   };
 
   const startPractice = () => {
-    // Start a new live session — tracked from this moment
-    startLiveSession('Subject Practice', selectedSubject, selectedTopic === 'all' ? 'All' : selectedTopic);
-    practiceStartTime.current = Date.now();
     setIsPracticing(true);
     setCurrentQIndex(0);
     setSelectedAnswer(null);
     setShowSolution(false);
     setAnsweredQuestions({});
-  };
-
-  const exitPractice = () => {
-    // Finalize and save the live session — all answers already saved in real-time
-    finalizeSession(filteredQuestions.length);
-    setIsPracticing(false);
   };
 
   const getSubjectColor = (subject: string) => {
@@ -167,8 +140,8 @@ export function PracticeEngine() {
         {/* Practice Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <button
-              onClick={exitPractice}
+            <button 
+              onClick={() => setIsPracticing(false)}
               className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"
             >
               <ChevronRight size={18} className="rotate-180 text-primary" />
@@ -202,67 +175,7 @@ export function PracticeEngine() {
 
         {/* Question Card */}
         <div className="bg-surface-container-lowest rounded-2xl shadow-sm border border-surface-container-high overflow-hidden">
-
-          {/* ── Metadata Banner: Date | Shift | Year ─────────────────────── */}
-          {currentQ.exam_year && (
-            <div className={cn(
-              "flex items-center gap-0 border-b text-xs font-bold tracking-wide overflow-hidden",
-              currentQ.source?.includes('2018')
-                ? "bg-amber-50 border-amber-200"
-                : "bg-primary/5 border-primary/15"
-            )}>
-              {/* Date pill */}
-              {currentQ.exam_date && (
-                <div className={cn(
-                  "flex items-center gap-1.5 px-4 py-2.5 border-r",
-                  currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
-                )}>
-                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                  </svg>
-                  <span>{currentQ.exam_date}</span>
-                </div>
-              )}
-              {/* Shift pill */}
-              {currentQ.shift && (
-                <div className={cn(
-                  "flex items-center gap-1.5 px-4 py-2.5 border-r",
-                  currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
-                )}>
-                  <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  <span>{currentQ.shift}</span>
-                </div>
-              )}
-              {/* Year pill */}
-              <div className={cn(
-                "flex items-center gap-1.5 px-4 py-2.5 border-r",
-                currentQ.source?.includes('2018') ? "border-amber-200 text-amber-800" : "border-primary/15 text-primary"
-              )}>
-                <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                  <path d="M2 17l10 5 10-5" />
-                  <path d="M2 12l10 5 10-5" />
-                </svg>
-                <span>RRB Group D {currentQ.exam_year}</span>
-              </div>
-              {/* 2018 badge */}
-              {currentQ.source?.includes('2018') && (
-                <div className="ml-auto px-4 py-2.5 text-amber-700 flex items-center gap-1.5">
-                  <span>📋</span>
-                  <span>Official PYQ</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Question counter + difficulty + topic ──────────────────────── */}
-          <div className="px-6 py-3 border-b border-surface-container bg-surface-container-low/30 flex justify-between items-center">
+          <div className="p-6 border-b border-surface-container bg-surface-container-low/30 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <span className="bg-primary text-white px-3 py-1 rounded-lg text-sm font-bold">
                 Q {currentQIndex + 1} / {filteredQuestions.length}
@@ -270,8 +183,18 @@ export function PracticeEngine() {
               <span className={cn("px-2 py-0.5 rounded text-[10px] font-bold uppercase", getDifficultyColor(currentQ.difficulty))}>
                 {currentQ.difficulty}
               </span>
+              {currentQ.exam_year && (
+                <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded">
+                  {currentQ.exam_date ? currentQ.exam_date : currentQ.exam_year} • {currentQ.shift}
+                </span>
+              )}
+              {currentQ.source && currentQ.source.includes('2018') && (
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
+                  📋 2018 Official PYQ
+                </span>
+              )}
             </div>
-            <span className="text-xs font-medium text-on-surface-variant">{currentQ.subject} › {currentQ.topic}</span>
+            <span className="text-xs font-medium text-on-surface-variant">{currentQ.topic}</span>
           </div>
 
           <div className="p-8">
@@ -298,8 +221,8 @@ export function PracticeEngine() {
                     <span className={cn(
                       "w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0",
                       selectedAnswer !== null && idx === currentQ.correctAnswer ? "bg-tertiary text-white" :
-                        selectedAnswer !== null && idx === selectedAnswer ? "bg-error text-white" :
-                          "bg-surface-container text-on-surface-variant"
+                      selectedAnswer !== null && idx === selectedAnswer ? "bg-error text-white" :
+                      "bg-surface-container text-on-surface-variant"
                     )}>
                       {String.fromCharCode(65 + idx)}
                     </span>
@@ -354,7 +277,7 @@ export function PracticeEngine() {
         <div>
           <h2 className="text-3xl font-bold text-primary tracking-tight">Practice Engine</h2>
           <p className="text-on-surface-variant text-sm mt-2">
-            {allQuestions.length.toLocaleString()} Real PYQs (2018, 2022, 2025-2026) • Subject → Topic drill-down
+            {allQuestions.length.toLocaleString()} Real PYQs (2018–2026) • Subject → Topic drill-down
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -374,17 +297,9 @@ export function PracticeEngine() {
       {/* Subject Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {subjects.map(subject => {
-          // Count respects year+difficulty filters for the badge
-          const filteredCount = (() => {
-            let qs = allQuestions.filter(q => q.subject === subject);
-            if (difficultyFilter !== 'all') qs = qs.filter(q => q.difficulty === difficultyFilter);
-            if (yearFilter !== 'all') qs = qs.filter(q => q.exam_year === yearFilter);
-            return qs.length;
-          })();
-          const totalCount = allQuestions.filter(q => q.subject === subject).length;
+          const count = allQuestions.filter(q => q.subject === subject).length;
           const topicCount = Object.keys(syllabus[subject]).length;
           const isActive = selectedSubject === subject;
-          const hasFilter = yearFilter !== 'all' || difficultyFilter !== 'all';
 
           return (
             <button
@@ -392,11 +307,12 @@ export function PracticeEngine() {
               onClick={() => {
                 setSelectedSubject(subject);
                 setSelectedTopic('all');
+                setBranchFilter('all');
               }}
               className={cn(
                 "relative overflow-hidden rounded-2xl p-5 text-left transition-all duration-300 border-2",
-                isActive
-                  ? "border-primary shadow-lg scale-[1.02]"
+                isActive 
+                  ? "border-primary shadow-lg scale-[1.02]" 
                   : "border-transparent shadow-sm hover:shadow-md hover:scale-[1.01]"
               )}
             >
@@ -404,13 +320,7 @@ export function PracticeEngine() {
               <div className="relative z-10">
                 <div className="text-3xl mb-3">{getSubjectIcon(subject)}</div>
                 <h3 className="font-bold text-primary text-sm mb-1">{subject}</h3>
-                <p className="text-xs text-on-surface-variant">
-                  {hasFilter ? (
-                    <><span className="font-bold text-primary">{filteredCount.toLocaleString()}</span> / {totalCount.toLocaleString()} PYQs • {topicCount} Topics</>
-                  ) : (
-                    <>{totalCount.toLocaleString()} PYQs • {topicCount} Topics</>
-                  )}
-                </p>
+                <p className="text-xs text-on-surface-variant">{count.toLocaleString()} PYQs • {topicCount} Topics</p>
               </div>
               {isActive && (
                 <div className="absolute top-3 right-3 w-3 h-3 bg-primary rounded-full animate-pulse"></div>
@@ -428,6 +338,27 @@ export function PracticeEngine() {
               <Filter size={16} /> Filters
             </h3>
 
+            {/* Branch Filter (Science only) */}
+            {selectedSubject === 'General Science' && (
+              <div className="mb-4">
+                <label className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 block">🔬 Branch</label>
+                <div className="flex gap-2 flex-wrap">
+                  {['all', 'Physics', 'Chemistry', 'Biology'].map(b => (
+                    <button
+                      key={b}
+                      onClick={() => { setBranchFilter(b); setSelectedTopic('all'); }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-bold transition-colors",
+                        branchFilter === b ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant hover:bg-surface-container-high"
+                      )}
+                    >
+                      {b === 'all' ? 'All' : b}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Topic Filter */}
             <div className="mb-4">
               <label className="text-[10px] font-bold text-on-surface-variant uppercase mb-2 block">Topic</label>
@@ -436,11 +367,14 @@ export function PracticeEngine() {
                 value={selectedTopic}
                 onChange={e => { setSelectedTopic(e.target.value); }}
               >
-                <option value="all">All Topics ({baseFilteredQuestions.length})</option>
-                {topics.map(topic => {
-                  const count = baseFilteredQuestions.filter(q => q.topic === topic).length;
-                  return <option key={topic} value={topic}>{topic} ({count})</option>;
-                })}
+                <option value="all">All Topics ({allQuestions.filter(q => q.subject === selectedSubject && (branchFilter === 'all' || q.branch === branchFilter)).length})</option>
+                {topics
+                  .filter(topic => branchFilter === 'all' || allQuestions.some(q => q.subject === selectedSubject && q.topic === topic && q.branch === branchFilter))
+                  .map(topic => {
+                    const count = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic && (branchFilter === 'all' || q.branch === branchFilter)).length;
+                    return <option key={topic} value={topic}>{topic} ({count})</option>;
+                  })
+                }
               </select>
             </div>
 
@@ -470,14 +404,14 @@ export function PracticeEngine() {
               <select
                 className="w-full bg-surface-container p-2 rounded-lg text-sm border-none focus:ring-2 focus:ring-primary outline-none"
                 value={yearFilter}
-                onChange={e => { setYearFilter(e.target.value); setSelectedTopic('all'); }}
+                onChange={e => setYearFilter(e.target.value)}
               >
-                <option value="all">All Years ({allQuestions.filter(q => q.subject === selectedSubject).length} Qs)</option>
+                <option value="all">All Years</option>
                 {[...new Set(allQuestions.filter(q => q.subject === selectedSubject).map(q => q.exam_year))]
                   .sort((a, b) => b.localeCompare(a))
                   .map(yr => {
                     const count = allQuestions.filter(q => q.subject === selectedSubject && q.exam_year === yr).length;
-                    return <option key={yr} value={yr}>{yr} — {count} Qs</option>;
+                    return <option key={yr} value={yr}>{yr} ({count} Qs)</option>;
                   })
                 }
               </select>
@@ -504,47 +438,34 @@ export function PracticeEngine() {
           )}
         </div>
 
-        {/* Topic Cards — counts always match active year+difficulty filter */}
+        {/* Topic Cards */}
         <div className="lg:col-span-3">
-          {topics.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant">
-              <span className="text-5xl mb-4">🔍</span>
-              <p className="font-bold text-primary">No questions match the selected filters</p>
-              <p className="text-sm mt-1">Try selecting a different year or difficulty</p>
-            </div>
-          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {topics.map(topic => {
-              // Counts respect year + difficulty filters
-              const topicQs = baseFilteredQuestions.filter(q => q.topic === topic);
-              const allTopicQs = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic);
+              const topicQs = allQuestions.filter(q => q.subject === selectedSubject && q.topic === topic);
               const easy = topicQs.filter(q => q.difficulty === 'easy').length;
               const medium = topicQs.filter(q => q.difficulty === 'medium').length;
               const hard = topicQs.filter(q => q.difficulty === 'hard').length;
               const isSelected = selectedTopic === topic;
-              const hasFilter = yearFilter !== 'all' || difficultyFilter !== 'all';
 
               return (
                 <div
                   key={topic}
-                  onClick={() => setSelectedTopic(topic)}
+                  onClick={() => {
+                    setSelectedTopic(topic);
+                  }}
                   className={cn(
                     "bg-surface-container-lowest rounded-xl p-5 shadow-sm border-2 cursor-pointer transition-all hover:shadow-md",
                     isSelected ? "border-primary bg-primary/[0.02]" : "border-surface-container-high hover:border-primary/30"
                   )}
                 >
                   <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-bold text-primary text-sm leading-snug flex-1 pr-2">{topic}</h4>
-                    <div className="text-right shrink-0">
-                      <span className="text-lg font-black text-primary">{topicQs.length}</span>
-                      {hasFilter && topicQs.length !== allTopicQs.length && (
-                        <p className="text-[9px] text-on-surface-variant">of {allTopicQs.length}</p>
-                      )}
-                    </div>
+                    <h4 className="font-bold text-primary text-sm">{topic}</h4>
+                    <span className="text-lg font-black text-primary">{topicQs.length}</span>
                   </div>
-
+                  
                   <p className="text-[10px] text-on-surface-variant mb-3">
-                    {topicQs.length} {hasFilter && yearFilter !== 'all' ? `${yearFilter} ` : ''}Questions
+                    {topicQs.length} Questions
                   </p>
 
                   {/* Difficulty Bar */}
