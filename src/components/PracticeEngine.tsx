@@ -7,6 +7,11 @@ import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
 import pyqsData from '../data/pyqs.json';
+import {
+  startLiveSession,
+  trackAnswer,
+  finalizeSession,
+} from '../lib/performanceEngine';
 
 interface PYQ {
   id: number;
@@ -298,6 +303,8 @@ export function PracticeEngine() {
     setSelectedAnswer(idx);
     const isCorrect = idx === currentQ.correctAnswer;
     setAnsweredQuestions(prev => ({ ...prev, [currentQ.id]: { selected: idx, correct: isCorrect } }));
+    // ── Track this answer in the live session ──────────────────────────────
+    trackAnswer(currentQ.id, currentQ.subject, currentQ.topic, isCorrect);
   };
 
   const handleNext = () => {
@@ -317,11 +324,19 @@ export function PracticeEngine() {
   };
 
   const startPractice = () => {
+    // ── Start a new performance-tracking session ───────────────────────────
+    startLiveSession('Subject Practice', selectedSubject, selectedTopic === 'all' ? 'All Topics' : selectedTopic);
     setIsPracticing(true);
     setCurrentQIndex(0);
     setSelectedAnswer(null);
     setShowSolution(false);
     setAnsweredQuestions({});
+  };
+
+  const exitPractice = () => {
+    // ── Finalize & save session to performance engine ─────────────────────
+    finalizeSession();
+    setIsPracticing(false);
   };
 
   const getSubjectColor = (subject: string) => {
@@ -370,7 +385,7 @@ export function PracticeEngine() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsPracticing(false)}
+                onClick={exitPractice}
                 className="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"
               >
                 <ChevronRight size={18} className="rotate-180 text-primary" />
