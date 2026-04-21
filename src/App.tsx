@@ -3,6 +3,7 @@ import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
 import { syncOnLogin, onSyncStatusChange, forceSyncNow, type SyncStatus } from './lib/performanceEngine';
+import { syncPlannerOnLogin, forceSyncPlanner } from './lib/plannerSync';
 import pyqsData from './data/pyqs.json';
 
 // ── Lazy-loaded tab components (code-split: loads only what's needed) ──────────
@@ -135,15 +136,19 @@ export default function App() {
     localStorage.setItem('pwa_install_dismissed', '1');
   };
 
-  // On app load: if user is already saved, sync their cloud data immediately
+  // On app load: sync both performance + planner data
   useEffect(() => {
-    if (user?.email) syncOnLogin(user.email);
+    if (user?.email) {
+      syncOnLogin(user.email);
+      syncPlannerOnLogin();
+    }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogin = async (profile: UserProfile) => {
     setUser(profile);
     localStorage.setItem('rrb_user', JSON.stringify(profile));
     syncOnLogin(profile.email);
+    syncPlannerOnLogin(); // ← pull planner data on login
   };
 
   const handleLogout = () => {
@@ -293,7 +298,9 @@ export default function App() {
         user={user}
         onLogout={handleLogout}
         installPrompt={installPrompt}
-        onSyncNow={forceSyncNow}
+        onSyncNow={async () => {
+          await Promise.all([forceSyncNow(), forceSyncPlanner()]);
+        }}
       />
       <div className="flex-1 flex flex-col w-full lg:ml-64 min-w-0">
         <TopNav activeTab={activeTab} setActiveTab={setActiveTab} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />

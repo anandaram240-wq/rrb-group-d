@@ -12,6 +12,8 @@ import {
   ListTodo, Trophy, BarChart3, AlertCircle,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { schedulePlannerSync } from '../lib/plannerSync';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Setup {
@@ -50,19 +52,19 @@ function dateKey(d: Date) { return d.toISOString().slice(0, 10); }
 function daysBetween(a: Date, b: Date) { return Math.round((b.getTime() - a.getTime()) / 86400000); }
 
 const SUBJECT_COLORS: Record<string, string> = {
-  'Mathematics':       '#3b82f6',
-  'Reasoning':         '#8b5cf6',
-  'General Science':   '#10b981',
+  'Mathematics': '#3b82f6',
+  'Reasoning': '#8b5cf6',
+  'General Science': '#10b981',
   'General Awareness': '#f59e0b',
-  'Revision':          '#6366f1',
-  'Mock Test':         '#ef4444',
-  'Other':             '#64748b',
+  'Revision': '#6366f1',
+  'Mock Test': '#ef4444',
+  'Other': '#64748b',
 };
 
 const PRIORITY_META = {
-  high:   { label: 'High',   color: 'text-red-600',   bg: 'bg-red-50 border-red-200' },
+  high: { label: 'High', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
   medium: { label: 'Medium', color: 'text-amber-600', bg: 'bg-amber-50 border-amber-200' },
-  low:    { label: 'Low',    color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
+  low: { label: 'Low', color: 'text-green-600', bg: 'bg-green-50 border-green-200' },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -73,14 +75,17 @@ function accuracyColor(pct: number) {
 }
 
 // ─── Storage Keys ─────────────────────────────────────────────────────────────
-const SETUP_KEY  = 'rrb_setup';
-const TASKS_KEY  = 'rrb_tasks';
-const LOGS_KEY   = 'rrb_daylogs';
+const SETUP_KEY = 'rrb_setup';
+const TASKS_KEY = 'rrb_tasks';
+const LOGS_KEY = 'rrb_daylogs';
 
 function loadTasks(): Task[] {
   try { return JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); } catch { return []; }
 }
-function saveTasks(t: Task[]) { localStorage.setItem(TASKS_KEY, JSON.stringify(t)); }
+function saveTasks(t: Task[]) {
+  localStorage.setItem(TASKS_KEY, JSON.stringify(t));
+  schedulePlannerSync(); // ← cloud sync
+}
 
 function loadLogs(): Record<string, DayLog> {
   try {
@@ -88,7 +93,7 @@ function loadLogs(): Record<string, DayLog> {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)!;
       if (k.startsWith('rrb_day_')) {
-        try { out[k.replace('rrb_day_', '')] = JSON.parse(localStorage.getItem(k)!); } catch {}
+        try { out[k.replace('rrb_day_', '')] = JSON.parse(localStorage.getItem(k)!); } catch { }
       }
     }
     return out;
@@ -112,8 +117,8 @@ function StatCard({ label, value, icon: Icon, bgColor, subtext, trend }: StatCar
         <p className="text-xs font-bold uppercase tracking-widest opacity-80 mb-2">{label}</p>
         <div className="flex items-end gap-2">
           <p className="text-4xl font-black">{value}</p>
-          {trend === 'up'   && <TrendingUp   size={20} className="mb-1 opacity-80" />}
-          {trend === 'down' && <TrendingDown  size={20} className="mb-1 opacity-80" />}
+          {trend === 'up' && <TrendingUp size={20} className="mb-1 opacity-80" />}
+          {trend === 'down' && <TrendingDown size={20} className="mb-1 opacity-80" />}
         </div>
         {subtext && <p className="text-xs opacity-70 mt-1 font-medium">{subtext}</p>}
       </div>
@@ -216,11 +221,11 @@ interface AddTaskModalProps {
 }
 function AddTaskModal({ onAdd, onClose, defaultDate }: AddTaskModalProps) {
   const today = dateKey(new Date());
-  const [title,    setTitle]    = useState('');
-  const [subject,  setSubject]  = useState<Task['subject']>('Mathematics');
-  const [dueDate,  setDueDate]  = useState(defaultDate || today);
+  const [title, setTitle] = useState('');
+  const [subject, setSubject] = useState<Task['subject']>('Mathematics');
+  const [dueDate, setDueDate] = useState(defaultDate || today);
   const [priority, setPriority] = useState<Task['priority']>('medium');
-  const [notes,    setNotes]    = useState('');
+  const [notes, setNotes] = useState('');
 
   const handleAdd = () => {
     if (!title.trim()) return;
@@ -238,7 +243,7 @@ function AddTaskModal({ onAdd, onClose, defaultDate }: AddTaskModalProps) {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
-         style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)' }}>
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-[#002045] to-[#1e40af]">
@@ -266,7 +271,7 @@ function AddTaskModal({ onAdd, onClose, defaultDate }: AddTaskModalProps) {
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Subject</label>
             <div className="flex flex-wrap gap-2">
-              {(['Mathematics','Reasoning','General Science','General Awareness','Revision','Mock Test','Other'] as Task['subject'][]).map(s => (
+              {(['Mathematics', 'Reasoning', 'General Science', 'General Awareness', 'Revision', 'Mock Test', 'Other'] as Task['subject'][]).map(s => (
                 <button key={s} onClick={() => setSubject(s)}
                   className={cn('px-3 py-1.5 rounded-xl text-xs font-bold border-2 transition-all',
                     subject === s ? 'text-white border-transparent' : 'bg-white border-slate-200 text-slate-500 hover:border-slate-300')}
@@ -287,7 +292,7 @@ function AddTaskModal({ onAdd, onClose, defaultDate }: AddTaskModalProps) {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Priority</label>
               <div className="flex gap-1.5">
-                {(['high','medium','low'] as const).map(p => (
+                {(['high', 'medium', 'low'] as const).map(p => (
                   <button key={p} onClick={() => setPriority(p)}
                     className={cn('flex-1 py-2.5 rounded-xl text-xs font-bold border-2 capitalize transition-all',
                       priority === p ? PRIORITY_META[p].bg + ' ' + PRIORITY_META[p].color + ' border-current' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300')}>
@@ -330,7 +335,7 @@ interface TaskCardProps {
 }
 function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
   const today = dateKey(new Date());
-  const isOverdue  = !task.completed && task.dueDate < today;
+  const isOverdue = !task.completed && task.dueDate < today;
   const isDueToday = !task.completed && task.dueDate === today;
   const pm = PRIORITY_META[task.priority];
 
@@ -380,7 +385,7 @@ function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
         </div>
         {task.notes && <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">{task.notes}</p>}
         {task.completed && task.completedAt && (
-          <p className="text-[10px] text-green-600 mt-1">✓ Completed {new Date(task.completedAt).toLocaleDateString('en-IN', { day:'2-digit', month:'short' })}</p>
+          <p className="text-[10px] text-green-600 mt-1">✓ Completed {new Date(task.completedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
         )}
       </div>
 
@@ -400,16 +405,31 @@ export function ExamPlanner() {
   const [setup, setSetup] = useState<Setup | null>(() => {
     try { const s = localStorage.getItem(SETUP_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
   });
-  const [tasks,   setTasksState] = useState<Task[]>(loadTasks);
-  const [dayLogs, setDayLogs]    = useState<Record<string, DayLog>>(loadLogs);
+  const [tasks, setTasksState] = useState<Task[]>(loadTasks);
+  const [dayLogs, setDayLogs] = useState<Record<string, DayLog>>(loadLogs);
+
+  // ── Re-read from localStorage when cloud push completes ─────────────────
+  useEffect(() => {
+    const reload = () => {
+      try {
+        const s = localStorage.getItem(SETUP_KEY);
+        if (s) setSetup(JSON.parse(s));
+      } catch { /* skip */ }
+      setTasksState(loadTasks());
+      setDayLogs(loadLogs());
+    };
+    window.addEventListener('rrb_planner_updated', reload);
+    return () => window.removeEventListener('rrb_planner_updated', reload);
+  }, []);
+
   const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'planner' | 'settings'>('overview');
-  const [showAddModal,  setShowAddModal]  = useState(false);
-  const [addModalDate,  setAddModalDate]  = useState<string | undefined>();
-  const [filterDate,    setFilterDate]    = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addModalDate, setAddModalDate] = useState<string | undefined>();
+  const [filterDate, setFilterDate] = useState('');
   const [filterSubject, setFilterSubject] = useState<string>('all');
-  const [filterStatus,  setFilterStatus]  = useState<'all' | 'pending' | 'done' | 'overdue'>('all');
-  const [resetConfirm,  setResetConfirm]  = useState(false);
-  const [settingsForm,  setSettingsForm]  = useState<Partial<Setup>>({});
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'done' | 'overdue'>('all');
+  const [resetConfirm, setResetConfirm] = useState(false);
+  const [settingsForm, setSettingsForm] = useState<Partial<Setup>>({});
 
   // Calendar
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -422,24 +442,24 @@ export function ExamPlanner() {
     });
   }, []);
 
-  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0 ,0, 0); return d; }, []);
+  const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const examDate = setup ? new Date(setup.examDate + 'T00:00:00') : null;
   const daysLeft = examDate ? daysBetween(today, examDate) : null;
-  const cutoff   = setup ? CUTOFFS[setup.category] : 82;
+  const cutoff = setup ? CUTOFFS[setup.category] : 82;
 
   const urgencyBg = daysLeft == null ? 'from-[#002045] to-[#1e40af]'
     : daysLeft > 60 ? 'from-[#002045] to-[#1e40af]'
-    : daysLeft > 30 ? 'from-amber-600 to-orange-600'
-    : 'from-red-600 to-red-700';
+      : daysLeft > 30 ? 'from-amber-600 to-orange-600'
+        : 'from-red-600 to-red-700';
 
   // ── Task Stats ──────────────────────────────────────────────────────────────
-  const totalTasks     = tasks.length;
-  const doneTasks      = tasks.filter(t => t.completed).length;
-  const pendingTasks   = totalTasks - doneTasks;
-  const overdueTasks   = tasks.filter(t => !t.completed && t.dueDate < dateKey(today)).length;
-  const todayTasks     = tasks.filter(t => t.dueDate === dateKey(today));
-  const todayDone      = todayTasks.filter(t => t.completed).length;
-  const completionPct  = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const totalTasks = tasks.length;
+  const doneTasks = tasks.filter(t => t.completed).length;
+  const pendingTasks = totalTasks - doneTasks;
+  const overdueTasks = tasks.filter(t => !t.completed && t.dueDate < dateKey(today)).length;
+  const todayTasks = tasks.filter(t => t.dueDate === dateKey(today));
+  const todayDone = todayTasks.filter(t => t.completed).length;
+  const completionPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
   // Streak from dayLogs
   const streak = useMemo(() => {
@@ -458,8 +478,8 @@ export function ExamPlanner() {
       d.setDate(today.getDate() - 13 + i);
       const ds = dateKey(d);
       const dayTasks = tasks.filter(t => t.dueDate === ds);
-      const done     = dayTasks.filter(t => t.completed).length;
-      const pending  = dayTasks.length - done;
+      const done = dayTasks.filter(t => t.completed).length;
+      const pending = dayTasks.length - done;
       return {
         date: d.toLocaleDateString('en', { weekday: 'short' }).slice(0, 2),
         done,
@@ -493,7 +513,7 @@ export function ExamPlanner() {
 
   // ── Subject breakdown ────────────────────────────────────────────────────────
   const subjectData = useMemo(() => {
-    const all = ['Mathematics','Reasoning','General Science','General Awareness','Revision','Mock Test','Other'] as Task['subject'][];
+    const all = ['Mathematics', 'Reasoning', 'General Science', 'General Awareness', 'Revision', 'Mock Test', 'Other'] as Task['subject'][];
     return all.map(s => {
       const subjTasks = tasks.filter(t => t.subject === s);
       const done = subjTasks.filter(t => t.completed).length;
@@ -504,15 +524,15 @@ export function ExamPlanner() {
   // ── Filtered tasks ───────────────────────────────────────────────────────────
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (filterDate    && t.dueDate              !== filterDate) return false;
-      if (filterSubject !== 'all' && t.subject    !== filterSubject) return false;
-      if (filterStatus === 'pending' && t.completed)              return false;
-      if (filterStatus === 'done'    && !t.completed)             return false;
+      if (filterDate && t.dueDate !== filterDate) return false;
+      if (filterSubject !== 'all' && t.subject !== filterSubject) return false;
+      if (filterStatus === 'pending' && t.completed) return false;
+      if (filterStatus === 'done' && !t.completed) return false;
       if (filterStatus === 'overdue' && (t.completed || t.dueDate >= dateKey(today))) return false;
       return true;
     }).sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
-      if (a.dueDate !== b.dueDate)     return a.dueDate.localeCompare(b.dueDate);
+      if (a.dueDate !== b.dueDate) return a.dueDate.localeCompare(b.dueDate);
       const prio = { high: 0, medium: 1, low: 2 };
       return prio[a.priority] - prio[b.priority];
     });
@@ -538,14 +558,14 @@ export function ExamPlanner() {
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDow    = new Date(year, month, 1).getDay();
+  const firstDow = new Date(year, month, 1).getDay();
 
   // ── Tabs ─────────────────────────────────────────────────────────────────────
   const tabs = [
-    { id: 'overview', label: 'Overview',  icon: BarChart3 },
-    { id: 'tasks',    label: 'Tasks',     icon: ListTodo  },
-    { id: 'planner',  label: 'Calendar',  icon: Calendar  },
-    { id: 'settings', label: 'Settings',  icon: Settings  },
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'tasks', label: 'Tasks', icon: ListTodo },
+    { id: 'planner', label: 'Calendar', icon: Calendar },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ] as const;
 
   const taskBadge = pendingTasks + overdueTasks;
@@ -558,7 +578,11 @@ export function ExamPlanner() {
           <p className="text-slate-500 text-sm font-medium mb-1">Get started</p>
           <h2 className="text-3xl font-black text-[#002045] tracking-tight">Exam Planner Setup</h2>
         </div>
-        <SetupScreen onSave={s => { setSetup(s); localStorage.setItem(SETUP_KEY, JSON.stringify(s)); }} />
+        <SetupScreen onSave={s => {
+          setSetup(s);
+          localStorage.setItem(SETUP_KEY, JSON.stringify(s));
+          schedulePlannerSync(); // ← sync setup to cloud
+        }} />
       </div>
     );
   }
@@ -618,10 +642,10 @@ export function ExamPlanner() {
 
         <div className="grid grid-cols-4 gap-2">
           {[
-            { icon: '🔥', val: streak,       label: 'Streak' },
-            { icon: '✅', val: doneTasks,     label: 'Done' },
-            { icon: '⏳', val: pendingTasks,  label: 'Pending' },
-            { icon: '⚠️', val: overdueTasks,  label: 'Overdue' },
+            { icon: '🔥', val: streak, label: 'Streak' },
+            { icon: '✅', val: doneTasks, label: 'Done' },
+            { icon: '⏳', val: pendingTasks, label: 'Pending' },
+            { icon: '⚠️', val: overdueTasks, label: 'Overdue' },
           ].map(s => (
             <div key={s.label} className="bg-white/15 rounded-xl p-3 text-center">
               <div className="text-lg mb-0.5">{s.icon}</div>
@@ -660,13 +684,13 @@ export function ExamPlanner() {
         <div className="space-y-6">
           {/* Stat Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard label="Total Tasks"   value={totalTasks}      icon={ListTodo}     bgColor="bg-[#1a237e]"
+            <StatCard label="Total Tasks" value={totalTasks} icon={ListTodo} bgColor="bg-[#1a237e]"
               subtext={`${doneTasks} completed`} />
-            <StatCard label="Completion"    value={`${completionPct}%`} icon={Trophy}    bgColor={completionPct >= 60 ? 'bg-green-700' : completionPct >= 30 ? 'bg-amber-600' : 'bg-red-700'}
+            <StatCard label="Completion" value={`${completionPct}%`} icon={Trophy} bgColor={completionPct >= 60 ? 'bg-green-700' : completionPct >= 30 ? 'bg-amber-600' : 'bg-red-700'}
               subtext={`${pendingTasks} remaining`} trend={completionPct >= 70 ? 'up' : 'down'} />
             <StatCard label="Today's Tasks" value={`${todayDone}/${todayTasks.length}`} icon={Star} bgColor="bg-amber-600"
               subtext={todayTasks.length === 0 ? 'No tasks today' : todayDone === todayTasks.length ? '🎉 All done!' : `${todayTasks.length - todayDone} left`} />
-            <StatCard label="Overdue"       value={overdueTasks}    icon={AlertTriangle} bgColor={overdueTasks > 0 ? 'bg-red-600' : 'bg-green-700'}
+            <StatCard label="Overdue" value={overdueTasks} icon={AlertTriangle} bgColor={overdueTasks > 0 ? 'bg-red-600' : 'bg-green-700'}
               subtext={overdueTasks === 0 ? 'Nothing overdue!' : 'Needs attention'} />
           </div>
 
@@ -684,8 +708,8 @@ export function ExamPlanner() {
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<TaskTooltip />} />
-                  <Bar dataKey="done"    fill="#16a34a"  radius={[4, 4, 0, 0]} name="Done"    stackId="a" />
-                  <Bar dataKey="pending" fill="#e2e8f0"  radius={[4, 4, 0, 0]} name="Pending" stackId="a" />
+                  <Bar dataKey="done" fill="#16a34a" radius={[4, 4, 0, 0]} name="Done" stackId="a" />
+                  <Bar dataKey="pending" fill="#e2e8f0" radius={[4, 4, 0, 0]} name="Pending" stackId="a" />
                 </BarChart>
               </ResponsiveContainer>
               <div className="flex items-center gap-4 mt-2 text-[10px] font-bold text-slate-500">
@@ -705,8 +729,8 @@ export function ExamPlanner() {
                 <AreaChart data={cumulativeData} margin={{ left: -20, right: 5, top: 5 }}>
                   <defs>
                     <linearGradient id="progressGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#1e40af" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#1e40af" stopOpacity={0}   />
+                      <stop offset="5%" stopColor="#1e40af" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#1e40af" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -808,13 +832,13 @@ export function ExamPlanner() {
               <select value={filterSubject} onChange={e => setFilterSubject(e.target.value)}
                 className="border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                 <option value="all">All Subjects</option>
-                {(['Mathematics','Reasoning','General Science','General Awareness','Revision','Mock Test','Other'] as Task['subject'][]).map(s => (
+                {(['Mathematics', 'Reasoning', 'General Science', 'General Awareness', 'Revision', 'Mock Test', 'Other'] as Task['subject'][]).map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
               {/* Status filter */}
               <div className="flex gap-1">
-                {(['all','pending','done','overdue'] as const).map(s => (
+                {(['all', 'pending', 'done', 'overdue'] as const).map(s => (
                   <button key={s} onClick={() => setFilterStatus(s)}
                     className={cn('flex-1 py-2 rounded-xl text-xs font-bold capitalize transition-all',
                       filterStatus === s ? 'bg-[#002045] text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200')}>
@@ -871,7 +895,7 @@ export function ExamPlanner() {
             <div className="p-4">
               {/* Weekday headers */}
               <div className="grid grid-cols-7 mb-2">
-                {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
                   <div key={d} className="text-center text-[11px] font-bold text-slate-400 py-1">{d}</div>
                 ))}
               </div>
@@ -881,11 +905,11 @@ export function ExamPlanner() {
                 {Array.from({ length: firstDow }).map((_, i) => <div key={`e${i}`} />)}
                 {Array.from({ length: daysInMonth }, (_, i) => {
                   const day = i + 1;
-                  const ds  = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
-                  const isToday  = ds === dateKey(today);
-                  const isExam   = examDate && ds === dateKey(examDate);
+                  const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const isToday = ds === dateKey(today);
+                  const isExam = examDate && ds === dateKey(examDate);
                   const dayTasks = tasks.filter(t => t.dueDate === ds);
-                  const allDone  = dayTasks.length > 0 && dayTasks.every(t => t.completed);
+                  const allDone = dayTasks.length > 0 && dayTasks.every(t => t.completed);
                   const hasPending = dayTasks.some(t => !t.completed);
                   const hasOverdue = !isToday && ds < dateKey(today) && hasPending;
 
@@ -894,19 +918,19 @@ export function ExamPlanner() {
                       onClick={() => { setAddModalDate(ds); setShowAddModal(true); }}
                       className={cn(
                         'aspect-square rounded-xl flex flex-col items-center justify-center relative text-xs font-bold transition-all hover:scale-105 active:scale-95',
-                        isExam   ? 'bg-red-50 border-2 border-red-400 text-red-600 shadow-sm' :
-                        isToday  ? 'bg-[#002045] text-white shadow-md' :
-                        allDone  ? 'bg-green-50 border-2 border-green-300 text-green-700' :
-                        hasPending && !hasOverdue ? 'bg-blue-50 border-2 border-blue-300 text-blue-700' :
-                        hasOverdue ? 'bg-red-50 border-2 border-orange-300 text-orange-700' :
-                        'hover:bg-slate-50 text-slate-500'
+                        isExam ? 'bg-red-50 border-2 border-red-400 text-red-600 shadow-sm' :
+                          isToday ? 'bg-[#002045] text-white shadow-md' :
+                            allDone ? 'bg-green-50 border-2 border-green-300 text-green-700' :
+                              hasPending && !hasOverdue ? 'bg-blue-50 border-2 border-blue-300 text-blue-700' :
+                                hasOverdue ? 'bg-red-50 border-2 border-orange-300 text-orange-700' :
+                                  'hover:bg-slate-50 text-slate-500'
                       )}>
                       <span>{day}</span>
                       {isExam && <span className="text-[9px] leading-none">🎯</span>}
                       {!isExam && dayTasks.length > 0 && (
                         <span className={cn('text-[8px] leading-none font-black',
                           allDone ? 'text-green-600' : hasOverdue ? 'text-orange-500' : 'text-blue-600')}>
-                          {allDone ? '✓' : `${dayTasks.filter(t=>t.completed).length}/${dayTasks.length}`}
+                          {allDone ? '✓' : `${dayTasks.filter(t => t.completed).length}/${dayTasks.length}`}
                         </span>
                       )}
                     </button>
@@ -917,11 +941,11 @@ export function ExamPlanner() {
               {/* Legend */}
               <div className="flex flex-wrap gap-3 mt-4 pt-3 border-t border-slate-100">
                 {[
-                  { cls: 'bg-green-50 border-2 border-green-300',  label: 'All done' },
-                  { cls: 'bg-blue-50 border-2 border-blue-300',    label: 'Has tasks' },
-                  { cls: 'bg-red-50 border-2 border-orange-300',   label: 'Overdue' },
-                  { cls: 'bg-[#002045]',                           label: 'Today' },
-                  { cls: 'bg-red-50 border-2 border-red-400',      label: 'Exam day' },
+                  { cls: 'bg-green-50 border-2 border-green-300', label: 'All done' },
+                  { cls: 'bg-blue-50 border-2 border-blue-300', label: 'Has tasks' },
+                  { cls: 'bg-red-50 border-2 border-orange-300', label: 'Overdue' },
+                  { cls: 'bg-[#002045]', label: 'Today' },
+                  { cls: 'bg-red-50 border-2 border-red-400', label: 'Exam day' },
                 ].map(l => (
                   <div key={l.label} className="flex items-center gap-1.5">
                     <div className={cn('w-3.5 h-3.5 rounded-md', l.cls)} />
@@ -953,7 +977,7 @@ export function ExamPlanner() {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Category</label>
               <div className="grid grid-cols-4 gap-2">
-                {(['General','OBC','SC','ST'] as const).map(c => (
+                {(['General', 'OBC', 'SC', 'ST'] as const).map(c => (
                   <button key={c} onClick={() => setSettingsForm(p => ({ ...p, category: c }))}
                     className={cn('py-2.5 rounded-xl text-sm font-bold border-2 transition-all',
                       (settingsForm.category || setup.category) === c
@@ -967,7 +991,7 @@ export function ExamPlanner() {
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Daily Study Hours</label>
               <div className="grid grid-cols-3 gap-2">
-                {(['1-2 hrs','3-4 hrs','5+ hrs'] as const).map(h => (
+                {(['1-2 hrs', '3-4 hrs', '5+ hrs'] as const).map(h => (
                   <button key={h} onClick={() => setSettingsForm(p => ({ ...p, dailyHours: h }))}
                     className={cn('py-2.5 rounded-xl text-sm font-bold border-2 transition-all',
                       (settingsForm.dailyHours || setup.dailyHours) === h
@@ -980,7 +1004,9 @@ export function ExamPlanner() {
             </div>
             <button onClick={() => {
               const u = { ...setup, ...settingsForm } as Setup;
-              setSetup(u); localStorage.setItem(SETUP_KEY, JSON.stringify(u));
+              setSetup(u);
+              localStorage.setItem(SETUP_KEY, JSON.stringify(u));
+              schedulePlannerSync(); // ← sync to cloud
               setSettingsForm({});
             }}
               className="w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r from-[#002045] to-[#1e40af] shadow-sm hover:opacity-90 transition-all">
