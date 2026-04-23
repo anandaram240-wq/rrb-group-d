@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense, Component, ErrorInfo, ReactNode } from 'react';
 import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
@@ -33,8 +33,46 @@ interface UserProfile {
   avatar: string;
 }
 
+// ── URL <-> Tab route map ─────────────────────────────────────────────────────
+const PATH_TO_TAB: Record<string, string> = {
+  '/': 'dashboard', '/dashboard': 'dashboard',
+  '/study': 'study', '/practice': 'practice', '/papers': 'papers',
+  '/analytics': 'analytics', '/performance': 'performance',
+  '/roadmap': 'roadmap', '/planner': 'planner', '/weakareas': 'weakareas',
+};
+const TAB_TO_PATH: Record<string, string> = {
+  dashboard: '/dashboard', study: '/study', practice: '/practice',
+  papers: '/papers', analytics: '/analytics', performance: '/performance',
+  roadmap: '/roadmap', planner: '/planner', weakareas: '/weakareas',
+};
+function getInitialTab(): string {
+  const p = window.location.pathname;
+  return PATH_TO_TAB[p] ?? 'dashboard';
+}
+
+// ── Error Boundary for safe tab rendering ────────────────────────────────────
+class TabErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: string }> {
+  constructor(props: any) { super(props); this.state = { hasError: false, error: '' }; }
+  static getDerivedStateFromError(err: Error) { return { hasError: true, error: err.message }; }
+  componentDidCatch(err: Error, info: ErrorInfo) { console.error('Tab crash:', err, info); }
+  render() {
+    if (this.state.hasError) return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4 text-center p-8">
+        <div className="text-5xl">⚠️</div>
+        <h2 className="text-xl font-black text-primary">Something went wrong</h2>
+        <p className="text-sm text-on-surface-variant max-w-sm">{this.state.error}</p>
+        <button onClick={() => { this.setState({ hasError: false, error: '' }); window.location.href = '/dashboard'; }}
+          className="px-6 py-2.5 bg-primary text-white rounded-xl font-bold text-sm">
+          Go to Dashboard
+        </button>
+      </div>
+    );
+    return this.props.children;
+  }
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
@@ -52,9 +90,26 @@ export default function App() {
     catch { setFlagCount(0); }
   };
 
+  // Sync URL when tab changes
+  const setActiveTabWithURL = (tab: string) => {
+    setActiveTab(tab);
+    const path = TAB_TO_PATH[tab] ?? '/dashboard';
+    window.history.pushState({}, '', path);
+  };
+
+  // Handle browser back/forward
+  useEffect(() => {
+    const handler = () => {
+      const tab = PATH_TO_TAB[window.location.pathname] ?? 'dashboard';
+      setActiveTab(tab);
+    };
+    window.addEventListener('popstate', handler);
+    return () => window.removeEventListener('popstate', handler);
+  }, []);
+
   const navigateToPractice = (subject: string, topic: string) => {
     setPracticeFilter({ subject, topic });
-    setActiveTab('practice');
+    setActiveTabWithURL('practice');
   };
 
   // PWA install
@@ -313,7 +368,7 @@ export default function App() {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={(tab) => {
-          setActiveTab(tab);
+          setActiveTabWithURL(tab);
           if (tab === 'weakareas') refreshFlagCount();
         }}
         isOpen={sidebarOpen}
@@ -327,19 +382,21 @@ export default function App() {
         }}
       />
       <div className="flex-1 flex flex-col w-full lg:ml-64 min-w-0">
-        <TopNav activeTab={activeTab} setActiveTab={setActiveTab} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />
+        <TopNav activeTab={activeTab} setActiveTab={setActiveTabWithURL} setSidebarOpen={setSidebarOpen} isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} user={user} />
         <main className="pt-16 px-3 sm:px-4 lg:px-8 pb-12 w-full min-w-0 overflow-x-hidden">
           <div className="max-w-screen-xl mx-auto">
             <Suspense fallback={<TabSpinner />}>
-              {activeTab === 'dashboard'   && <Dashboard userName={user.name} onNavigateTo={setActiveTab} />}
-              {activeTab === 'study'       && <StudyModules onPractice={navigateToPractice} />}
-              {activeTab === 'practice'    && <PracticeEngine initialSubject={practiceFilter?.subject} initialTopic={practiceFilter?.topic} />}
-              {activeTab === 'papers'      && <MockTests />}
-              {activeTab === 'analytics'  && <AnalyticsEngine />}
-              {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
-              {activeTab === 'roadmap'     && <StudyRoadmap />}
-              {activeTab === 'planner'     && <ExamPlanner />}
-              {activeTab === 'weakareas'   && <WeakAreas onPractice={(subject, topic) => { navigateToPractice(subject, topic); refreshFlagCount(); }} />}
+              <TabErrorBoundary>
+                {activeTab === 'dashboard'   && <Dashboard userName={user.name} onNavigateTo={setActiveTabWithURL} />}
+                {activeTab === 'study'       && <StudyModules onPractice={navigateToPractice} />}
+                {activeTab === 'practice'    && <PracticeEngine initialSubject={practiceFilter?.subject} initialTopic={practiceFilter?.topic} />}
+                {activeTab === 'papers'      && <MockTests />}
+                {activeTab === 'analytics'  && <AnalyticsEngine />}
+                {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTabWithURL} />}
+                {activeTab === 'roadmap'     && <StudyRoadmap />}
+                {activeTab === 'planner'     && <ExamPlanner />}
+                {activeTab === 'weakareas'   && <WeakAreas onPractice={(subject, topic) => { navigateToPractice(subject, topic); refreshFlagCount(); }} />}
+              </TabErrorBoundary>
             </Suspense>
           </div>
         </main>
