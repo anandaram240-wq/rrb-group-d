@@ -44,6 +44,7 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
     { id: 'papers',     label: 'Mock Tests',         icon: History },
     { id: 'analytics',  label: 'Analytics',          icon: TrendingUp },
     { id: 'performance',label: 'Performance',         icon: BarChart2 },
+    { id: 'roadmap',    label: '🗺️ Study Roadmap',    icon: CalendarDays },
     { id: 'planner',    label: 'Exam Planner',        icon: CalendarDays },
     { id: 'weakareas',  label: 'Weak Areas',          icon: AlertTriangle, badge: flagCount },
   ];

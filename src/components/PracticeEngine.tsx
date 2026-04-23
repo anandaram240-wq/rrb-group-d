@@ -323,6 +323,10 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
     return qs;
   }, [allQuestions, selectedSubject, selectedTopic, branchFilter, difficultyFilter, yearFilter, searchQuery]);
 
+  // ── practiceQuestions & currentQ defined here so handlers below can use them ──
+  // When practicing: use shuffled sessionQuestions. Otherwise: use filtered list.
+  const practiceQuestions = isPracticing && sessionQuestions.length > 0 ? sessionQuestions : filteredQuestions;
+  const currentQ = practiceQuestions[currentQIndex];
 
 
   const stats = useMemo(() => {
@@ -426,11 +430,6 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
     if (d === 'hard') return 'text-red-600 bg-red-50';
     return 'text-amber-600 bg-amber-50';
   };
-
-  // ── Practice Mode — use shuffled session questions ────────────────────────
-  // Override filteredQuestions with shuffled session for currentQ lookup
-  const practiceQuestions = isPracticing && sessionQuestions.length > 0 ? sessionQuestions : filteredQuestions;
-  const currentQ = practiceQuestions[currentQIndex];
 
   if (isPracticing && currentQ) {
     const isCorrected = !!corrections[currentQ.id];
