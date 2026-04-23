@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, CalendarDays, BarChart2, Download, CloudUpload, CheckCircle, GraduationCap } from 'lucide-react';
+import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, CalendarDays, BarChart2, Download, CloudUpload, CheckCircle, GraduationCap, AlertTriangle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useState } from 'react';
 
@@ -9,11 +9,12 @@ interface SidebarProps {
   setIsOpen: (isOpen: boolean) => void;
   user: { name: string; email: string; avatar: string };
   onLogout: () => void;
-  installPrompt?: any;           // BeforeInstallPromptEvent
-  onSyncNow?: () => Promise<void>; // force cloud sync
+  installPrompt?: any;
+  onSyncNow?: () => Promise<void>;
+  flagCount?: number;   // count of confusion-flagged questions
 }
 
-export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout, installPrompt, onSyncNow }: SidebarProps) {
+export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLogout, installPrompt, onSyncNow, flagCount = 0 }: SidebarProps) {
   const [syncing, setSyncing] = useState(false);
   const [syncDone, setSyncDone] = useState(false);
 
@@ -37,13 +38,14 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
   };
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard',       icon: LayoutDashboard },
-    { id: 'study',     label: '📚 Study',          icon: GraduationCap },
-    { id: 'practice', label: 'Subject Mastery',   icon: BookOpen },
-    { id: 'papers',   label: 'Mock Tests',         icon: History },
-    { id: 'analytics',label: 'Analytics',          icon: TrendingUp },
-    { id: 'performance', label: 'Performance',     icon: BarChart2 },
-    { id: 'planner',  label: 'Exam Planner',       icon: CalendarDays },
+    { id: 'dashboard',   label: 'Dashboard',       icon: LayoutDashboard },
+    { id: 'study',       label: '📚 Study',          icon: GraduationCap },
+    { id: 'practice',   label: 'Subject Mastery',   icon: BookOpen },
+    { id: 'papers',     label: 'Mock Tests',         icon: History },
+    { id: 'analytics',  label: 'Analytics',          icon: TrendingUp },
+    { id: 'performance',label: 'Performance',         icon: BarChart2 },
+    { id: 'planner',    label: 'Exam Planner',        icon: CalendarDays },
+    { id: 'weakareas',  label: 'Weak Areas',          icon: AlertTriangle, badge: flagCount },
   ];
 
   return (
@@ -93,8 +95,13 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
                     : "text-slate-500 hover:bg-slate-200/50"
                 )}
               >
-                <item.icon size={18} />
+              <item.icon size={18} />
                 {item.label}
+                {'badge' in item && (item as any).badge > 0 && (
+                  <span className="ml-auto text-[10px] font-black bg-error text-white rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {(item as any).badge > 99 ? '99+' : (item as any).badge}
+                  </span>
+                )}
               </button>
             );
           })}

@@ -1616,6 +1616,31 @@ function enrichOddOneOut(ctx: QuestionContext): EnrichedSolution {
 
 function enrichScienceGA(ctx: QuestionContext): EnrichedSolution {
   const correct = ctx.options[ctx.correctAnswer];
+  const wrongList = ctx.options.map((o, i) => ({ o, i })).filter(x => x.i !== ctx.correctAnswer);
+  const stored = ctx.existingSolution ?? '';
+
+  // Science/GA: direct factual questions — keep solution short and clean
+  return {
+    answer: correctLabel(ctx.options, ctx.correctAnswer),
+    steps: [
+      stored && stored.length > 10
+        ? stored.substring(0, 300).trim()
+        : `✅ Correct answer: ${correct}`,
+    ],
+    speedTrick: [
+      `⚡ Direct recall: ${correct}`,
+      ctx.topic ? `💡 Topic: ${ctx.topic} — know the key fact cold` : '',
+    ].filter(Boolean),
+    wrongOptions: wrongList.map(x =>
+      `❌ Option ${LETTER[x.i]}) "${x.o}" — Incorrect`
+    ),
+    concept: [`→ ${ctx.topic}: memorise key facts from NCERT Class 9-10`],
+    examTip: `Science/GA = direct recall. No calculation.  Answer = ${correct}.`,
+  };
+}
+
+function enrichScienceGAFull(ctx: QuestionContext): EnrichedSolution {
+  const correct = ctx.options[ctx.correctAnswer];
   const q = ctx.question;
   const topic = ctx.topic;
   const wrongList = ctx.options.map((o, i) => ({ o, i })).filter(x => x.i !== ctx.correctAnswer);

@@ -16,6 +16,7 @@ const LoginScreen       = lazy(() => import('./components/LoginScreen').then(m =
 const StudyRoadmap      = lazy(() => import('./components/StudyRoadmap').then(m => ({ default: m.StudyRoadmap })));
 const ExamPlanner       = lazy(() => import('./components/ExamPlanner').then(m => ({ default: m.ExamPlanner })));
 const StudyModules      = lazy(() => import('./components/StudyModules').then(m => ({ default: m.StudyModules })));
+const WeakAreas         = lazy(() => import('./components/WeakAreas').then(m => ({ default: m.WeakAreas })));
 
 // ── Tiny tab fallback spinner ──────────────────────────────────────────────────
 function TabSpinner() {
@@ -39,6 +40,17 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   // For deep-linking from Study Modules → Practice Engine
   const [practiceFilter, setPracticeFilter] = useState<{ subject: string; topic: string } | null>(null);
+
+  // Confusion flag count (badge on Weak Areas sidebar item)
+  const [flagCount, setFlagCount] = useState(() => {
+    try { return (JSON.parse(localStorage.getItem('rrb_confusion_flags') || '[]') as unknown[]).length; }
+    catch { return 0; }
+  });
+
+  const refreshFlagCount = () => {
+    try { setFlagCount((JSON.parse(localStorage.getItem('rrb_confusion_flags') || '[]') as unknown[]).length); }
+    catch { setFlagCount(0); }
+  };
 
   const navigateToPractice = (subject: string, topic: string) => {
     setPracticeFilter({ subject, topic });
@@ -300,12 +312,16 @@ export default function App() {
 
       <Sidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => {
+          setActiveTab(tab);
+          if (tab === 'weakareas') refreshFlagCount();
+        }}
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
         user={user}
         onLogout={handleLogout}
         installPrompt={installPrompt}
+        flagCount={flagCount}
         onSyncNow={async () => {
           await Promise.all([forceSyncNow(), forceSyncPlanner()]);
         }}
@@ -323,6 +339,7 @@ export default function App() {
               {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
               {activeTab === 'roadmap'     && <StudyRoadmap />}
               {activeTab === 'planner'     && <ExamPlanner />}
+              {activeTab === 'weakareas'   && <WeakAreas onPractice={(subject, topic) => { navigateToPractice(subject, topic); refreshFlagCount(); }} />}
             </Suspense>
           </div>
         </main>

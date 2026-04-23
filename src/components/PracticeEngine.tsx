@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   BookOpen, ChevronRight, CheckCircle2, XCircle,
-  Search, BarChart3, Zap, Filter, Pencil, X, Save, CheckCircle
+  Search, BarChart3, Zap, Filter, Pencil, X, Save, CheckCircle, Flag
 } from 'lucide-react';
 import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
@@ -13,6 +13,17 @@ import {
   finalizeSession,
 } from '../lib/performanceEngine';
 import { enrichSolution, enrichedToText } from '../lib/solutionEnricher';
+import { toggleFlag, isFlagged } from '../lib/confusionTracker';
+
+/** Fisher-Yates shuffle (mutates and returns arr) */
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 interface PYQ {
   id: number;
@@ -272,6 +283,16 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
   const [showSolution, setShowSolution] = useState(false);
   const [answeredQuestions, setAnsweredQuestions] = useState<Record<number, { selected: number; correct: boolean }>>({});
   const [isPracticing, setIsPracticing] = useState(false);
+  // Shuffled question list for this session
+  const [sessionQuestions, setSessionQuestions] = useState<typeof filteredQuestions>([]);
+  // Flag state for current question
+  const [flaggedIds, setFlaggedIds] = useState<Set<number>>(() => {
+    // Load all currently flagged ids from confusionTracker
+    try {
+      const stored = JSON.parse(localStorage.getItem('rrb_confusion_flags') || '[]') as { id: number }[];
+      return new Set(stored.map(e => e.id));
+    } catch { return new Set(); }
+  });
 
   // ── Auto-finalize if user switches tabs while practicing ──────────────────
   // Store isPracticing in a ref so the cleanup can read the latest value
@@ -302,7 +323,7 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
     return qs;
   }, [allQuestions, selectedSubject, selectedTopic, branchFilter, difficultyFilter, yearFilter, searchQuery]);
 
-  const currentQ = filteredQuestions[currentQIndex];
+
 
   const stats = useMemo(() => {
     const answered = Object.keys(answeredQuestions).length;
@@ -328,7 +349,10 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
   };
 
   const handleNext = () => {
-    if (currentQIndex < filteredQuestions.length - 1) {
+    // practiceQuestions is defined later but handleNext is called inside practice mode
+    // so we use sessionQuestions when practicing
+    const qs = isPracticing && sessionQuestions.length > 0 ? sessionQuestions : filteredQuestions;
+    if (currentQIndex < qs.length - 1) {
       setCurrentQIndex(prev => prev + 1);
       setSelectedAnswer(null);
       setShowSolution(false);
@@ -346,12 +370,30 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
   const startPractice = () => {
     // ── Start a new performance-tracking session ───────────────────────────
     startLiveSession('Subject Practice', selectedSubject, selectedTopic === 'all' ? 'All Topics' : selectedTopic);
+    // Shuffle questions for this session (Fisher-Yates)
+    setSessionQuestions(shuffle(filteredQuestions));
     setIsPracticing(true);
     setCurrentQIndex(0);
     setSelectedAnswer(null);
     setShowSolution(false);
     setAnsweredQuestions({});
   };
+
+  const handleFlagToggle = useCallback(() => {
+    if (!currentQ) return;
+    const nowFlagged = toggleFlag(
+      currentQ.id,
+      currentQ.subject,
+      currentQ.topic,
+      currentQ.sub_topic,
+      currentQ.question,
+    );
+    setFlaggedIds(prev => {
+      const next = new Set(prev);
+      if (nowFlagged) next.add(currentQ.id); else next.delete(currentQ.id);
+      return next;
+    });
+  }, [currentQ]);
 
   const exitPractice = () => {
     // ── Finalize & save session to performance engine ─────────────────────
@@ -385,9 +427,14 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
     return 'text-amber-600 bg-amber-50';
   };
 
-  // ── Practice Mode ──────────────────────────────────────────────────────────
+  // ── Practice Mode — use shuffled session questions ────────────────────────
+  // Override filteredQuestions with shuffled session for currentQ lookup
+  const practiceQuestions = isPracticing && sessionQuestions.length > 0 ? sessionQuestions : filteredQuestions;
+  const currentQ = practiceQuestions[currentQIndex];
+
   if (isPracticing && currentQ) {
     const isCorrected = !!corrections[currentQ.id];
+    const isCurrentFlagged = flaggedIds.has(currentQ.id);
 
     return (
       <>
@@ -463,6 +510,21 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
                   {isCorrected && '✏️ '}{currentQ.topic}{currentQ.sub_topic ? ` › ${currentQ.sub_topic}` : ''}
                 </span>
               </div>
+
+              {/* FLAG (Confused) BUTTON */}
+              <button
+                onClick={handleFlagToggle}
+                title={isCurrentFlagged ? 'Remove confusion flag' : 'Flag as confusing / need to revisit'}
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border',
+                  isCurrentFlagged
+                    ? 'bg-error text-white border-error'
+                    : 'bg-surface-container text-on-surface-variant border-surface-container-high hover:bg-error/10 hover:text-error hover:border-error/30'
+                )}
+              >
+                <Flag size={13} />
+                {isCurrentFlagged ? 'Flagged' : 'Flag'}
+              </button>
 
               {/* EDIT BUTTON */}
               <button
@@ -553,12 +615,12 @@ export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineP
               >
                 <ChevronRight size={16} className="rotate-180" /> Previous
               </button>
-              <span className="text-xs font-bold text-on-surface-variant">
-                {currentQIndex + 1} of {filteredQuestions.length}
-              </span>
+              <p className="text-xs font-bold text-on-surface-variant">
+                {currentQIndex + 1} of {practiceQuestions.length} {isCurrentFlagged && <span className="text-error ml-1">🚩</span>}
+              </p>
               <button
                 onClick={handleNext}
-                disabled={currentQIndex === filteredQuestions.length - 1}
+                disabled={currentQIndex === practiceQuestions.length - 1}
                 className="px-5 py-2.5 bg-primary text-white rounded-lg font-bold disabled:opacity-40 flex items-center gap-2 hover:bg-primary-container transition-colors"
               >
                 Next <ChevronRight size={16} />
