@@ -4,6 +4,7 @@ import { SolutionDisplay } from './SolutionDisplay';
 import { cn } from '../lib/utils';
 import { cleanText } from '../lib/cleanText';
 import { startLiveSession, trackAnswer, finalizeSession } from '../lib/performanceEngine';
+import { enrichSolution, enrichedToText } from '../lib/solutionEnricher';
 
 interface PYQ {
   id: number;
@@ -274,16 +275,27 @@ export function TakeTest({ title, questions, duration, subject, onClose, onCompl
             </div>
 
             {/* Solution & Explanation */}
-            {q.solution && (
-              <div className="mb-6">
-                <SolutionDisplay
-                  solution={q.solution}
-                  isVisible={true}
-                  onToggle={() => {}}
-                  alwaysShow={true}
-                />
-              </div>
-            )}
+            {q.solution && (() => {
+              const enriched = enrichSolution({
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
+                subject: q.subject,
+                topic: q.topic,
+                existingSolution: q.solution,
+              });
+              const finalSolution = enriched ? enrichedToText(enriched) : q.solution;
+              return (
+                <div className="mb-6">
+                  <SolutionDisplay
+                    solution={finalSolution}
+                    isVisible={true}
+                    onToggle={() => {}}
+                    alwaysShow={true}
+                  />
+                </div>
+              );
+            })()}
 
             {/* Navigation */}
             <div className="mt-auto pt-4 flex justify-between items-center border-t border-surface-container">

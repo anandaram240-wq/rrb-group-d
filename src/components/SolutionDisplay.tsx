@@ -1,265 +1,437 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ChevronDown, ChevronUp, Lightbulb, BookOpen, FlaskConical, Calculator } from 'lucide-react';
+import { Eye, EyeOff, ChevronDown, ChevronUp, Zap, BookOpen, XCircle, Lightbulb, Brain, FlaskConical, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface SolutionDisplayProps {
   solution: string;
   isVisible: boolean;
   onToggle: () => void;
-  /** If true, solution is always shown (no toggle button) — used in review mode */
   alwaysShow?: boolean;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+//  PARSER — handles BOTH old format (📖 📐 💡) AND new 5-section format
+// ─────────────────────────────────────────────────────────────────────────────
 interface ParsedSolution {
-  correctAnswer: string;
+  answer: string;
   steps: string[];
-  keyConcept: string;
+  speedTrick: string[];
+  wrongOptions: string[];
+  concept: string[];
   examTip: string;
-  rawLines: string[];
 }
 
-function parseSolution(raw: string): ParsedSolution {
-  const result: ParsedSolution = {
-    correctAnswer: '',
-    steps: [],
-    keyConcept: '',
-    examTip: '',
-    rawLines: [],
-  };
+function parse(raw: string): ParsedSolution {
+  const out: ParsedSolution = { answer: '', steps: [], speedTrick: [], wrongOptions: [], concept: [], examTip: '' };
+  if (!raw?.trim()) return out;
 
-  if (!raw) return result;
+  type Sec = 'none' | 'steps' | 'trick' | 'wrong' | 'concept' | 'tip';
+  let sec: Sec = 'none';
 
-  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
-  let currentSection = '';
+  for (const rawLine of raw.split('\n')) {
+    const t = rawLine.trim();
+    if (!t) continue;
 
-  for (const line of lines) {
-    // Correct answer line
-    if (line.startsWith('✅')) {
-      result.correctAnswer = line.replace('✅', '').replace('Correct Answer:', '').trim();
+    // ── Section headers ─────────────────────────────────────────────────────
+    if (t.startsWith('✅')) {
+      out.answer = t.replace(/^✅\s*(ANSWER\s*[:：]?\s*)?/i, '').replace(/^Correct Answer\s*[:：]?\s*/i, '').trim();
+      sec = 'none'; continue;
+    }
+    if (t.startsWith('📝') || t.startsWith('📖')) {
+      sec = 'steps';
+      const rest = t.replace(/^[📝📖]\s*(STEP[- ]BY[- ]STEP\s*SOLUTION|Step-by-Step\s*Solution|Explanation)\s*[:：]?\s*/i, '').trim();
+      if (rest) out.steps.push(rest);
       continue;
     }
-
-    // Section headers
-    if (line.startsWith('📖') && line.toLowerCase().includes('step')) {
-      currentSection = 'steps';
+    if (t.startsWith('⚡')) {
+      sec = 'trick';
+      const rest = t.replace(/^⚡\s*(TOP\s*SPEED\s*TRICK|Speed Trick|Shortcut)\s*[:：]?\s*/i, '').trim();
+      if (rest) out.speedTrick.push(rest);
       continue;
     }
-    if (line.startsWith('📖') && !line.toLowerCase().includes('step')) {
-      // It's the old-style "📖 Explanation:" header
-      currentSection = 'steps';
+    if (t.startsWith('❌')) {
+      sec = 'wrong';
+      const rest = t.replace(/^❌\s*(WHY\s*WRONG\s*OPTIONS?\s*(FAIL)?|Wrong Options?)\s*[:：]?\s*/i, '').trim();
+      if (rest) out.wrongOptions.push(rest);
       continue;
     }
-    if (line.startsWith('📐') || line.startsWith('📘')) {
-      const content = line.replace(/^[📐📘]\s*(Key Concept|Formula Used|Key Formula|Formula):?\s*/i, '').trim();
-      if (content && content !== line) {
-        result.keyConcept = content;
-      } else {
-        result.keyConcept = line.replace(/^[📐📘]\s*/, '').trim();
-      }
-      currentSection = 'concept';
+    if (t.startsWith('🧠') || t.startsWith('📐') || t.startsWith('📘')) {
+      sec = 'concept';
+      const rest = t.replace(/^[🧠📐📘]\s*(CONCEPT\s*[+&]\s*FORMULA|Key Concept|Key Formula|Key Approach|Formula Used|Formula)\s*[:：]?\s*/i, '').trim();
+      if (rest) out.concept.push(rest);
       continue;
     }
-    if (line.startsWith('💡')) {
-      const content = line.replace(/^💡\s*(Exam Tip|Tip):?\s*/i, '').trim();
-      if (content && content !== line) {
-        result.examTip = content;
-      } else {
-        result.examTip = line.replace(/^💡\s*/, '').trim();
-      }
-      currentSection = 'tip';
-      continue;
-    }
-    if (line.startsWith('📝')) {
-      const content = line.replace(/^📝\s*(Exam Tip|Tip):?\s*/i, '').trim();
-      if (content && content !== line) {
-        result.examTip = content;
-      } else {
-        result.examTip = line.replace(/^📝\s*/, '').trim();
-      }
-      currentSection = 'tip';
+    if (t.startsWith('💡') || t.startsWith('📌')) {
+      sec = 'tip';
+      const rest = t.replace(/^[💡📌]\s*(Exam Tip|Tip|Note)\s*[:：]?\s*/i, '').trim();
+      if (rest) out.examTip = rest;
       continue;
     }
 
-    // Content under sections
-    if (currentSection === 'steps') {
-      // Match numbered steps like "1." or "1)" or just content
-      const stepMatch = line.match(/^\d+[\.\)]\s*(.*)/);
-      if (stepMatch) {
-        result.steps.push(stepMatch[1]);
-      } else if (line.startsWith('•') || line.startsWith('-')) {
-        result.steps.push(line.replace(/^[•\-]\s*/, ''));
-      } else if (line.length > 2) {
-        // If we have no steps yet but have content, add it
-        result.steps.push(line);
-      }
-    } else if (currentSection === 'concept' && !result.keyConcept) {
-      result.keyConcept = line;
-    } else if (currentSection === 'tip' && !result.examTip) {
-      result.examTip = line;
-    } else {
-      result.rawLines.push(line);
+    // ── Content routing ─────────────────────────────────────────────────────
+    switch (sec) {
+      case 'steps':   out.steps.push(t); break;
+      case 'trick':   out.speedTrick.push(t); break;
+      case 'wrong':   out.wrongOptions.push(t); break;
+      case 'concept': out.concept.push(t); break;
+      case 'tip':     if (!out.examTip) out.examTip = t; break;
     }
   }
 
-  // If no steps were parsed, treat all remaining raw lines as steps
-  if (result.steps.length === 0 && result.rawLines.length > 0) {
-    result.steps = result.rawLines.filter(l => 
-      !l.startsWith('✅') && l.length > 3
+  // ── Post-process: strip leading step numbers ─────────────────────────────
+  out.steps = out.steps
+    .map(s => s.replace(/^(step\s*)?\d+[\.):\-\s]+\s*/i, '').trim())
+    .filter(Boolean);
+
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  MATH HIGHLIGHTER — makes numbers & operators visually pop in step text
+// ─────────────────────────────────────────────────────────────────────────────
+function HighlightedText({ text }: { text: string }) {
+  // Split on numbers, operators, fractions, percentages
+  const parts = text.split(/(\d+\.?\d*%?|\+|\-|×|÷|=|→|∴|≈|√)/g);
+  return (
+    <span>
+      {parts.map((part, i) => {
+        if (/^[\d.]+%?$/.test(part) && part.length > 0) {
+          return <span key={i} className="font-black text-blue-600 bg-blue-50 px-0.5 rounded">{part}</span>;
+        }
+        if (/^[=→∴≈]$/.test(part)) {
+          return <span key={i} className="font-black text-emerald-600 mx-0.5">{part}</span>;
+        }
+        if (/^[+\-×÷√]$/.test(part)) {
+          return <span key={i} className="font-black text-purple-600 mx-0.5">{part}</span>;
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </span>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  STEP CARD — single numbered step with highlighting
+// ─────────────────────────────────────────────────────────────────────────────
+const STEP_STYLES = [
+  { bg: 'bg-blue-50',   border: 'border-blue-200',   num: 'bg-blue-600',    text: 'text-blue-800'   },
+  { bg: 'bg-violet-50', border: 'border-violet-200', num: 'bg-violet-600',  text: 'text-violet-800' },
+  { bg: 'bg-teal-50',   border: 'border-teal-200',   num: 'bg-teal-600',    text: 'text-teal-800'   },
+  { bg: 'bg-orange-50', border: 'border-orange-200', num: 'bg-orange-500',  text: 'text-orange-800' },
+  { bg: 'bg-rose-50',   border: 'border-rose-200',   num: 'bg-rose-600',    text: 'text-rose-800'   },
+  { bg: 'bg-cyan-50',   border: 'border-cyan-200',   num: 'bg-cyan-600',    text: 'text-cyan-800'   },
+];
+
+function StepCard({ text, idx }: { text: string; idx: number }) {
+  const s = STEP_STYLES[idx % STEP_STYLES.length];
+  // Detect if this is a formula/calculation line (contains = or →)
+  const isCalc = /[=→∴≈]|^\d/.test(text);
+  return (
+    <div className={cn('flex items-start gap-3 p-3 rounded-xl border', s.bg, s.border)}>
+      <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-black shrink-0 mt-0.5 shadow-sm', s.num)}>
+        {idx + 1}
+      </div>
+      <p className={cn('text-sm leading-relaxed flex-1', s.text, isCalc ? 'font-bold' : 'font-medium')}>
+        <HighlightedText text={text} />
+      </p>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  WRONG OPTION CARD
+// ─────────────────────────────────────────────────────────────────────────────
+const OPT_LABELS = ['A', 'B', 'C', 'D'];
+
+function WrongCard({ text, idx }: { text: string; idx: number }) {
+  const optMatch = text.match(/^(option\s*[a-d]|\([a-d]\)|[a-d][.):\s])/i);
+  let label = OPT_LABELS[idx] ?? String(idx + 1);
+  let body = text;
+  if (optMatch) {
+    label = optMatch[0].replace(/[^a-dA-D]/g, '').toUpperCase() || label;
+    body = text.slice(optMatch[0].length).trim();
+  }
+  // strip leading "—", "-", ":"
+  body = body.replace(/^[-—:]\s*/, '');
+
+  const isPipe = body.includes('|');
+  const parts = isPipe ? body.split('|').map(x => x.trim()).filter(Boolean) : [body];
+
+  return (
+    <div className="flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
+      <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center shrink-0 mt-0.5 shadow-sm">
+        <span className="text-white text-xs font-black">{label}</span>
+      </div>
+      <div className="flex-1">
+        {parts.map((part, pi) => (
+          <p key={pi} className={cn('text-sm text-red-800 leading-relaxed', pi > 0 && 'mt-1.5')}>
+            {pi > 0 && <span className="text-red-400 font-bold mr-1">▸</span>}
+            <HighlightedText text={part} />
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  FORMULA LINE — renders → or = lines with monospace feel
+// ─────────────────────────────────────────────────────────────────────────────
+function FormulaLine({ text }: { text: string }) {
+  const isFormula = /^[→\->=]|→|:=/.test(text);
+  if (isFormula) {
+    return (
+      <div className="flex items-start gap-2">
+        <span className="text-indigo-400 font-black mt-0.5 shrink-0">▶</span>
+        <p className="text-sm font-mono font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-3 py-1.5 rounded-lg flex-1 leading-relaxed">
+          {text.replace(/^[→\->]/, '').trim()}
+        </p>
+      </div>
     );
-    result.rawLines = [];
   }
-
-  return result;
+  return <p className="text-sm text-on-surface font-medium leading-relaxed">{text}</p>;
 }
 
-const stepColors = [
-  'from-blue-500/10 to-indigo-500/10 border-blue-500/20',
-  'from-violet-500/10 to-purple-500/10 border-violet-500/20',
-  'from-teal-500/10 to-emerald-500/10 border-teal-500/20',
-  'from-amber-500/10 to-orange-500/10 border-amber-500/20',
-  'from-rose-500/10 to-pink-500/10 border-rose-500/20',
-  'from-cyan-500/10 to-blue-500/10 border-cyan-500/20',
-];
+// ─────────────────────────────────────────────────────────────────────────────
+//  SECTION BADGE — compact pill on the header to show what's inside
+// ─────────────────────────────────────────────────────────────────────────────
+function Badge({ color, label }: { color: string; label: string }) {
+  return (
+    <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider', color)}>
+      {label}
+    </span>
+  );
+}
 
-const stepNumberColors = [
-  'bg-blue-500',
-  'bg-violet-500',
-  'bg-teal-500',
-  'bg-amber-500',
-  'bg-rose-500',
-  'bg-cyan-500',
-];
-
+// ─────────────────────────────────────────────────────────────────────────────
+//  MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 export function SolutionDisplay({ solution, isVisible, onToggle, alwaysShow = false }: SolutionDisplayProps) {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const parsed = parseSolution(solution);
+  const [expanded, setExpanded] = useState(true);
+  const p = parse(solution ?? '');
 
-  // Toggle button (only when not alwaysShow)
+  const hasAny = p.answer || p.steps.length || p.speedTrick.length || p.wrongOptions.length || p.concept.length || p.examTip;
+
+  // ── Reveal button (before user clicks) ────────────────────────────────────
   if (!alwaysShow && !isVisible) {
     return (
       <div className="mt-6">
         <button
           onClick={onToggle}
-          className="group flex items-center gap-2.5 px-5 py-3 rounded-xl 
-                     bg-gradient-to-r from-primary/5 to-primary/10 
-                     border border-primary/15 
-                     hover:from-primary/10 hover:to-primary/15 hover:border-primary/25
-                     transition-all duration-300"
+          className="group w-full sm:w-auto flex items-center gap-3 px-6 py-3.5 rounded-2xl
+                     bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10
+                     border-2 border-dashed border-primary/25
+                     hover:border-primary/50 hover:from-blue-600/15 hover:to-purple-600/15
+                     transition-all duration-300 shadow-sm hover:shadow-md"
         >
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-            <Eye size={16} className="text-primary" />
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+            <Eye size={17} className="text-white" />
           </div>
-          <span className="text-sm font-bold text-primary">View Step-by-Step Solution</span>
-          <ChevronDown size={14} className="text-primary/60 ml-1" />
+          <div className="text-left">
+            <p className="text-sm font-black text-primary">देखो Step-by-Step Solution</p>
+            <p className="text-[10px] text-on-surface-variant">Answer + Trick + Formula — सब कुछ</p>
+          </div>
+          <ChevronDown size={16} className="text-primary/50 ml-auto" />
         </button>
       </div>
     );
   }
 
-  const showContent = alwaysShow || isVisible;
-
+  // ── Main solution card ─────────────────────────────────────────────────────
   return (
-    <div className={cn("mt-6", showContent && "animate-in fade-in slide-in-from-top-2 duration-300")}>
-      {/* Header */}
-      <div 
-        className="flex items-center justify-between px-5 py-3 rounded-t-xl bg-gradient-to-r from-primary/8 to-tertiary/8 border border-primary/15 border-b-0 cursor-pointer"
-        onClick={() => alwaysShow ? setIsExpanded(!isExpanded) : onToggle()}
+    <div className={cn('mt-6', (alwaysShow || isVisible) && 'animate-in fade-in slide-in-from-bottom-2 duration-400')}>
+
+      {/* ── MASTER HEADER ─────────────────────────────────────────────────── */}
+      <div
+        className="relative flex items-center justify-between px-4 py-3 rounded-t-2xl
+                   bg-gradient-to-r from-[#1a237e] via-[#283593] to-[#1565c0]
+                   cursor-pointer select-none overflow-hidden"
+        onClick={() => alwaysShow ? setExpanded(e => !e) : onToggle()}
       >
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <BookOpen size={16} className="text-primary" />
+        {/* background glow */}
+        <div className="absolute inset-0 opacity-20"
+          style={{ background: 'radial-gradient(ellipse at 30% 50%, #7c4dff 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, #00b0ff 0%, transparent 60%)' }}
+        />
+        <div className="relative flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
+            <BookOpen size={17} className="text-white" />
           </div>
-          <span className="text-sm font-bold text-primary">Step-by-Step Solution</span>
+          <div>
+            <p className="text-white font-black text-sm tracking-wide">Complete Solution</p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              {p.answer         && <Badge color="bg-emerald-400/90 text-white" label="Answer" />}
+              {p.steps.length   > 0 && <Badge color="bg-blue-400/80 text-white" label={`${p.steps.length} Steps`} />}
+              {p.speedTrick.length > 0 && <Badge color="bg-amber-400/90 text-slate-900" label="Speed Trick" />}
+              {p.wrongOptions.length > 0 && <Badge color="bg-red-400/80 text-white" label="Why Wrong" />}
+              {(p.concept.length > 0 || p.examTip) && <Badge color="bg-purple-400/80 text-white" label="Formula" />}
+            </div>
+          </div>
         </div>
-        <button className="p-1 rounded hover:bg-primary/10 transition-colors">
-          {(!alwaysShow) ? (
-            <EyeOff size={16} className="text-primary/50" />
-          ) : isExpanded ? (
-            <ChevronUp size={16} className="text-primary/50" />
-          ) : (
-            <ChevronDown size={16} className="text-primary/50" />
-          )}
+        <button className="relative p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors">
+          {!alwaysShow
+            ? <EyeOff size={16} className="text-white/80" />
+            : expanded
+            ? <ChevronUp size={16} className="text-white/80" />
+            : <ChevronDown size={16} className="text-white/80" />}
         </button>
       </div>
 
-      {/* Content */}
-      {(isExpanded || !alwaysShow) && (
-        <div className="rounded-b-xl border border-primary/15 border-t-0 bg-surface-container-lowest overflow-hidden">
-          {/* Correct Answer Banner */}
-          {parsed.correctAnswer && (
-            <div className="px-5 py-3 bg-gradient-to-r from-tertiary/10 to-tertiary/5 border-b border-tertiary/10 flex items-center gap-3">
-              <div className="w-6 h-6 rounded-full bg-tertiary flex items-center justify-center">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              </div>
-              <span className="font-bold text-tertiary text-sm">{parsed.correctAnswer}</span>
+      {/* ── BODY ──────────────────────────────────────────────────────────── */}
+      {(expanded || !alwaysShow) && (
+        <div className="border-2 border-t-0 border-slate-200/80 rounded-b-2xl overflow-hidden bg-white shadow-md">
+
+          {hasAny ? (
+            <>
+              {/* ══ ✅ ANSWER BANNER ════════════════════════════════════════ */}
+              {p.answer && (
+                <div className="relative overflow-hidden px-5 py-5 bg-gradient-to-r from-emerald-500 to-teal-500">
+                  <div className="absolute right-0 top-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                  <div className="relative flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 shadow-lg">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-emerald-100 text-[11px] font-black uppercase tracking-widest mb-0.5">✅ Correct Answer</p>
+                      <p className="text-white font-black text-xl leading-tight">{p.answer}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ══ 📝 STEP-BY-STEP ═════════════════════════════════════════ */}
+              {p.steps.length > 0 && (
+                <div className="p-5 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
+                      <FlaskConical size={15} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black text-blue-700 uppercase tracking-widest">📝 Step-by-Step Solution</p>
+                      <p className="text-[10px] text-slate-400">Har step mein real calculation</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {p.steps.map((s, i) => <StepCard key={i} text={s} idx={i} />)}
+                  </div>
+                </div>
+              )}
+
+              {/* ══ ⚡ SPEED TRICK ══════════════════════════════════════════ */}
+              {p.speedTrick.length > 0 && (
+                <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shrink-0">
+                      <Zap size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black text-amber-700 uppercase tracking-widest">⚡ Top Speed Trick</p>
+                      <p className="text-[10px] text-amber-600 font-bold">30 second mein solve karo ✓</p>
+                    </div>
+                    <div className="ml-auto bg-amber-400 text-amber-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm shrink-0">
+                      ⏱ &lt;30 sec
+                    </div>
+                  </div>
+                  <div className="bg-white/80 border border-amber-300/60 rounded-xl p-4 space-y-2 shadow-sm">
+                    {p.speedTrick.map((line, i) => (
+                      <p key={i} className="text-sm text-amber-950 font-semibold leading-relaxed">
+                        {i > 0 && p.speedTrick.length > 1 && <span className="text-amber-500 font-black mr-1">▶</span>}
+                        <HighlightedText text={line} />
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ══ ❌ WHY WRONG OPTIONS FAIL ═══════════════════════════════ */}
+              {p.wrongOptions.length > 0 && (
+                <div className="p-5 bg-gradient-to-br from-red-50/50 to-rose-50/50 border-b border-red-100">
+                  <div className="flex items-center gap-2.5 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-red-500 flex items-center justify-center shadow-sm">
+                      <XCircle size={15} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-black text-red-600 uppercase tracking-widest">❌ Why Wrong Options Fail</p>
+                      <p className="text-[10px] text-red-400">Numbers se dekho galat kyun hai</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {p.wrongOptions.map((w, i) => <WrongCard key={i} text={w} idx={i} />)}
+                  </div>
+                </div>
+              )}
+
+              {/* ══ 🧠 CONCEPT + FORMULA ════════════════════════════════════ */}
+              {(p.concept.length > 0 || p.examTip) && (
+                <div className="p-5 bg-gradient-to-br from-indigo-50/60 to-purple-50/60">
+                  {p.concept.length > 0 && (
+                    <>
+                      <div className="flex items-center gap-2.5 mb-3">
+                        <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
+                          <Brain size={15} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-black text-indigo-700 uppercase tracking-widest">🧠 Concept + Formula</p>
+                          <p className="text-[10px] text-indigo-400">Yaad karo — exam mein kaam aayega</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2 mb-3">
+                        {p.concept.map((line, i) => <FormulaLine key={i} text={line} />)}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Exam Tip strip */}
+                  {p.examTip && (
+                    <div className="mt-2 flex items-start gap-3 bg-purple-100/70 border border-purple-200/80 rounded-xl px-4 py-3">
+                      <Target size={14} className="text-purple-600 mt-0.5 shrink-0" />
+                      <p className="text-xs text-purple-800 font-semibold leading-relaxed">
+                        <span className="font-black">💡 Exam Tip: </span>{p.examTip}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            /* ── FALLBACK — raw text, nicely rendered ─────────────────────── */
+            <div className="p-5 space-y-1">
+              {(solution ?? '').split('\n').map((line, i) => {
+                const t = line.trim();
+                if (!t) return <div key={i} className="h-1.5" />;
+                if (t.startsWith('✅')) return (
+                  <p key={i} className="text-base font-black text-emerald-600 py-1">{t}</p>
+                );
+                if (t.startsWith('⚡'))  return <p key={i} className="text-sm font-bold text-amber-600 pt-2">{t}</p>;
+                if (t.startsWith('❌'))  return <p key={i} className="text-sm font-bold text-red-600 pt-2">{t}</p>;
+                if (t.startsWith('🧠') || t.startsWith('📐')) return <p key={i} className="text-sm font-bold text-indigo-600 pt-2">{t}</p>;
+                if (t.startsWith('📝') || t.startsWith('📖')) return <p key={i} className="text-sm font-bold text-blue-600 pt-2">{t}</p>;
+                if (t.startsWith('💡')) return <p key={i} className="text-sm font-bold text-purple-600 pt-1">{t}</p>;
+                if (/^\d+\./.test(t))  return (
+                  <div key={i} className="flex items-start gap-2 py-0.5">
+                    <span className="w-5 h-5 rounded bg-blue-600 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
+                      {t.match(/^\d+/)?.[0]}
+                    </span>
+                    <p className="text-sm text-slate-700 font-medium leading-relaxed">
+                      <HighlightedText text={t.replace(/^\d+\.\s*/, '')} />
+                    </p>
+                  </div>
+                );
+                return <p key={i} className="text-sm text-slate-700 leading-relaxed"><HighlightedText text={t} /></p>;
+              })}
             </div>
           )}
 
-          {/* Steps */}
-          {parsed.steps.length > 0 && (
-            <div className="p-5 space-y-2.5">
-              {parsed.steps.map((step, idx) => (
-                <div 
-                  key={idx}
-                  className={cn(
-                    "flex items-start gap-3 p-3.5 rounded-xl bg-gradient-to-r border transition-all duration-200 hover:shadow-sm",
-                    stepColors[idx % stepColors.length]
-                  )}
-                >
-                  <div className={cn(
-                    "w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-black shrink-0 mt-0.5 shadow-sm",
-                    stepNumberColors[idx % stepNumberColors.length]
-                  )}>
-                    {idx + 1}
-                  </div>
-                  <p className="text-sm text-on-surface leading-relaxed font-medium flex-1">{step}</p>
-                </div>
+          {/* ── BOTTOM SIGNATURE BAR ──────────────────────────────────────── */}
+          <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">RRB Group D Mastery</p>
+            <div className="flex items-center gap-1">
+              {[p.answer, p.steps.length > 0, p.speedTrick.length > 0, p.wrongOptions.length > 0, p.concept.length > 0 || !!p.examTip].map((has, i) => (
+                <div key={i} className={cn('w-1.5 h-1.5 rounded-full', has ? 'bg-primary' : 'bg-slate-200')} />
               ))}
             </div>
-          )}
-
-          {/* If no steps were parsed, show raw solution */}
-          {parsed.steps.length === 0 && (
-            <div className="p-5">
-              <div className="text-sm text-on-surface leading-relaxed whitespace-pre-line">
-                {solution.split('\n').map((line, i) => {
-                  if (!line.trim()) return <div key={i} className="h-2" />;
-                  if (line.startsWith('✅')) return <p key={i} className="text-base font-bold text-tertiary mb-2">{line}</p>;
-                  return <p key={i} className="text-on-surface">{line}</p>;
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Key Concept */}
-          {parsed.keyConcept && (
-            <div className="mx-5 mb-4 p-4 rounded-xl bg-gradient-to-r from-indigo-500/8 to-blue-500/8 border border-indigo-500/15">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0">
-                  <Calculator size={16} className="text-indigo-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-1">Key Concept</p>
-                  <p className="text-sm text-on-surface font-medium leading-relaxed">{parsed.keyConcept}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Exam Tip */}
-          {parsed.examTip && (
-            <div className="mx-5 mb-5 p-4 rounded-xl bg-gradient-to-r from-amber-500/8 to-orange-500/8 border border-amber-500/15">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
-                  <Lightbulb size={16} className="text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-1">Exam Tip</p>
-                  <p className="text-sm text-on-surface font-medium leading-relaxed">{parsed.examTip}</p>
-                </div>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       )}
     </div>

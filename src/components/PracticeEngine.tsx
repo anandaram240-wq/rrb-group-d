@@ -12,6 +12,7 @@ import {
   trackAnswer,
   finalizeSession,
 } from '../lib/performanceEngine';
+import { enrichSolution, enrichedToText } from '../lib/solutionEnricher';
 
 interface PYQ {
   id: number;
@@ -229,7 +230,12 @@ function EditModal({ q, onSave, onClose }: EditModalProps) {
 //  PRACTICE ENGINE
 // ══════════════════════════════════════════════════════════════════
 
-export function PracticeEngine() {
+interface PracticeEngineProps {
+  initialSubject?: string;
+  initialTopic?: string;
+}
+
+export function PracticeEngine({ initialSubject, initialTopic }: PracticeEngineProps = {}) {
   const [corrections, setCorrections] = useState(loadCorrections);
   const [editingQ, setEditingQ] = useState<PYQ | null>(null);
   const [editSavedId, setEditSavedId] = useState<number | null>(null);
@@ -254,8 +260,8 @@ export function PracticeEngine() {
   }, [allQuestions]);
 
   const subjects = Object.keys(syllabus);
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0] || '');
-  const [selectedTopic, setSelectedTopic] = useState('all');
+  const [selectedSubject, setSelectedSubject] = useState(() => initialSubject || subjects[0] || '');
+  const [selectedTopic, setSelectedTopic] = useState(() => initialTopic || 'all');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [yearFilter, setYearFilter] = useState('all');
@@ -517,13 +523,25 @@ export function PracticeEngine() {
               </div>
 
               {/* Solution */}
-              {selectedAnswer !== null && (
-                <SolutionDisplay
-                  solution={currentQ.solution}
-                  isVisible={showSolution}
-                  onToggle={() => setShowSolution(!showSolution)}
-                />
-              )}
+              {selectedAnswer !== null && currentQ && (() => {
+                const enriched = enrichSolution({
+                  question: currentQ.question,
+                  options: currentQ.options,
+                  correctAnswer: currentQ.correctAnswer,
+                  subject: currentQ.subject,
+                  topic: currentQ.topic,
+                  sub_topic: currentQ.sub_topic,
+                  existingSolution: currentQ.solution,
+                });
+                const finalSolution = enriched ? enrichedToText(enriched) : currentQ.solution;
+                return (
+                  <SolutionDisplay
+                    solution={finalSolution}
+                    isVisible={showSolution}
+                    onToggle={() => setShowSolution(!showSolution)}
+                  />
+                );
+              })()}
             </div>
 
             {/* Navigation */}

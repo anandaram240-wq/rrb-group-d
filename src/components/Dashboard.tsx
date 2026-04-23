@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { CheckCircle2, Flame, Target, CalendarDays, Plus, Trash2, Lock, BookOpen, Zap, BarChart3, Trophy } from 'lucide-react';
+import { CheckCircle2, Flame, Target, Plus, Trash2, BookOpen, Zap, BarChart3, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { format, subDays } from 'date-fns';
 import pyqsData from '../data/pyqs.json';
@@ -24,9 +24,10 @@ interface Goal {
 
 interface DashboardProps {
   userName: string;
+  onNavigateTo?: (tab: string) => void;
 }
 
-export function Dashboard({ userName }: DashboardProps) {
+export function Dashboard({ userName, onNavigateTo }: DashboardProps) {
   const today = new Date();
   const allQuestions = pyqsData as PYQ[];
 
@@ -285,76 +286,75 @@ export function Dashboard({ userName }: DashboardProps) {
           </div>
         </div>
 
-        {/* Right Column: Quick Actions & Roadmap */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Quick Actions */}
+        {/* Right Column: Subject Quick Jump */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Quick Actions Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md transition-all cursor-pointer">
-              <Zap size={24} className="text-primary mb-3" />
+            <div
+              onClick={() => onNavigateTo?.('practice')}
+              className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md hover:border-primary/30 transition-all cursor-pointer group"
+            >
+              <Zap size={24} className="text-primary mb-3 group-hover:scale-110 transition-transform" />
               <h4 className="font-bold text-primary text-sm mb-1">Quick Practice</h4>
               <p className="text-xs text-on-surface-variant">Jump into topic-wise PYQ practice</p>
             </div>
-            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md transition-all cursor-pointer">
-              <Target size={24} className="text-secondary mb-3" />
+            <div
+              onClick={() => onNavigateTo?.('papers')}
+              className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md hover:border-secondary/30 transition-all cursor-pointer group"
+            >
+              <BookOpen size={24} className="text-secondary mb-3 group-hover:scale-110 transition-transform" />
               <h4 className="font-bold text-primary text-sm mb-1">Full Mock Test</h4>
               <p className="text-xs text-on-surface-variant">100 Qs • 90 Min • Real CBT Pattern</p>
             </div>
-            <div className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md transition-all cursor-pointer">
-              <BarChart3 size={24} className="text-tertiary mb-3" />
+            <div
+              onClick={() => onNavigateTo?.('analytics')}
+              className="bg-surface-container-lowest rounded-xl p-5 shadow-sm border border-surface-container-high hover:shadow-md hover:border-tertiary/30 transition-all cursor-pointer group"
+            >
+              <BarChart3 size={24} className="text-tertiary mb-3 group-hover:scale-110 transition-transform" />
               <h4 className="font-bold text-primary text-sm mb-1">Analytics</h4>
               <p className="text-xs text-on-surface-variant">Track your performance trends</p>
             </div>
           </div>
 
-          {/* Roadmap */}
-          <div className="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                  <CalendarDays size={24} /> 90-Day Mastery Roadmap
-                </h3>
-                <p className="text-sm text-on-surface-variant mt-1">Your personalized path to RRB Group D selection.</p>
-              </div>
+          {/* Subject Quick Jump */}
+          <div className="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-container-high overflow-hidden">
+            <div className="px-6 py-4 border-b border-surface-container">
+              <h3 className="font-bold text-primary text-base flex items-center gap-2">
+                <Zap size={18} className="text-primary" /> Subject Quick Jump
+              </h3>
+              <p className="text-xs text-on-surface-variant mt-0.5">Choose a subject and start mastering or test yourself</p>
             </div>
-
-            <div className="relative">
-              <div className="absolute left-[19px] top-2 bottom-2 w-1 bg-surface-container-high rounded-full"></div>
-
-              <div className="space-y-8">
-                {[
-                  { id: 1, title: "Phase 1: Basics & High-Yield PYQs", desc: "Weeks 1-2 • Focus on Mathematics (Percentage, Ratio) and Reasoning (Analogies).", status: 'current' },
-                  { id: 2, title: "Phase 2: Science & General Awareness", desc: "Weeks 3-5 • Physics, Chemistry, Biology and Current Affairs.", status: 'locked' },
-                  { id: 3, title: "Phase 3: Full Mocks & Analytics", desc: "Weeks 6-8 • Unlimited CBT mocks, adaptive difficulty, and weak area targeting.", status: 'locked' },
-                  { id: 4, title: "Phase 4: Final Revision & Exam Ready", desc: "Weeks 9-12 • Rapid fire PYQs, formula revision, and confidence building.", status: 'locked' },
-                ].map((phase) => (
-                  <div key={phase.id} className={cn("relative pl-12 transition-opacity", phase.status === 'locked' ? "opacity-60" : "opacity-100")}>
-                    <div className={cn(
-                      "absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center shadow-sm z-10 border-4 border-white",
-                      phase.status === 'current' ? "bg-primary text-white shadow-md" : "bg-surface-container-high text-on-surface-variant"
-                    )}>
-                      {phase.id === 4 ? <Trophy size={18} /> : <span className="font-bold text-sm">{phase.id}</span>}
-                    </div>
-
-                    <div className={cn(
-                      "p-5 rounded-xl border transition-all",
-                      phase.status === 'current' ? "bg-primary/5 border-2 border-primary/20 shadow-sm" : "bg-surface-container-lowest border-surface-container-high"
-                    )}>
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className={cn("font-bold", phase.status === 'locked' ? "text-on-surface-variant" : "text-primary")}>
-                          {phase.title}
-                        </h4>
-                        <span className={cn(
-                          "text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1",
-                          phase.status === 'current' ? "bg-primary text-white" : "bg-surface-container text-on-surface-variant"
-                        )}>
-                          {phase.status === 'current' ? 'Current' : <><Lock size={10} /> Locked</>}
-                        </span>
-                      </div>
-                      <p className="text-xs text-on-surface-variant">{phase.desc}</p>
-                    </div>
+            <div className="divide-y divide-surface-container">
+              {([
+                { subject: 'Mathematics',       icon: '📐', grad: 'from-blue-500 to-indigo-600',    pyqs: stats.subjectMap['Mathematics']?.count || 0 },
+                { subject: 'Reasoning',         icon: '🧩', grad: 'from-purple-500 to-violet-600',  pyqs: stats.subjectMap['Reasoning']?.count || 0 },
+                { subject: 'General Science',   icon: '🔬', grad: 'from-emerald-500 to-teal-600',   pyqs: stats.subjectMap['General Science']?.count || 0 },
+                { subject: 'General Awareness', icon: '🌍', grad: 'from-amber-500 to-orange-600',   pyqs: stats.subjectMap['General Awareness']?.count || 0 },
+              ] as const).map(({ subject, icon, grad, pyqs }) => (
+                <div key={subject} className="flex items-center gap-4 px-5 py-4 hover:bg-surface-container/40 transition-colors">
+                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-gradient-to-br shrink-0 shadow-sm', grad)}>
+                    {icon}
                   </div>
-                ))}
-              </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm text-primary truncate">{subject}</p>
+                    <p className="text-[10px] text-on-surface-variant">{pyqs.toLocaleString()} PYQs</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => onNavigateTo?.('practice')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:bg-primary/90 transition-all active:scale-95 shadow-sm"
+                    >
+                      <BookOpen size={12} /> Subject Mastery
+                    </button>
+                    <button
+                      onClick={() => onNavigateTo?.('papers')}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container text-primary rounded-lg text-xs font-bold hover:bg-surface-container-high transition-all active:scale-95 border border-surface-container-high"
+                    >
+                      <ChevronRight size={12} /> Mock Test
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

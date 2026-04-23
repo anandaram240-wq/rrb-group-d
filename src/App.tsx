@@ -15,6 +15,7 @@ const PerformanceTracker= lazy(() => import('./components/PerformanceTracker'));
 const LoginScreen       = lazy(() => import('./components/LoginScreen').then(m => ({ default: m.LoginScreen })));
 const StudyRoadmap      = lazy(() => import('./components/StudyRoadmap').then(m => ({ default: m.StudyRoadmap })));
 const ExamPlanner       = lazy(() => import('./components/ExamPlanner').then(m => ({ default: m.ExamPlanner })));
+const StudyModules      = lazy(() => import('./components/StudyModules').then(m => ({ default: m.StudyModules })));
 
 // ── Tiny tab fallback spinner ──────────────────────────────────────────────────
 function TabSpinner() {
@@ -36,6 +37,13 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
+  // For deep-linking from Study Modules → Practice Engine
+  const [practiceFilter, setPracticeFilter] = useState<{ subject: string; topic: string } | null>(null);
+
+  const navigateToPractice = (subject: string, topic: string) => {
+    setPracticeFilter({ subject, topic });
+    setActiveTab('practice');
+  };
 
   // PWA install
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -307,8 +315,9 @@ export default function App() {
         <main className="pt-16 px-3 sm:px-4 lg:px-8 pb-12 w-full min-w-0 overflow-x-hidden">
           <div className="max-w-screen-xl mx-auto">
             <Suspense fallback={<TabSpinner />}>
-              {activeTab === 'dashboard'   && <Dashboard userName={user.name} />}
-              {activeTab === 'practice'    && <PracticeEngine />}
+              {activeTab === 'dashboard'   && <Dashboard userName={user.name} onNavigateTo={setActiveTab} />}
+              {activeTab === 'study'       && <StudyModules onPractice={navigateToPractice} />}
+              {activeTab === 'practice'    && <PracticeEngine initialSubject={practiceFilter?.subject} initialTopic={practiceFilter?.topic} />}
               {activeTab === 'papers'      && <MockTests />}
               {activeTab === 'analytics'  && <AnalyticsEngine />}
               {activeTab === 'performance' && <PerformanceTracker onNavigateTo={setActiveTab} />}
