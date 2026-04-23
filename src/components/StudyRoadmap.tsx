@@ -950,7 +950,17 @@ export function StudyRoadmap() {
   const syllabus = useMemo(() => buildSyllabus(allQ), []);
 
   const [profile, setProfile] = useState<Profile | null>(() => {
-    try { return JSON.parse(localStorage.getItem(SK) || 'null'); } catch { return null; }
+    try {
+      const raw = JSON.parse(localStorage.getItem(SK) || 'null') as Profile | null;
+      // Validate: must have valid category + examDate, otherwise force re-onboard
+      if (!raw) return null;
+      const validCats = ['general', 'obc', 'sc', 'st'];
+      if (!validCats.includes(raw.category) || !raw.examDate || !raw.createdAt) {
+        localStorage.removeItem(SK);
+        return null;
+      }
+      return raw;
+    } catch { return null; }
   });
   const [completions, setCompletions] = useState<Set<number>>(loadCompletions);
   const [activeTab, setActiveTab] = useState<'plan' | 'heatmap' | 'mastery' | 'rules'>('plan');
@@ -986,7 +996,10 @@ export function StudyRoadmap() {
   }, [plan]);
 
   const overallPct = plan.length > 0 ? Math.round((completions.size / plan.length) * 100) : 0;
-  const daysLeft = profile ? differenceInDays(parseISO(profile.examDate), new Date()) : 0;
+  const daysLeft = useMemo(() => {
+    if (!profile) return 0;
+    try { return differenceInDays(parseISO(profile.examDate), new Date()); } catch { return 0; }
+  }, [profile]);
   const streakDays = useMemo(() => {
     let streak = 0;
     for (let d = todayDayNum; d >= 1; d--) {
@@ -996,13 +1009,16 @@ export function StudyRoadmap() {
   }, [completions, todayDayNum]);
 
   const todayTip = TOPPER_STRATEGIES[todayDayNum % TOPPER_STRATEGIES.length];
-  const tier = profile ? getStrategyTier(differenceInDays(parseISO(profile.examDate), parseISO(profile.createdAt))) : null;
+  const tier = useMemo(() => {
+    if (!profile) return null;
+    try { return getStrategyTier(differenceInDays(parseISO(profile.examDate), parseISO(profile.createdAt))); } catch { return null; }
+  }, [profile]);
 
   if (!profile) {
     return <OnboardingWizard onComplete={p => setProfile(p)} />;
   }
 
-  const cutoff = CATEGORY_CUTOFF[profile.category];
+  const cutoff = CATEGORY_CUTOFF[profile.category] ?? CATEGORY_CUTOFF.general;
 
   const TABS = [
     { id: 'plan' as const, label: 'Plan', icon: <CalendarDays size={14} /> },
