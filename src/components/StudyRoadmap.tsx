@@ -1,15 +1,16 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import {
   CalendarDays, Clock, Target, ChevronDown, ChevronUp, AlertTriangle,
-  CheckCircle2, Circle, TrendingUp, Zap, Settings, ArrowRight, Sparkles,
+  CheckCircle2, Circle, TrendingUp, Zap, ArrowRight, Sparkles,
   GraduationCap, BarChart3, Trophy, BookOpen, RotateCcw, Lightbulb,
-  Flame, Star, ChevronRight, Lock, MapPin, Users,
+  Flame, Star, Lock, MapPin, Users, Brain, Swords, FlaskConical,
+  Globe, ChevronRight, Info,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { format, differenceInDays, addDays, parseISO, isBefore } from 'date-fns';
+import { format, differenceInDays, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
 import pyqsData from '../data/pyqs.json';
-import { TOPIC_META, HEAT_COLORS } from '../data/roadmapData';
+import { TOPIC_META, HEAT_COLORS, REVISION_PLAN } from '../data/roadmapData';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 interface PYQ { id: number; subject: string; topic: string; }
@@ -41,29 +42,32 @@ const SUBJECT_ORDER = [
     name: 'Reasoning', marks: 30, icon: '🧩',
     grad: 'from-purple-500 to-violet-600', light: 'bg-purple-50',
     border: 'border-purple-200', text: 'text-purple-700',
-    why: 'Highest marks (30), fastest to improve with practice — do first',
+    why: 'Highest marks (30) — fastest to improve with daily practice',
+    lucide: Brain,
   },
   {
     name: 'Mathematics', marks: 25, icon: '📐',
     grad: 'from-blue-500 to-indigo-600', light: 'bg-blue-50',
     border: 'border-blue-200', text: 'text-blue-700',
-    why: 'Formula-based — learn 1 trick per topic, do second',
+    why: 'Formula-based — 1 trick per topic gives 80%+ accuracy',
+    lucide: Swords,
   },
   {
     name: 'General Science', marks: 25, icon: '🔬',
     grad: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50',
     border: 'border-emerald-200', text: 'text-emerald-700',
-    why: 'NCERT 9-10 facts — direct questions, do third',
+    why: 'NCERT 9-10 direct facts — 70% questions are straight recall',
+    lucide: FlaskConical,
   },
   {
     name: 'General Awareness', marks: 20, icon: '🌍',
     grad: 'from-amber-500 to-orange-600', light: 'bg-amber-50',
     border: 'border-amber-200', text: 'text-amber-700',
-    why: 'Memory-based — do last so facts are fresh for exam',
+    why: 'Memory-based — revise last so facts stay freshest for exam',
+    lucide: Globe,
   },
 ];
 
-// RRB Category cutoffs (approximate, based on 2022 data)
 const CATEGORY_CUTOFF: Record<string, { min: number; safe: number; label: string; color: string }> = {
   general: { min: 65, safe: 72, label: 'General/UR', color: 'text-blue-700' },
   obc:     { min: 60, safe: 67, label: 'OBC/NCWL',  color: 'text-violet-700' },
@@ -86,15 +90,25 @@ const DIFFICULTY: Record<string, number> = {
 
 // Topper-sourced strategies (SSC CGL, UPSC, RRB toppers)
 const TOPPER_STRATEGIES = [
-  { icon: '🎯', rule: 'One subject at a time — complete mastery before moving on', src: 'SSC CGL Rank 1 (Parth Garg) strategy' },
-  { icon: '📊', rule: 'Prioritize by PYQ frequency — top 20% topics = 80% paper coverage', src: 'Pareto principle, RRB 2018-2024 data analysis' },
-  { icon: '🔁', rule: 'Revise at Day 1, Day 7, Day 30 after learning (Ebbinghaus Forgetting Curve)', src: 'Memory retention science research' },
+  { icon: '🎯', rule: 'One subject at a time — full mastery before moving on', src: 'SSC CGL Rank 1 (Parth Garg) strategy' },
+  { icon: '📊', rule: 'Top 20% PYQ topics = 80% of the paper — always prioritise by frequency', src: 'Pareto principle applied to RRB 2018-2024 PYQ data' },
+  { icon: '🔁', rule: 'Revise on Day 1, Day 7, Day 30 after learning (Ebbinghaus Forgetting Curve)', src: 'Memory retention science — proven to boost recall to 90%+' },
   { icon: '⏱', rule: '54 seconds max per Q — practice with timer from Day 1', src: 'RRB CBT official pattern: 90 min / 100 Qs' },
-  { icon: '🌅', rule: 'Morning = Math/Reasoning (peak concentration). Evening = Science/GA (reading)', src: 'Circadian rhythm research for cognitive tasks' },
-  { icon: '📝', rule: 'Weekly mini-mock (30 Qs in 27 min) from Week 2 — even if not all topics done', src: 'UPSC CSE topper Anudeep Durishetty method' },
-  { icon: '🚩', rule: 'Flag every confusing Q → practice them Saturday (Weak Areas page)', src: 'Active recall methodology, Barbara Oakley' },
-  { icon: '💯', rule: 'Accuracy first (aim 80%+), then build speed — never the other way', src: 'SSC CGL 100+ scorers interview analysis' },
+  { icon: '🌅', rule: 'Morning = Maths/Reasoning (peak focus). Evening = Science/GA (reading)', src: 'Circadian rhythm research for cognitive performance' },
+  { icon: '📝', rule: 'Weekly mini-mock (30 Qs / 27 min) from Week 2 — even if topics not done', src: 'UPSC topper Anudeep Durishetty method' },
+  { icon: '🚩', rule: 'Flag confusing Qs immediately → practice them every Saturday', src: 'Active recall methodology — Barbara Oakley, "Learning How to Learn"' },
+  { icon: '💯', rule: 'Accuracy first (80%+), THEN build speed — never the other way around', src: 'SSC CGL 100+ scorers interview analysis, 2021–2024' },
+  { icon: '📖', rule: 'Short explanation reading for Science/GK — never memorise, understand', src: 'RRB Group D 2022 topper interviews — direct question strategy' },
+  { icon: '🧮', rule: 'For Maths: note 1 formula + 1 shortcut per topic in a dedicated sheet', src: 'SSC CGL Rank 3 Nishant Dixit — formula book method' },
 ];
+
+// Subject-wise sub-target scores
+const SUB_TARGETS: Record<string, Record<string, number>> = {
+  general: { Reasoning: 22, Mathematics: 18, 'General Science': 18, 'General Awareness': 14 },
+  obc:     { Reasoning: 20, Mathematics: 17, 'General Science': 16, 'General Awareness': 14 },
+  sc:      { Reasoning: 18, Mathematics: 15, 'General Science': 15, 'General Awareness': 14 },
+  st:      { Reasoning: 16, Mathematics: 14, 'General Science': 14, 'General Awareness': 14 },
+};
 
 /** Strategy tier based on available days */
 function getStrategyTier(days: number): { label: string; topics: number; desc: string; color: string } {
@@ -107,7 +121,7 @@ function getStrategyTier(days: number): { label: string; topics: number; desc: s
 const SK = 'rrb_roadmap_profile';
 const CK = 'rrb_day_completions';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Helpers ─────────────────────────────────────────────────────────────────────
 function buildSyllabus(qs: PYQ[]) {
   const c: Record<string, Record<string, number>> = {};
   qs.forEach(q => {
@@ -129,7 +143,7 @@ function saveCompletions(s: Set<number>) {
   localStorage.setItem(CK, JSON.stringify([...s]));
 }
 
-// ── Plan Generator ─────────────────────────────────────────────────────────────
+// ── Plan Generator ──────────────────────────────────────────────────────────────
 function generatePlan(
   profile: Profile,
   syllabus: Record<string, { topic: string; count: number }[]>
@@ -143,12 +157,10 @@ function generatePlan(
     : profile.hoursPerDay >= 4 ? 45
     : profile.hoursPerDay >= 2 ? 30 : 20;
 
-  // Budget: 72% study, 13% revision, 15% mock (more mocks = higher score in short time)
   const studyBudget = Math.floor(totalDays * 0.72);
   const revBudget   = Math.floor(totalDays * 0.13);
   const mockBudget  = totalDays - studyBudget - revBudget;
 
-  // Per-subject day allocation weighted by marks × difficulty
   const totalW = SUBJECT_ORDER.reduce((s, sub) => s + sub.marks * (DIFFICULTY[sub.name] || 1), 0);
   const subAlloc = SUBJECT_ORDER.map(sub => ({
     ...sub,
@@ -158,12 +170,9 @@ function generatePlan(
   const plans: DayPlan[] = [];
   let dayNum = 1;
 
-  // ── Phase 1–4: One subject fully, then next ───────────────────────────────
   for (let pi = 0; pi < subAlloc.length; pi++) {
     const sub = subAlloc[pi];
     const subName = sub.name;
-
-    // Pick topics: PYQ-sorted, top N based on strategy tier
     const topics = (syllabus[subName] || []).slice(0, tier.topics);
     const alloted = sub.days;
     const phaseNum = pi + 1;
@@ -172,7 +181,6 @@ function generatePlan(
     let daysSinceRev = 0;
     let ti = 0;
 
-    // Phase kickoff day
     plans.push({
       dayNumber: dayNum++,
       subject: subName,
@@ -184,9 +192,9 @@ function generatePlan(
       phaseLabel: subName,
       topicFreq: topics.reduce((s, t) => s + t.count, 0),
       tips: [
-        `${subName} = ${sub.marks} marks in RRB Group D — ${sub.why}`,
-        `Strategy: ${tier.label} — study top ${tier.topics} PYQ-frequency topics`,
-        `Today target: understand scope. Don't worry about getting all correct.`,
+        `${subName} = ${sub.marks} marks — ${sub.why}`,
+        `Strategy: ${tier.label} — top ${tier.topics} PYQ-frequency topics`,
+        `Today: understand the scope. Don't worry if accuracy is low.`,
       ],
     });
     dayInPhase++;
@@ -195,7 +203,6 @@ function generatePlan(
     while (dayInPhase < alloted - 1 && ti < topics.length) {
       const topic = topics[ti];
 
-      // Spaced revision every 7 days within subject
       if (daysSinceRev >= 7 && ti >= 2) {
         const revTopics = topics.slice(Math.max(0, ti - 3), ti).map(t => t.topic).join(' + ');
         plans.push({
@@ -203,15 +210,15 @@ function generatePlan(
           subject: subName,
           topic: 'Spaced Revision',
           targetQ: qPerDay,
-          instruction: `🔁 Day-7 Revision (Ebbinghaus Rule): Re-solve ${qPerDay} PYQs from: ${revTopics}. Focus only on your wrong/flagged questions. Skip what you already score 90%+.`,
+          instruction: `🔁 Day-7 Revision (Ebbinghaus Rule): Re-solve ${qPerDay} PYQs from: ${revTopics}. Focus only on wrong/flagged questions. Skip what you score 90%+.`,
           type: 'revise',
           phase: phaseNum,
           phaseLabel: subName,
           topicFreq: 0,
           tips: [
-            'Without revision in 7 days, you forget 70% (Ebbinghaus curve)',
-            'Revising at Day 7 restores retention to 90%+',
-            'Use Weak Areas 🚩 list to target the right questions',
+            'Without revision at Day 7, you forget 70% of what you studied',
+            'Target: get accuracy above 80% on previously wrong questions',
+            'Use your 🚩 flagged list as the revision queue',
           ],
         });
         dayInPhase++;
@@ -220,7 +227,6 @@ function generatePlan(
 
       if (dayInPhase >= alloted - 1) break;
 
-      // Days for this topic: tier-based
       const topicDays = topic.count >= 50 ? 3 : topic.count >= 25 ? 2 : 1;
       const isHighPriority = topic.count >= 40;
       const isMedPriority = topic.count >= 20;
@@ -238,13 +244,13 @@ function generatePlan(
           targetQ: qTarget,
           instruction: isFirst
             ? `📖 Learn "${topic.topic}" (${subName}): Study concept + formula (20 min max) → Solve first ${qTarget} PYQs → Note 1 speed trick → Flag 🚩 any confusing Q`
-            : `⚡ Master "${topic.topic}": Solve ${qTarget} PYQs at exam speed (≤54s each). After each 10: check accuracy. Revisit wrong answers immediately. Target: ≥80%.`,
+            : `⚡ Master "${topic.topic}": Solve ${qTarget} PYQs at exam speed (≤54s each). After every 10 Qs: check accuracy. Revisit wrong answers immediately. Target: ≥80%.`,
           type: isFirst ? 'learn' : 'practice',
           phase: phaseNum,
           phaseLabel: subName,
           topicFreq: topic.count,
           tips: [
-            `"${topic.topic}" — ${topic.count} PYQs in dataset ${isHighPriority ? '🔥 Very High Priority (40+ PYQs)' : isMedPriority ? '⚡ High Priority (20+ PYQs)' : '✅ Standard'}`,
+            `"${topic.topic}" — ${topic.count} PYQs in dataset ${isHighPriority ? '🔥 Very High Priority' : isMedPriority ? '⚡ High Priority' : '✅ Standard'}`,
             ...(TOPIC_META[topic.topic]?.tips?.slice(0, 2) ?? []),
           ],
         });
@@ -254,27 +260,26 @@ function generatePlan(
       ti++;
     }
 
-    // Phase-end mini mock
     plans.push({
       dayNumber: dayNum++,
       subject: subName,
       topic: `${subName} Phase Test`,
       targetQ: 25,
-      instruction: `📝 ${subName} Phase Test: 25 Qs in 22 min (timer on, no notes, simulate exam). Analyze every wrong answer by topic. Score target: ${CATEGORY_CUTOFF[profile.category]?.safe ?? 70}%+ to move on confidently.`,
+      instruction: `📝 ${subName} Phase Test: 25 Qs in 22 min (timer on, no notes, exam simulation). Analyse every wrong answer. Score target: ≥${CATEGORY_CUTOFF['general']?.safe ?? 70}% to move confidently.`,
       type: 'mock',
       phase: phaseNum,
       phaseLabel: subName,
       topicFreq: 0,
       milestone: `✅ Phase ${phaseNum} Complete — ${subName} DONE!`,
       tips: [
-        '≥80% = Excellent! Move to next subject',
-        '60–80% = Good. Note 3 weak topics for revision phase',
-        '<60% = Spend 2 more days on your 3 weakest topics before moving',
+        '≥80% → Excellent! Move to next subject',
+        '60–80% → Good. Note 3 weak topics for revision phase',
+        '<60% → Spend 2 extra days on weakest 3 topics before moving',
       ],
     });
   }
 
-  // ── Phase 5: Mixed Revision ───────────────────────────────────────────────
+  // Phase 5: Mixed Revision
   const revRota = SUBJECT_ORDER.map(s => s.name);
   for (let d = 0; d < revBudget; d++) {
     const subName = revRota[d % revRota.length];
@@ -283,20 +288,20 @@ function generatePlan(
       subject: subName,
       topic: 'Final Revision',
       targetQ: qPerDay,
-      instruction: `🔁 Final Revision — ${subName}: ONLY practice your Weak Areas 🚩 flagged questions + topics where accuracy was <70%. Skip strong topics. Simulate exam time.`,
+      instruction: `🔁 Final Revision — ${subName}: ONLY practice your 🚩 Weak Areas flagged questions + topics where accuracy was <70%. Skip strong topics. Simulate exam time.`,
       type: 'revise',
       phase: 5,
       phaseLabel: 'Mixed Revision',
       topicFreq: 0,
       tips: [
-        'Skip what you know. Double down on weak spots.',
-        'Recommended: 30 min Weak Areas practice + 30 min timed PYQs',
-        `Target cutoff: ${CATEGORY_CUTOFF[profile.category]?.safe ?? 70}/100 (${CATEGORY_CUTOFF[profile.category]?.label ?? 'General'})`,
+        'Skip what you know well. Double down on weak spots.',
+        '30 min Weak Areas practice + 30 min timed PYQs = optimal session',
+        `Target cutoff: ${CATEGORY_CUTOFF['general']?.safe ?? 70}/100`,
       ],
     });
   }
 
-  // ── Phase 6: Full CBT Mocks ───────────────────────────────────────────────
+  // Phase 6: Full CBT Mocks
   for (let d = 0; d < mockBudget; d++) {
     const isLast = d === mockBudget - 1;
     plans.push({
@@ -305,19 +310,19 @@ function generatePlan(
       topic: isLast ? '🏆 EXAM DAY — You Are Ready!' : `Full CBT Mock ${d + 1}`,
       targetQ: isLast ? 0 : 100,
       instruction: isLast
-        ? `🏅 Exam Day preparation: Light breakfast, reach 30 min early. Read all 100 Qs in 5 min first pass. Attempt easy ones first. Don't spend >2 min on any single Q. Trust your preparation — YOU ARE READY!`
-        : `📝 Full Mock ${d + 1}: 100 Qs / 90 min — no breaks, real exam simulation. Post-mock: calculate accuracy per subject, note top-3 wrong topics. Target: ${CATEGORY_CUTOFF[profile.category]?.safe ?? 70}+/100`,
+        ? `🏅 Exam Day: Light breakfast, reach 30 min early. Read all 100 Qs quickly (5 min first pass). Attempt easy Qs first. Don't spend >2 min on any Q. Trust your preparation!`
+        : `📝 Full Mock ${d + 1}: 100 Qs / 90 min — no breaks, real exam simulation. Post-mock: calculate accuracy per subject, note top-3 wrong topics. Analysis = 1 hr minimum.`,
       type: isLast ? 'buffer' : 'mock',
       phase: 6,
       phaseLabel: 'Full Mocks',
       topicFreq: 0,
-      milestone: isLast ? `🎯 ${profile.zone} — All the best in your exam!` : undefined,
+      milestone: isLast ? `🎯 Good luck at ${profile.zone}!` : undefined,
       tips: isLast
-        ? ['8 hours sleep tonight', 'Documents ready?', 'Hall ticket + ID + pen printed?']
+        ? ['8 hours sleep tonight', 'Hall ticket + ID ready?', 'Arrive 30 min early']
         : [
-          `${profile.zone}: Check zone-specific cutoff trends for ${CATEGORY_CUTOFF[profile.category]?.label ?? 'General'}`,
-          `Reasoning 22+, Maths 17+, Science 17+, GA 14+ = safe score for ${CATEGORY_CUTOFF[profile.category]?.label ?? 'General'}`,
-          'After each mock: 1 hour analysis > 3 hours studying',
+          'After each mock: 1 hour analysis > 3 hours more studying',
+          'Reasoning 22+, Maths 18+, Science 18+, GA 14+ = safe zone',
+          'Eliminate 2 wrong options first — boosts 50% guessing to 70%',
         ],
     });
   }
@@ -325,7 +330,209 @@ function generatePlan(
   return plans;
 }
 
-// ── Today Card ─────────────────────────────────────────────────────────────────
+// ── PYQ Frequency Heatmap ───────────────────────────────────────────────────────
+function FrequencyHeatmap({ syllabus }: { syllabus: Record<string, { topic: string; count: number }[]> }) {
+  const [activeSubject, setActiveSubject] = useState(SUBJECT_ORDER[0].name);
+  const sub = SUBJECT_ORDER.find(s => s.name === activeSubject)!;
+  const topics = (syllabus[activeSubject] || []).slice(0, 12);
+  const maxCount = topics[0]?.count || 1;
+  const totalPYQs = topics.reduce((s, t) => s + t.count, 0);
+
+  return (
+    <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high shadow-sm overflow-hidden">
+      <div className="p-5 pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-black text-primary flex items-center gap-2 text-sm">
+            <BarChart3 size={16} className="text-primary" /> PYQ Frequency Analysis — Top Topics
+          </h3>
+          <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full font-mono">
+            {totalPYQs} PYQs shown
+          </span>
+        </div>
+        {/* Subject tabs */}
+        <div className="flex gap-1 flex-wrap mb-4">
+          {SUBJECT_ORDER.map(s => (
+            <button
+              key={s.name}
+              onClick={() => setActiveSubject(s.name)}
+              className={cn(
+                'text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all',
+                activeSubject === s.name
+                  ? `bg-gradient-to-r ${s.grad} text-white shadow-sm`
+                  : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+              )}
+            >
+              {s.icon} {s.name.replace('General ', 'Gen. ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-5 pb-5 space-y-2">
+        {topics.map((t, i) => {
+          const pct = Math.round((t.count / maxCount) * 100);
+          const meta = TOPIC_META[t.topic];
+          const heat = meta?.heat ?? (t.count >= 100 ? 'heavy' : t.count >= 40 ? 'medium' : 'light');
+          const hc = HEAT_COLORS[heat];
+          return (
+            <div key={t.topic} className="group">
+              <div className="flex items-center justify-between mb-0.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={cn('text-[9px] font-black w-4 text-center shrink-0', hc.text)}>
+                    #{i + 1}
+                  </span>
+                  <span className="text-xs font-semibold text-on-surface truncate">{t.topic}</span>
+                  <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0', hc.bg, hc.text)}>
+                    {heat === 'heavy' ? '🔥' : heat === 'medium' ? '⚡' : '✅'} {hc.label}
+                  </span>
+                </div>
+                <span className="text-[11px] font-black text-on-surface shrink-0 ml-2">{t.count}</span>
+              </div>
+              <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
+                <motion.div
+                  className={cn('h-full rounded-full bg-gradient-to-r', sub.grad)}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${pct}%` }}
+                  transition={{ duration: 0.6, delay: i * 0.04 }}
+                />
+              </div>
+              {meta?.tips?.[0] && (
+                <p className="text-[10px] text-on-surface-variant mt-0.5 pl-6 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  💡 {meta.tips[0]}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Subject Mastery Overview ────────────────────────────────────────────────────
+function SubjectMasteryOverview({
+  plan, completions, category,
+}: {
+  plan: DayPlan[]; completions: Set<number>; category: string;
+}) {
+  const targets = SUB_TARGETS[category] ?? SUB_TARGETS.general;
+
+  const subStats = SUBJECT_ORDER.map(sub => {
+    const subDays = plan.filter(d => d.subject === sub.name);
+    const done = subDays.filter(d => completions.has(d.dayNumber)).length;
+    const pct = subDays.length > 0 ? Math.round((done / subDays.length) * 100) : 0;
+    const learnDone = subDays.filter(d => d.type === 'learn' && completions.has(d.dayNumber)).length;
+    const totalLearn = subDays.filter(d => d.type === 'learn').length;
+    return { ...sub, done, total: subDays.length, pct, learnDone, totalLearn };
+  });
+
+  return (
+    <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high shadow-sm p-5">
+      <h3 className="font-black text-primary flex items-center gap-2 text-sm mb-4">
+        <Trophy size={16} className="text-amber-500" /> Subject Mastery Overview
+      </h3>
+      <div className="grid grid-cols-2 gap-3">
+        {subStats.map(s => (
+          <div key={s.name} className={cn('rounded-xl p-3 border', s.light, s.border)}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-lg">{s.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className={cn('text-xs font-black truncate', s.text)}>{s.name.replace('General ', 'G. ')}</p>
+                <p className="text-[10px] text-on-surface-variant">{s.marks} marks</p>
+              </div>
+              <span className={cn('text-sm font-black', s.text)}>{s.pct}%</span>
+            </div>
+            <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-2">
+              <motion.div
+                className={cn('h-full rounded-full bg-gradient-to-r', s.grad)}
+                initial={{ width: 0 }}
+                animate={{ width: `${s.pct}%` }}
+                transition={{ duration: 0.8 }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-on-surface-variant">
+              <span>{s.done}/{s.total} days</span>
+              <span className="font-bold">Target: {targets[s.name]}/{s.marks}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── 7-Day Pre-Exam Sprint ───────────────────────────────────────────────────────
+function PreExamSprint({ daysLeft }: { daysLeft: number }) {
+  const [open, setOpen] = useState(daysLeft <= 14);
+  if (daysLeft > 30) return null;
+
+  return (
+    <div className={cn(
+      'rounded-2xl border-2 overflow-hidden',
+      daysLeft <= 7 ? 'border-red-400' : 'border-amber-300'
+    )}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={cn(
+          'w-full flex items-center gap-3 p-4 text-left',
+          daysLeft <= 7 ? 'bg-red-50' : 'bg-amber-50'
+        )}
+      >
+        <div className={cn(
+          'w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0',
+          daysLeft <= 7 ? 'bg-red-500' : 'bg-amber-500'
+        )}>
+          🔥
+        </div>
+        <div className="flex-1">
+          <p className={cn('font-black text-sm', daysLeft <= 7 ? 'text-red-700' : 'text-amber-700')}>
+            {daysLeft <= 7 ? `🚨 EXAM IN ${daysLeft} DAYS — Final Sprint!` : `⚡ ${daysLeft} Days Left — Pre-Exam Sprint Plan`}
+          </p>
+          <p className="text-[11px] text-on-surface-variant">7-day topper revision schedule</p>
+        </div>
+        {open ? <ChevronUp size={16} className="text-on-surface-variant shrink-0" /> : <ChevronDown size={16} className="text-on-surface-variant shrink-0" />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="p-4 space-y-2 bg-surface-container-lowest">
+              {REVISION_PLAN.map(day => {
+                const typeColor: Record<string, string> = {
+                  revise: 'bg-amber-100 text-amber-800 border-amber-200',
+                  practice: 'bg-blue-100 text-blue-800 border-blue-200',
+                };
+                return (
+                  <div key={day.day} className={cn('flex items-start gap-3 p-3 rounded-xl border', typeColor[day.type] ?? 'bg-surface-container border-surface-container-high')}>
+                    <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center font-black text-xs shrink-0">
+                      D-{8 - day.day}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-black">{day.label}</p>
+                      <p className="text-[10px] mt-0.5 opacity-80">{day.focus}</p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {day.topics.map(t => (
+                          <span key={t} className="text-[9px] font-bold bg-white/50 px-1.5 py-0.5 rounded">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold shrink-0">{day.hours}h</span>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Today Card ──────────────────────────────────────────────────────────────────
 function TodayCard({ day, isCompleted, onToggle, profile }: {
   day: DayPlan | null; isCompleted: boolean; onToggle: () => void; profile: Profile;
 }) {
@@ -347,6 +554,8 @@ function TodayCard({ day, isCompleted, onToggle, profile }: {
     learn: '📖 LEARN', practice: '⚡ PRACTICE', revise: '🔁 REVISE', mock: '📝 MOCK', buffer: '🛡 BUFFER',
   };
   const cutoff = CATEGORY_CUTOFF[profile.category];
+  const subTargets = SUB_TARGETS[profile.category] ?? SUB_TARGETS.general;
+  const meta = TOPIC_META[day.topic];
 
   return (
     <motion.div
@@ -357,8 +566,8 @@ function TodayCard({ day, isCompleted, onToggle, profile }: {
         isCompleted ? 'border-tertiary/30 bg-tertiary/5' : (sub?.border ?? 'border-primary/20')
       )}
     >
-      <div className={cn('h-1 bg-gradient-to-r', sub?.grad ?? 'from-primary to-primary-container')} />
-      <div className="p-6">
+      <div className={cn('h-1.5 bg-gradient-to-r', sub?.grad ?? 'from-primary to-primary-container')} />
+      <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -377,18 +586,34 @@ function TodayCard({ day, isCompleted, onToggle, profile }: {
                   {day.topicFreq >= 50 ? '🔥' : day.topicFreq >= 25 ? '⚡' : '✅'} {day.topicFreq} PYQs
                 </span>
               )}
-              {/* Category badge */}
               <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', cutoff.color, 'bg-surface-container border-surface-container-high')}>
-                🎯 Target: {cutoff.safe}/100 ({cutoff.label})
+                🎯 Target: {cutoff.safe}/100
               </span>
             </div>
-            <h3 className="text-xl font-black text-primary mb-1">{day.topic}</h3>
-            <p className={cn('text-sm font-medium mb-4', sub?.text ?? 'text-on-surface-variant')}>
-              {day.subject}{profile.zone && ` · ${profile.zone}`}
+            <h3 className="text-xl font-black text-primary mb-0.5">{day.topic}</h3>
+            <p className={cn('text-sm font-medium mb-3', sub?.text ?? 'text-on-surface-variant')}>
+              {day.subject}{profile.zone && profile.zone !== 'Not selected' ? ` · ${profile.zone}` : ''}
             </p>
-            <p className="text-sm text-on-surface leading-relaxed bg-surface-container rounded-xl p-4 mb-4">
+
+            <p className="text-sm text-on-surface leading-relaxed bg-surface-container rounded-xl p-4 mb-3">
               {day.instruction}
             </p>
+
+            {/* Sub-subject target */}
+            {day.subject !== 'All Subjects' && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {SUBJECT_ORDER.map(s => (
+                  <div key={s.name} className={cn(
+                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border',
+                    s.name === day.subject ? `${s.light} ${s.border} ${s.text}` : 'bg-surface-container border-surface-container-high text-on-surface-variant/60'
+                  )}>
+                    {s.icon} {s.name.replace('General ', '')}:
+                    <span className="font-black">{subTargets[s.name]}/{s.marks}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {day.targetQ > 0 && (
               <div className="flex items-center gap-4 mb-3">
                 <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
@@ -399,11 +624,20 @@ function TodayCard({ day, isCompleted, onToggle, profile }: {
                 </div>
               </div>
             )}
-            {day.tips.slice(0, 2).map((tip, i) => (
+
+            {/* Tips from topic meta */}
+            {day.tips.slice(0, 3).map((tip, i) => (
               <p key={i} className="text-xs text-on-surface-variant flex items-start gap-1.5 mb-0.5">
                 <Lightbulb size={10} className="text-amber-500 shrink-0 mt-0.5" />{tip}
               </p>
             ))}
+
+            {/* Extra meta tip if available */}
+            {meta?.tips?.[2] && (
+              <p className="text-xs text-primary/70 flex items-start gap-1.5 mt-1">
+                <Info size={10} className="text-primary/60 shrink-0 mt-0.5" />{meta.tips[2]}
+              </p>
+            )}
           </div>
           <button
             onClick={onToggle}
@@ -426,7 +660,7 @@ function TodayCard({ day, isCompleted, onToggle, profile }: {
   );
 }
 
-// ── Day Row ────────────────────────────────────────────────────────────────────
+// ── Day Row ─────────────────────────────────────────────────────────────────────
 function DayRow({ day, isCompleted, isToday, onToggle }: {
   day: DayPlan; isCompleted: boolean; isToday: boolean; onToggle: (n: number) => void;
 }) {
@@ -470,7 +704,7 @@ function DayRow({ day, isCompleted, isToday, onToggle }: {
   );
 }
 
-// ── Phase Card ─────────────────────────────────────────────────────────────────
+// ── Phase Card ──────────────────────────────────────────────────────────────────
 function PhaseCard({ phaseNum, phaseLabel, days, completions, todayDayNum, onToggle, isLocked }: {
   phaseNum: number; phaseLabel: string; days: DayPlan[];
   completions: Set<number>; todayDayNum: number; onToggle: (n: number) => void; isLocked: boolean;
@@ -488,6 +722,9 @@ function PhaseCard({ phaseNum, phaseLabel, days, completions, todayDayNum, onTog
   const hasCurrent = days.some(d => d.dayNumber === todayDayNum);
   const phaseIcons: Record<number, string> = { 1: '🧩', 2: '📐', 3: '🔬', 4: '🌍', 5: '🔁', 6: '📝' };
   const [expanded, setExpanded] = useState(hasCurrent);
+
+  // High-frequency topic count for this phase
+  const highFreqTopics = days.filter(d => d.topicFreq >= 50).length;
 
   return (
     <motion.div
@@ -513,6 +750,11 @@ function PhaseCard({ phaseNum, phaseLabel, days, completions, todayDayNum, onTog
             {hasCurrent && <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-bold animate-pulse">CURRENT</span>}
             {isDone && <span className="text-[10px] bg-tertiary text-white px-2 py-0.5 rounded-full font-bold">COMPLETE</span>}
             {isLocked && <span className="text-[10px] bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full font-bold">LOCKED</span>}
+            {highFreqTopics > 0 && !isLocked && (
+              <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold">
+                🔥 {highFreqTopics} high-freq
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-3 mt-1">
             <div className="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
@@ -539,7 +781,7 @@ function PhaseCard({ phaseNum, phaseLabel, days, completions, todayDayNum, onTog
   );
 }
 
-// ── Onboarding Wizard ──────────────────────────────────────────────────────────
+// ── Onboarding Wizard ───────────────────────────────────────────────────────────
 function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) {
   const [step, setStep] = useState(0);
   const [examDate, setExamDate] = useState('');
@@ -571,8 +813,8 @@ function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) 
         <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary-container rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <GraduationCap size={36} className="text-white" />
         </div>
-        <h2 className="text-3xl font-black text-primary">Study Roadmap</h2>
-        <p className="text-sm text-on-surface-variant mt-1">Personalised day-by-day plan — SSC/RRB/UPSC topper strategy</p>
+        <h2 className="text-3xl font-black text-primary">Top 1% Roadmap</h2>
+        <p className="text-sm text-on-surface-variant mt-1">Personalised day-by-day plan — built from SSC CGL, RRB & UPSC topper strategies + PYQ frequency data</p>
       </div>
 
       {/* Step dots */}
@@ -612,7 +854,7 @@ function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) 
               <h3 className="text-lg font-bold text-primary flex items-center gap-2 mb-2">
                 <Users size={21} /> Your reservation category?
               </h3>
-              <p className="text-xs text-on-surface-variant mb-4">Sets your score target throughout the roadmap</p>
+              <p className="text-xs text-on-surface-variant mb-4">Sets your score target and sub-subject cutoffs throughout the roadmap</p>
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {CATS.map(c => (
                   <button key={c.id} onClick={() => setCategory(c.id)}
@@ -627,8 +869,8 @@ function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) 
                 ))}
               </div>
               <div className={cn('p-3 rounded-xl border mb-4 text-sm', cutoff.color, 'border-current/20 bg-current/5')}>
-                <p className="font-black">{cutoff.label} category target: {cutoff.safe}/100</p>
-                <p className="text-xs mt-0.5 opacity-80">Min passing: ~{cutoff.min} · Safe score: {cutoff.safe}+</p>
+                <p className="font-black">{cutoff.label} target: {cutoff.safe}/100</p>
+                <p className="text-xs mt-0.5 opacity-80">Sub-targets: R:{SUB_TARGETS[category].Reasoning} | M:{SUB_TARGETS[category].Mathematics} | S:{SUB_TARGETS[category]['General Science']} | GA:{SUB_TARGETS[category]['General Awareness']}</p>
               </div>
               <label className="text-xs font-bold text-on-surface-variant block mb-1 flex items-center gap-1">
                 <MapPin size={12} /> RRB Zone (optional)
@@ -684,6 +926,7 @@ function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) 
                 <p className="text-xs"><span className="font-bold text-primary">Daily target:</span> {hours >= 6 ? 60 : hours >= 4 ? 45 : hours >= 2 ? 30 : 20} questions/day</p>
                 <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Strategy:</span> {getStrategyTier(daysLeft).label} — {getStrategyTier(daysLeft).topics} topics/subject</p>
                 <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Zone:</span> {zone || 'Not selected'} · <span className="font-bold text-primary">Category:</span> {cutoff.label}</p>
+                <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Sub-targets:</span> R:{SUB_TARGETS[category].Reasoning} | M:{SUB_TARGETS[category].Mathematics} | S:{SUB_TARGETS[category]['General Science']} | GA:{SUB_TARGETS[category]['General Awareness']}</p>
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl font-bold text-sm text-on-surface-variant border border-surface-container-high hover:bg-surface-container">Back</button>
@@ -710,6 +953,7 @@ export function StudyRoadmap() {
     try { return JSON.parse(localStorage.getItem(SK) || 'null'); } catch { return null; }
   });
   const [completions, setCompletions] = useState<Set<number>>(loadCompletions);
+  const [activeTab, setActiveTab] = useState<'plan' | 'heatmap' | 'mastery' | 'rules'>('plan');
 
   React.useEffect(() => { if (profile) localStorage.setItem(SK, JSON.stringify(profile)); }, [profile]);
   React.useEffect(() => { saveCompletions(completions); }, [completions]);
@@ -760,21 +1004,28 @@ export function StudyRoadmap() {
 
   const cutoff = CATEGORY_CUTOFF[profile.category];
 
+  const TABS = [
+    { id: 'plan' as const, label: 'Plan', icon: <CalendarDays size={14} /> },
+    { id: 'heatmap' as const, label: 'PYQ Frequency', icon: <BarChart3 size={14} /> },
+    { id: 'mastery' as const, label: 'Mastery', icon: <Trophy size={14} /> },
+    { id: 'rules' as const, label: 'Topper Rules', icon: <Star size={14} /> },
+  ];
+
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-5 max-w-5xl mx-auto">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-primary flex items-center gap-2">
-            <CalendarDays size={26} /> Study Roadmap
+            <CalendarDays size={26} /> Top 1% Study Roadmap
           </h2>
           <div className="flex flex-wrap items-center gap-2 mt-1">
             {[
               { label: profile.level, icon: '📘' },
               { label: `${profile.hoursPerDay} hrs/day`, icon: '⏱' },
               { label: cutoff.label, icon: '🎯' },
-              { label: profile.zone, icon: '📍' },
+              { label: profile.zone !== 'Not selected' ? profile.zone : '', icon: '📍' },
               { label: tier?.label ?? '', icon: '' },
             ].filter(t => t.label).map(tag => (
               <span key={tag.label} className="text-xs font-bold text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
@@ -803,25 +1054,38 @@ export function StudyRoadmap() {
         </div>
       </div>
 
-      {/* Category target bar */}
-      <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm flex flex-wrap items-center gap-4">
-        <div>
-          <p className="text-xs font-bold text-on-surface-variant mb-0.5">Your Target Score ({cutoff.label})</p>
-          <p className="text-2xl font-black text-primary">{cutoff.safe}<span className="text-sm font-normal text-on-surface-variant">/100</span></p>
-        </div>
-        <div className="flex-1 max-w-sm">
-          <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
-            <span>Min: {cutoff.min}</span><span>Safe: {cutoff.safe}</span><span>Excellent: 80+</span>
+      {/* Category + Sub-target bar */}
+      <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm">
+        <div className="flex flex-wrap items-center gap-4 mb-3">
+          <div>
+            <p className="text-xs font-bold text-on-surface-variant mb-0.5">Your Target ({cutoff.label})</p>
+            <p className="text-2xl font-black text-primary">{cutoff.safe}<span className="text-sm font-normal text-on-surface-variant">/100</span></p>
           </div>
-          <div className="h-3 bg-surface-container-high rounded-full overflow-hidden relative">
-            <div className="h-full bg-gradient-to-r from-red-400 via-amber-400 to-emerald-400 rounded-full w-full" />
-            <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.min}%` }} />
-            <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.safe}%` }} />
+          <div className="flex-1 max-w-sm">
+            <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
+              <span>Min: {cutoff.min}</span><span>Safe: {cutoff.safe}</span><span>Excellent: 80+</span>
+            </div>
+            <div className="h-3 bg-surface-container-high rounded-full overflow-hidden relative">
+              <div className="h-full bg-gradient-to-r from-red-400 via-amber-400 to-emerald-400 rounded-full w-full" />
+              <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.min}%` }} />
+              <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.safe}%` }} />
+            </div>
           </div>
         </div>
-        <div className="text-xs text-on-surface-variant">
-          <p><span className="font-bold text-red-500">●</span> Min: {cutoff.min}</p>
-          <p><span className="font-bold text-emerald-500">●</span> Safe: {cutoff.safe}+</p>
+        {/* Sub-targets */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {SUBJECT_ORDER.map(s => {
+            const t = SUB_TARGETS[profile.category]?.[s.name] ?? 0;
+            return (
+              <div key={s.name} className={cn('flex items-center gap-2 p-2.5 rounded-lg border', s.light, s.border)}>
+                <span className="text-base">{s.icon}</span>
+                <div>
+                  <p className={cn('text-[10px] font-bold', s.text)}>{s.name.replace('General ', 'G. ')}</p>
+                  <p className="text-sm font-black text-on-surface">{t}<span className="text-[10px] font-normal text-on-surface-variant">/{s.marks}</span></p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -842,7 +1106,7 @@ export function StudyRoadmap() {
         ))}
       </div>
 
-      {/* Progress bar */}
+      {/* Overall progress bar */}
       <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-bold text-primary">Overall Progress</p>
@@ -854,7 +1118,10 @@ export function StudyRoadmap() {
         <p className="text-[10px] text-on-surface-variant mt-2">{plan.length - completions.size} days remaining · {tier?.label} strategy · {tier?.topics} topics/subject</p>
       </div>
 
-      {/* Daily topper tip */}
+      {/* Pre-exam sprint (shows when ≤30 days) */}
+      <PreExamSprint daysLeft={daysLeft} />
+
+      {/* Topper tip of the day */}
       <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 flex items-start gap-3">
         <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
           <Lightbulb size={18} className="text-amber-600" />
@@ -874,39 +1141,108 @@ export function StudyRoadmap() {
         <TodayCard day={todayPlan} isCompleted={todayPlan ? completions.has(todayPlan.dayNumber) : false} onToggle={() => todayPlan && toggleDay(todayPlan.dayNumber)} profile={profile} />
       </div>
 
-      {/* Phase List */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-black text-primary flex items-center gap-2"><BookOpen size={17} /> Full Phase Plan</h3>
-          <p className="text-xs text-on-surface-variant">{phases.length} phases · {plan.length} days total</p>
-        </div>
-        <div className="space-y-3">
-          {phases.map(({ phase, label, days }) => {
-            const prevPhase = phases.find(p => p.phase === phase - 1);
-            const prevDone = !prevPhase || prevPhase.days.every(d => completions.has(d.dayNumber));
-            const isLocked = phase > 1 && !prevDone && !days.some(d => completions.has(d.dayNumber) || d.dayNumber <= todayDayNum);
-            return <PhaseCard key={phase} phaseNum={phase} phaseLabel={label} days={days} completions={completions} todayDayNum={todayDayNum} onToggle={toggleDay} isLocked={isLocked} />;
-          })}
-        </div>
+      {/* Tab Navigator */}
+      <div className="flex gap-1 bg-surface-container rounded-2xl p-1">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all',
+              activeTab === tab.id
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-on-surface-variant hover:bg-surface-container-high'
+            )}
+          >
+            {tab.icon} <span className="hidden sm:inline">{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Topper Strategies */}
-      <div className="bg-surface-container-lowest rounded-2xl p-6 border border-surface-container-high shadow-sm">
-        <h3 className="font-black text-primary flex items-center gap-2 mb-4">
-          <Trophy size={17} className="text-amber-500" /> Top Rules — SSC CGL, RRB, UPSC Toppers
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {TOPPER_STRATEGIES.map(s => (
-            <div key={s.rule} className="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low">
-              <span className="text-xl shrink-0">{s.icon}</span>
-              <div>
-                <p className="text-xs font-black text-primary">{s.rule}</p>
-                <p className="text-[10px] text-on-surface-variant leading-relaxed mt-0.5 italic">— {s.src}</p>
+      {/* Tab Content */}
+      <AnimatePresence mode="wait">
+
+        {/* Plan Tab */}
+        {activeTab === 'plan' && (
+          <motion.div key="plan" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-primary flex items-center gap-2"><BookOpen size={17} /> Full Phase Plan</h3>
+              <p className="text-xs text-on-surface-variant">{phases.length} phases · {plan.length} days total</p>
+            </div>
+            {phases.map(({ phase, label, days }) => {
+              const prevPhase = phases.find(p => p.phase === phase - 1);
+              const prevDone = !prevPhase || prevPhase.days.every(d => completions.has(d.dayNumber));
+              const isLocked = phase > 1 && !prevDone && !days.some(d => completions.has(d.dayNumber) || d.dayNumber <= todayDayNum);
+              return <PhaseCard key={phase} phaseNum={phase} phaseLabel={label} days={days} completions={completions} todayDayNum={todayDayNum} onToggle={toggleDay} isLocked={isLocked} />;
+            })}
+          </motion.div>
+        )}
+
+        {/* Heatmap Tab */}
+        {activeTab === 'heatmap' && (
+          <motion.div key="heatmap" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="mb-3 bg-primary/5 rounded-xl p-3 border border-primary/10">
+              <p className="text-xs font-bold text-primary mb-0.5">📊 Why PYQ Frequency Matters</p>
+              <p className="text-xs text-on-surface-variant">Top 20% high-frequency topics cover 80% of exam paper (Pareto Law). Focus here first for maximum marks with minimum time.</p>
+            </div>
+            <FrequencyHeatmap syllabus={syllabus} />
+          </motion.div>
+        )}
+
+        {/* Mastery Tab */}
+        {activeTab === 'mastery' && (
+          <motion.div key="mastery" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+            <SubjectMasteryOverview plan={plan} completions={completions} category={profile.category} />
+            {/* Subject priority order explanation */}
+            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high p-5">
+              <h3 className="font-black text-primary text-sm mb-3 flex items-center gap-2">
+                <TrendingUp size={16} /> Why This Subject Order? (Topper Strategy)
+              </h3>
+              <div className="space-y-2">
+                {SUBJECT_ORDER.map((s, i) => (
+                  <div key={s.name} className={cn('flex items-start gap-3 p-3 rounded-xl border', s.light, s.border)}>
+                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0 bg-gradient-to-br', s.grad)}>
+                      {i + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm">{s.icon}</span>
+                        <p className={cn('text-sm font-black', s.text)}>{s.name}</p>
+                        <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', s.light, s.text, s.border, 'border')}>{s.marks} marks</span>
+                      </div>
+                      <p className="text-xs text-on-surface-variant mt-0.5">{s.why}</p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </motion.div>
+        )}
+
+        {/* Topper Rules Tab */}
+        {activeTab === 'rules' && (
+          <motion.div key="rules" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <div className="bg-surface-container-lowest rounded-2xl p-6 border border-surface-container-high shadow-sm">
+              <h3 className="font-black text-primary flex items-center gap-2 mb-4 text-sm">
+                <Trophy size={17} className="text-amber-500" /> Top 10 Rules — SSC CGL, RRB & UPSC Toppers
+              </h3>
+              <div className="space-y-3">
+                {TOPPER_STRATEGIES.map((s, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low border border-surface-container-high">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-lg shrink-0">{s.icon}</div>
+                    <div>
+                      <p className="text-xs font-black text-primary">{s.rule}</p>
+                      <p className="text-[10px] text-on-surface-variant leading-relaxed mt-0.5 italic">— {s.src}</p>
+                    </div>
+                    <span className="text-[10px] font-black text-on-surface-variant shrink-0 w-5 text-center">#{i + 1}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
     </div>
   );
 }
