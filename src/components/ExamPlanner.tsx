@@ -12,7 +12,7 @@ import {
   ListTodo, Trophy, BarChart3, AlertCircle,
 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { schedulePlannerSync } from '../lib/plannerSync';
+import { schedulePlannerSync, getPlannerSetupKey, getPlannerTasksKey, getPlannerDayLogPrefix } from '../lib/plannerSync';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,26 +74,25 @@ function accuracyColor(pct: number) {
   return '#dc2626';
 }
 
-// ─── Storage Keys ─────────────────────────────────────────────────────────────
-const SETUP_KEY = 'rrb_setup';
-const TASKS_KEY = 'rrb_tasks';
-const LOGS_KEY = 'rrb_daylogs';
+// ─── Storage Keys — per-user namespaced via plannerSync ──────────────────────
+// Keys are dynamic (depend on logged-in user email) so we call getters each time
 
 function loadTasks(): Task[] {
-  try { return JSON.parse(localStorage.getItem(TASKS_KEY) || '[]'); } catch { return []; }
+  try { return JSON.parse(localStorage.getItem(getPlannerTasksKey()) || '[]'); } catch { return []; }
 }
 function saveTasks(t: Task[]) {
-  localStorage.setItem(TASKS_KEY, JSON.stringify(t));
+  localStorage.setItem(getPlannerTasksKey(), JSON.stringify(t));
   schedulePlannerSync(); // ← cloud sync
 }
 
 function loadLogs(): Record<string, DayLog> {
   try {
     const out: Record<string, DayLog> = {};
+    const prefix = getPlannerDayLogPrefix();
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)!;
-      if (k.startsWith('rrb_day_')) {
-        try { out[k.replace('rrb_day_', '')] = JSON.parse(localStorage.getItem(k)!); } catch { }
+      if (k.startsWith(prefix)) {
+        try { out[k.slice(prefix.length)] = JSON.parse(localStorage.getItem(k)!); } catch { }
       }
     }
     return out;
@@ -403,7 +402,7 @@ function TaskCard({ task, onToggle, onDelete }: TaskCardProps) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export function ExamPlanner() {
   const [setup, setSetup] = useState<Setup | null>(() => {
-    try { const s = localStorage.getItem(SETUP_KEY); return s ? JSON.parse(s) : null; } catch { return null; }
+    try { const s = localStorage.getItem(getPlannerSetupKey()); return s ? JSON.parse(s) : null; } catch { return null; }
   });
   const [tasks, setTasksState] = useState<Task[]>(loadTasks);
   const [dayLogs, setDayLogs] = useState<Record<string, DayLog>>(loadLogs);
@@ -412,7 +411,7 @@ export function ExamPlanner() {
   useEffect(() => {
     const reload = () => {
       try {
-        const s = localStorage.getItem(SETUP_KEY);
+        const s = localStorage.getItem(getPlannerSetupKey());
         if (s) setSetup(JSON.parse(s));
       } catch { /* skip */ }
       setTasksState(loadTasks());
@@ -580,7 +579,7 @@ export function ExamPlanner() {
         </div>
         <SetupScreen onSave={s => {
           setSetup(s);
-          localStorage.setItem(SETUP_KEY, JSON.stringify(s));
+          localStorage.setItem(getPlannerSetupKey(), JSON.stringify(s));
           schedulePlannerSync(); // ← sync setup to cloud
         }} />
       </div>
@@ -1005,7 +1004,7 @@ export function ExamPlanner() {
             <button onClick={() => {
               const u = { ...setup, ...settingsForm } as Setup;
               setSetup(u);
-              localStorage.setItem(SETUP_KEY, JSON.stringify(u));
+              localStorage.setItem(getPlannerSetupKey(), JSON.stringify(u));
               schedulePlannerSync(); // ← sync to cloud
               setSettingsForm({});
             }}
@@ -1025,8 +1024,8 @@ export function ExamPlanner() {
                 <button onClick={() => {
                   setTasks([]);
                   setSetup(null);
-                  localStorage.removeItem(SETUP_KEY);
-                  localStorage.removeItem(TASKS_KEY);
+                  localStorage.removeItem(getPlannerSetupKey());
+                  localStorage.removeItem(getPlannerTasksKey());
                   setResetConfirm(false);
                 }}
                   className="flex-1 py-3 rounded-xl font-bold text-white bg-red-600 hover:bg-red-700 transition-colors">

@@ -1,15 +1,21 @@
 /**
- * LIVE PERFORMANCE ENGINE  v3 — Cross-Device Cloud Sync
- * ─────────────────────────────────────────────────────────────────
+ * LIVE PERFORMANCE ENGINE  v4 — Per-User Isolated Storage + Cloud Sync
+ * ─────────────────────────────────────────────────────────────────────
  * Architecture:
- *   - localStorage  → instant, offline-first local cache (0ms latency)
+ *   - localStorage  → namespaced per user email (prevents cross-user leakage)
  *   - Firebase Firestore → cloud sync keyed by user email
  *
+ * Key namespacing:
+ *   All keys use prefix derived from user email, e.g.:
+ *   "ananda_gmail_com__rrb_perf" for ananda@gmail.com
+ *   This means different Google accounts on the SAME device
+ *   never see each other's data.
+ *
  * Flow on login:
- *   1. Pull data from Firestore for this email
- *   2. Merge with local data (union, deduplicated by test_id)
- *   3. Save merged to localStorage + push back to Firestore
- *   4. Any device with same email → same merged data
+ *   1. Clear ALL stale keys from any previously-logged-in user
+ *   2. Pull data from Firestore for this email
+ *   3. Save to this user's namespaced localStorage
+ *   4. Any device with same email → same data
  */
 
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -64,11 +70,93 @@ export interface PerformanceData {
   };
 }
 
-// ─── Storage keys ─────────────────────────────────────────────────────────────
+// ─── User key management ──────────────────────────────────────────────────────
 
-const DATA_KEY = 'rrb_performance_data';
-const LIVE_KEY = 'rrb_live_session';
 const USER_KEY = 'rrb_user';
+
+/**
+ * Converts an email to a safe localStorage namespace prefix.
+ * e.g. ananda@gmail.com → "u_ananda_gmail_com"
+ */
+function emailToPrefix(email: string): string {
+  return 'u_' + email.toLowerCase()
+    .replace(/[@.]/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .substring(0, 60);
+}
+
+function getCurrentEmail(): string | null {
+  try {
+    const u = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
+    return u?.email || null;
+  } catch (_) { return null; }
+}
+
+function getPrefix(): string {
+  const email = getCurrentEmail();
+  if (!email) return 'u_guest';
+  return emailToPrefix(email);
+}
+
+// Namespaced key getters (computed lazily so they always use current user)
+function dataKey(): string { return `${getPrefix()}__rrb_perf`; }
+function liveKey(): string { return `${getPrefix()}__rrb_live`; }
+
+// ─── Cross-user data isolation ────────────────────────────────────────────────
+
+/**
+ * Called on login: removes ALL localStorage keys that belong to a DIFFERENT user.
+ * This prevents User A's stale data from being seen by User B.
+ * Only removes rrb_* and u_* namespaced keys — does not touch unrelated app data.
+ */
+export function clearOtherUserData(currentEmail: string): void {
+  const currentPrefix = emailToPrefix(currentEmail);
+  const toDelete: string[] = [];
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+
+      // Old-style global keys (without user prefix) — always remove
+      const isOldGlobal = (
+        key === 'rrb_performance_data' ||
+        key === 'rrb_live_session' ||
+        key === 'rrb_roadmap_profile' ||
+        key === 'rrb_day_completions' ||
+        key === 'rrb_setup' ||
+        key === 'rrb_tasks' ||
+        key.startsWith('rrb_day_')
+      );
+
+      // New-style keys from a DIFFERENT user
+      const isOtherUserKey = key.startsWith('u_') && !key.startsWith(currentPrefix + '__');
+
+      if (isOldGlobal || isOtherUserKey) {
+        toDelete.push(key);
+      }
+    }
+    toDelete.forEach(k => localStorage.removeItem(k));
+    console.log(`[UserIsolation] Cleared ${toDelete.length} stale keys for user switch`);
+  } catch (_) {}
+}
+
+/**
+ * Called on logout: clears ALL data for the currently logged-in user from localStorage.
+ * Cloud data (Firestore) is NOT touched — user can recover on next login.
+ */
+export function clearCurrentUserData(): void {
+  const prefix = getPrefix();
+  const toDelete: string[] = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix + '__')) toDelete.push(key);
+    }
+    toDelete.forEach(k => localStorage.removeItem(k));
+    console.log(`[UserIsolation] Cleared ${toDelete.length} local keys on logout`);
+  } catch (_) {}
+}
 
 // ─── Local storage helpers ────────────────────────────────────────────────────
 
@@ -85,37 +173,30 @@ function emptyData(): PerformanceData {
 
 function readData(): PerformanceData {
   try {
-    const raw = localStorage.getItem(DATA_KEY);
+    const raw = localStorage.getItem(dataKey());
     if (raw) return JSON.parse(raw);
   } catch (_) {}
   return emptyData();
 }
 
 function writeData(data: PerformanceData): void {
-  try { localStorage.setItem(DATA_KEY, JSON.stringify(data)); } catch (_) {}
+  try { localStorage.setItem(dataKey(), JSON.stringify(data)); } catch (_) {}
 }
 
 export function readLiveSession(): LiveSession | null {
   try {
-    const raw = localStorage.getItem(LIVE_KEY);
+    const raw = localStorage.getItem(liveKey());
     if (raw) return JSON.parse(raw);
   } catch (_) {}
   return null;
 }
 
 function writeLiveSession(session: LiveSession): void {
-  try { localStorage.setItem(LIVE_KEY, JSON.stringify(session)); } catch (_) {}
+  try { localStorage.setItem(liveKey(), JSON.stringify(session)); } catch (_) {}
 }
 
 function clearLiveSession(): void {
-  try { localStorage.removeItem(LIVE_KEY); } catch (_) {}
-}
-
-function getCurrentEmail(): string | null {
-  try {
-    const u = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
-    return u?.email || null;
-  } catch (_) { return null; }
+  try { localStorage.removeItem(liveKey()); } catch (_) {}
 }
 
 // ─── Recalculate overall stats ────────────────────────────────────────────────
@@ -250,10 +331,13 @@ async function pullFromCloud(email: string): Promise<PerformanceData | null> {
 // ─── PUBLIC API ───────────────────────────────────────────────────────────────
 
 /**
- * SYNC ON LOGIN — pull cloud, merge with local, push back.
+ * SYNC ON LOGIN — clear other-user stale data, pull cloud, merge, push back.
  * Always resolves (never throws) — offline safe.
  */
 export async function syncOnLogin(email: string): Promise<PerformanceData> {
+  // 🔑 Step 1: Evict any stale data from previous user BEFORE reading local
+  clearOtherUserData(email);
+
   if (!navigator.onLine) {
     setSyncStatus('offline');
     console.log('[CloudSync] Offline — using local data only');

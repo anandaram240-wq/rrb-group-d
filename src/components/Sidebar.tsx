@@ -39,7 +39,6 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
 
   const navItems = [
     { id: 'dashboard',   label: 'Dashboard',       icon: LayoutDashboard },
-    { id: 'study',       label: '📚 Study',          icon: GraduationCap },
     { id: 'practice',   label: 'Subject Mastery',   icon: BookOpen },
     { id: 'papers',     label: 'Mock Tests',         icon: History },
     { id: 'analytics',  label: 'Analytics',          icon: TrendingUp },

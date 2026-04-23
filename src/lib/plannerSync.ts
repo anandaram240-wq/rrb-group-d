@@ -1,16 +1,14 @@
 /**
- * EXAM PLANNER — Cloud Sync
- * Syncs setup, tasks, and day-logs to Firestore under the user's email doc.
- * Works exactly like performanceEngine's cloud sync but for planner data.
+ * EXAM PLANNER — Cloud Sync  v2 (Per-User Isolated Storage)
+ * All localStorage keys are namespaced by user email prefix to prevent
+ * cross-user data leakage on shared devices.
  */
 
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, emailToDocId } from './firebase';
 
-// ─── Storage keys (must match ExamPlanner.tsx) ────────────────────────────────
-const SETUP_KEY = 'rrb_setup';
-const TASKS_KEY = 'rrb_tasks';
-const USER_KEY  = 'rrb_user';
+// ─── User key prefix ──────────────────────────────────────────────────────────
+const USER_KEY = 'rrb_user';
 
 function getCurrentEmail(): string | null {
   try {
@@ -19,13 +17,33 @@ function getCurrentEmail(): string | null {
   } catch { return null; }
 }
 
+function emailToPrefix(email: string): string {
+  return 'u_' + email.toLowerCase()
+    .replace(/[@.]/g, '_')
+    .replace(/[^a-z0-9_]/g, '')
+    .substring(0, 60);
+}
+
+function getPrefix(): string {
+  const email = getCurrentEmail();
+  return email ? emailToPrefix(email) : 'u_guest';
+}
+
+// Dynamic namespaced key getters
+function setupKey(): string { return `${getPrefix()}__rrb_setup`; }
+function tasksKey(): string { return `${getPrefix()}__rrb_tasks`; }
+function dayLogPrefix(): string { return `${getPrefix()}__rrb_day_`; }
+
+// ─── Day log helpers ──────────────────────────────────────────────────────────
+
 function readAllLogs(): Record<string, unknown> {
   const out: Record<string, unknown> = {};
+  const prefix = dayLogPrefix();
   try {
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i)!;
-      if (k.startsWith('rrb_day_')) {
-        try { out[k] = JSON.parse(localStorage.getItem(k)!); } catch { /* skip */ }
+      if (k.startsWith(prefix)) {
+        try { out[k.slice(prefix.length)] = JSON.parse(localStorage.getItem(k)!); } catch { /* skip */ }
       }
     }
   } catch { /* skip */ }
@@ -33,10 +51,9 @@ function readAllLogs(): Record<string, unknown> {
 }
 
 function writeAllLogs(logs: Record<string, unknown>) {
+  const prefix = dayLogPrefix();
   for (const [k, v] of Object.entries(logs)) {
-    if (k.startsWith('rrb_day_')) {
-      try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* skip */ }
-    }
+    try { localStorage.setItem(prefix + k, JSON.stringify(v)); } catch { /* skip */ }
   }
 }
 
@@ -44,8 +61,8 @@ function writeAllLogs(logs: Record<string, unknown>) {
 async function pushPlanner(email: string): Promise<boolean> {
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const setup = localStorage.getItem(SETUP_KEY);
-      const tasks = localStorage.getItem(TASKS_KEY);
+      const setup = localStorage.getItem(setupKey());
+      const tasks = localStorage.getItem(tasksKey());
       const logs  = readAllLogs();
 
       const ref = doc(db, 'users', emailToDocId(email));
@@ -79,31 +96,28 @@ async function pullPlanner(email: string): Promise<boolean> {
 
     // Restore setup
     if (data.planner_setup) {
-      localStorage.setItem(SETUP_KEY, data.planner_setup);
+      localStorage.setItem(setupKey(), data.planner_setup);
     }
 
     // Restore tasks — merge: cloud wins for new tasks, local wins for completed status
     if (data.planner_tasks) {
       try {
         const cloudTasks: any[] = JSON.parse(data.planner_tasks);
-        const localRaw = localStorage.getItem(TASKS_KEY);
+        const localRaw = localStorage.getItem(tasksKey());
         const localTasks: any[] = localRaw ? JSON.parse(localRaw) : [];
 
         const merged = new Map<string, any>();
-        // Start with cloud tasks
         for (const t of cloudTasks) merged.set(t.id, t);
-        // Local tasks override (keeps latest toggle state)
         for (const t of localTasks) {
           if (merged.has(t.id)) {
-            // Keep whichever has the most recent completedAt
             const cloud = merged.get(t.id);
             const localNewer = (t.completedAt || '') >= (cloud.completedAt || '');
             merged.set(t.id, localNewer ? t : cloud);
           } else {
-            merged.set(t.id, t); // local-only task
+            merged.set(t.id, t);
           }
         }
-        localStorage.setItem(TASKS_KEY, JSON.stringify([...merged.values()]));
+        localStorage.setItem(tasksKey(), JSON.stringify([...merged.values()]));
       } catch { /* skip merge, keep local */ }
     }
 
@@ -133,7 +147,6 @@ export async function syncPlannerOnLogin(): Promise<void> {
   if (!email || !navigator.onLine) return;
   try {
     await pullPlanner(email);
-    // Dispatch event so ExamPlanner re-reads localStorage
     window.dispatchEvent(new CustomEvent('rrb_planner_updated'));
   } catch { /* never throw */ }
 }
@@ -149,7 +162,7 @@ export function schedulePlannerSync(): void {
     if (email && navigator.onLine) {
       await pushPlanner(email);
     }
-  }, 1500); // 1.5s debounce — batch rapid changes
+  }, 1500);
 }
 
 /**
@@ -164,3 +177,11 @@ export async function forceSyncPlanner(): Promise<boolean> {
   window.dispatchEvent(new CustomEvent('rrb_planner_updated'));
   return ok;
 }
+
+/**
+ * Return the namespaced setup key for the current user
+ * (used by ExamPlanner.tsx to read/write its own localStorage)
+ */
+export function getPlannerSetupKey(): string { return setupKey(); }
+export function getPlannerTasksKey(): string { return tasksKey(); }
+export function getPlannerDayLogPrefix(): string { return dayLogPrefix(); }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense, Component, ErrorInf
 import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
-import { syncOnLogin, onSyncStatusChange, forceSyncNow, type SyncStatus } from './lib/performanceEngine';
+import { syncOnLogin, onSyncStatusChange, forceSyncNow, clearOtherUserData, clearCurrentUserData, type SyncStatus } from './lib/performanceEngine';
 import { syncPlannerOnLogin, forceSyncPlanner } from './lib/plannerSync';
 import pyqsData from './data/pyqs.json';
 
@@ -15,7 +15,6 @@ const PerformanceTracker= lazy(() => import('./components/PerformanceTracker'));
 const LoginScreen       = lazy(() => import('./components/LoginScreen').then(m => ({ default: m.LoginScreen })));
 const StudyRoadmap      = lazy(() => import('./components/StudyRoadmap').then(m => ({ default: m.StudyRoadmap })));
 const ExamPlanner       = lazy(() => import('./components/ExamPlanner').then(m => ({ default: m.ExamPlanner })));
-const StudyModules      = lazy(() => import('./components/StudyModules').then(m => ({ default: m.StudyModules })));
 const WeakAreas         = lazy(() => import('./components/WeakAreas').then(m => ({ default: m.WeakAreas })));
 
 // ── Tiny tab fallback spinner ──────────────────────────────────────────────────
@@ -36,12 +35,12 @@ interface UserProfile {
 // ── URL <-> Tab route map ─────────────────────────────────────────────────────
 const PATH_TO_TAB: Record<string, string> = {
   '/': 'dashboard', '/dashboard': 'dashboard',
-  '/study': 'study', '/practice': 'practice', '/papers': 'papers',
+  '/practice': 'practice', '/papers': 'papers',
   '/analytics': 'analytics', '/performance': 'performance',
   '/roadmap': 'roadmap', '/planner': 'planner', '/weakareas': 'weakareas',
 };
 const TAB_TO_PATH: Record<string, string> = {
-  dashboard: '/dashboard', study: '/study', practice: '/practice',
+  dashboard: '/dashboard', practice: '/practice',
   papers: '/papers', analytics: '/analytics', performance: '/performance',
   roadmap: '/roadmap', planner: '/planner', weakareas: '/weakareas',
 };
@@ -220,6 +219,8 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogin = async (profile: UserProfile) => {
+    // 🔑 Clear any data belonging to a different user BEFORE setting current user
+    clearOtherUserData(profile.email);
     setUser(profile);
     localStorage.setItem('rrb_user', JSON.stringify(profile));
     syncOnLogin(profile.email);
@@ -227,6 +228,8 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    // 🔑 Clear this user's namespaced local data on logout
+    clearCurrentUserData();
     setUser(null);
     localStorage.removeItem('rrb_user');
   };
@@ -388,7 +391,6 @@ export default function App() {
             <Suspense fallback={<TabSpinner />}>
               <TabErrorBoundary>
                 {activeTab === 'dashboard'   && <Dashboard userName={user.name} onNavigateTo={setActiveTabWithURL} />}
-                {activeTab === 'study'       && <StudyModules onPractice={navigateToPractice} />}
                 {activeTab === 'practice'    && <PracticeEngine initialSubject={practiceFilter?.subject} initialTopic={practiceFilter?.topic} />}
                 {activeTab === 'papers'      && <MockTests />}
                 {activeTab === 'analytics'  && <AnalyticsEngine />}

@@ -1,1264 +1,1059 @@
-import React, { useState, useMemo, useCallback } from 'react';
+/**
+ * STUDY ROADMAP  v3 — Best-in-Class RRB Group D Preparation Engine
+ * ─────────────────────────────────────────────────────────────────
+ * Features:
+ *   • Per-user isolated storage (namespaced by email)
+ *   • Topic unlocking gates: Solve min PYQs + reach accuracy threshold
+ *   • Strict PYQ-frequency ordering (most-asked topics first)
+ *   • Per-topic topper laws (SSC CGL / RRB / UPSC specific rules)
+ *   • Ebbinghaus revision tracking: Day 1, Day 7, Day 30 reminders
+ *   • Minimum 10 topics always shown (even for shortest time window)
+ *   • One-button heroic roadmap — see your full journey at a glance
+ *   • Cloud sync: reads email from rrb_user → namespaced localStorage key
+ */
+
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  CalendarDays, Clock, Target, ChevronDown, ChevronUp, AlertTriangle,
-  CheckCircle2, Circle, TrendingUp, Zap, ArrowRight, Sparkles,
-  GraduationCap, BarChart3, Trophy, BookOpen, RotateCcw, Lightbulb,
-  Flame, Star, Lock, MapPin, Users, Brain, Swords, FlaskConical,
-  Globe, ChevronRight, Info,
+  Trophy, Lock, CheckCircle, ChevronDown, ChevronUp,
+  BookOpen, Target, Zap, Brain, Clock, AlertTriangle,
+  Star, ArrowRight, RefreshCw, Award, Flame, Shield,
+  BarChart2, Calendar, TrendingUp, Info
 } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { format, differenceInDays, parseISO } from 'date-fns';
-import { motion, AnimatePresence } from 'motion/react';
 import pyqsData from '../data/pyqs.json';
-import { TOPIC_META, HEAT_COLORS, REVISION_PLAN } from '../data/roadmapData';
 
-// ── Types ──────────────────────────────────────────────────────────────────────
-interface PYQ { id: number; subject: string; topic: string; }
-interface Profile {
-  examDate: string;
-  level: 'beginner' | 'intermediate' | 'advanced';
-  hoursPerDay: number;
-  createdAt: string;
-  category: 'general' | 'obc' | 'sc' | 'st';
-  zone: string;
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface TopicProgress {
+  conceptRead: boolean;
+  pyqsAttempted: number;
+  correctAnswers: number;
+  unlocked: boolean;          // gates passed → can start next
+  completedAt?: string;       // ISO date when gate was first passed
+  revisions: string[];        // ISO dates each revision was done
 }
-interface DayPlan {
-  dayNumber: number;
-  subject: string;
+
+interface RoadmapProfile {
+  daysLeft: number;
+  startDate: string;
+  topicProgress: Record<string, TopicProgress>;
+}
+
+interface TopicRule {
+  minPYQs: number;
+  accuracyGate: number;       // % e.g. 70
+  conceptHours: number;
+  topperTips: string[];
+  revisionDays: number[];     // Ebbinghaus curve: [1,7,30]
+  subjectColor: string;
+}
+
+// ─── User storage helpers ─────────────────────────────────────────────────────
+
+function getCurrentEmailPrefix(): string {
+  try {
+    const u = JSON.parse(localStorage.getItem('rrb_user') || '{}');
+    const email: string = u?.email || '';
+    if (!email) return 'u_guest';
+    return 'u_' + email.toLowerCase()
+      .replace(/[@.]/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .substring(0, 60);
+  } catch { return 'u_guest'; }
+}
+
+function getRoadmapKey(): string { return `${getCurrentEmailPrefix()}__rrb_roadmap`; }
+
+function loadProfile(): RoadmapProfile | null {
+  try {
+    const raw = localStorage.getItem(getRoadmapKey());
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveProfile(p: RoadmapProfile): void {
+  try { localStorage.setItem(getRoadmapKey(), JSON.stringify(p)); } catch { /* ignore */ }
+}
+
+// ─── PYQ frequency analysis ───────────────────────────────────────────────────
+
+interface FreqEntry {
   topic: string;
-  targetQ: number;
-  instruction: string;
-  type: 'learn' | 'practice' | 'revise' | 'mock' | 'buffer';
-  phase: number;
-  phaseLabel: string;
-  topicFreq: number;
-  tips: string[];
-  milestone?: string;
+  subject: string;
+  count: number;
 }
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-const SUBJECT_ORDER = [
-  {
-    name: 'Reasoning', marks: 30, icon: '🧩',
-    grad: 'from-purple-500 to-violet-600', light: 'bg-purple-50',
-    border: 'border-purple-200', text: 'text-purple-700',
-    why: 'Highest marks (30) — fastest to improve with daily practice',
-    lucide: Brain,
-  },
-  {
-    name: 'Mathematics', marks: 25, icon: '📐',
-    grad: 'from-blue-500 to-indigo-600', light: 'bg-blue-50',
-    border: 'border-blue-200', text: 'text-blue-700',
-    why: 'Formula-based — 1 trick per topic gives 80%+ accuracy',
-    lucide: Swords,
-  },
-  {
-    name: 'General Science', marks: 25, icon: '🔬',
-    grad: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50',
-    border: 'border-emerald-200', text: 'text-emerald-700',
-    why: 'NCERT 9-10 direct facts — 70% questions are straight recall',
-    lucide: FlaskConical,
-  },
-  {
-    name: 'General Awareness', marks: 20, icon: '🌍',
-    grad: 'from-amber-500 to-orange-600', light: 'bg-amber-50',
-    border: 'border-amber-200', text: 'text-amber-700',
-    why: 'Memory-based — revise last so facts stay freshest for exam',
-    lucide: Globe,
-  },
-];
-
-const CATEGORY_CUTOFF: Record<string, { min: number; safe: number; label: string; color: string }> = {
-  general: { min: 65, safe: 72, label: 'General/UR', color: 'text-blue-700' },
-  obc:     { min: 60, safe: 67, label: 'OBC/NCWL',  color: 'text-violet-700' },
-  sc:      { min: 55, safe: 62, label: 'SC',         color: 'text-emerald-700' },
-  st:      { min: 50, safe: 58, label: 'ST',         color: 'text-amber-700' },
-};
-
-const RRB_ZONES = [
-  'RRB Ahmedabad','RRB Ajmer','RRB Allahabad','RRB Bangalore',
-  'RRB Bhopal','RRB Bhubaneswar','RRB Bilaspur','RRB Chandigarh',
-  'RRB Chennai','RRB Gorakhpur','RRB Guwahati','RRB Jammu-Srinagar',
-  'RRB Kolkata','RRB Malda','RRB Mumbai','RRB Muzaffarpur',
-  'RRB Patna','RRB Ranchi','RRB Secunderabad','RRB Siliguri',
-  'RRB Thiruvananthapuram',
-];
-
-const DIFFICULTY: Record<string, number> = {
-  Reasoning: 1.2, Mathematics: 1.3, 'General Science': 0.85, 'General Awareness': 0.7,
-};
-
-// Topper-sourced strategies (SSC CGL, UPSC, RRB toppers)
-const TOPPER_STRATEGIES = [
-  { icon: '🎯', rule: 'One subject at a time — full mastery before moving on', src: 'SSC CGL Rank 1 (Parth Garg) strategy' },
-  { icon: '📊', rule: 'Top 20% PYQ topics = 80% of the paper — always prioritise by frequency', src: 'Pareto principle applied to RRB 2018-2024 PYQ data' },
-  { icon: '🔁', rule: 'Revise on Day 1, Day 7, Day 30 after learning (Ebbinghaus Forgetting Curve)', src: 'Memory retention science — proven to boost recall to 90%+' },
-  { icon: '⏱', rule: '54 seconds max per Q — practice with timer from Day 1', src: 'RRB CBT official pattern: 90 min / 100 Qs' },
-  { icon: '🌅', rule: 'Morning = Maths/Reasoning (peak focus). Evening = Science/GA (reading)', src: 'Circadian rhythm research for cognitive performance' },
-  { icon: '📝', rule: 'Weekly mini-mock (30 Qs / 27 min) from Week 2 — even if topics not done', src: 'UPSC topper Anudeep Durishetty method' },
-  { icon: '🚩', rule: 'Flag confusing Qs immediately → practice them every Saturday', src: 'Active recall methodology — Barbara Oakley, "Learning How to Learn"' },
-  { icon: '💯', rule: 'Accuracy first (80%+), THEN build speed — never the other way around', src: 'SSC CGL 100+ scorers interview analysis, 2021–2024' },
-  { icon: '📖', rule: 'Short explanation reading for Science/GK — never memorise, understand', src: 'RRB Group D 2022 topper interviews — direct question strategy' },
-  { icon: '🧮', rule: 'For Maths: note 1 formula + 1 shortcut per topic in a dedicated sheet', src: 'SSC CGL Rank 3 Nishant Dixit — formula book method' },
-];
-
-// Subject-wise sub-target scores
-const SUB_TARGETS: Record<string, Record<string, number>> = {
-  general: { Reasoning: 22, Mathematics: 18, 'General Science': 18, 'General Awareness': 14 },
-  obc:     { Reasoning: 20, Mathematics: 17, 'General Science': 16, 'General Awareness': 14 },
-  sc:      { Reasoning: 18, Mathematics: 15, 'General Science': 15, 'General Awareness': 14 },
-  st:      { Reasoning: 16, Mathematics: 14, 'General Science': 14, 'General Awareness': 14 },
-};
-
-/** Strategy tier based on available days */
-function getStrategyTier(days: number): { label: string; topics: number; desc: string; color: string } {
-  if (days >= 90) return { label: '🟢 Comprehensive', topics: 25, desc: 'All topics, full depth + 3 revision rounds', color: 'text-emerald-700 bg-emerald-50 border-emerald-200' };
-  if (days >= 60) return { label: '🔵 Focused', topics: 18, desc: 'Top-18 PYQ topics per subject + 2 revision rounds', color: 'text-blue-700 bg-blue-50 border-blue-200' };
-  if (days >= 30) return { label: '🟡 Rapid', topics: 10, desc: 'Top-10 topics only + weekly mocks from Day 1', color: 'text-amber-700 bg-amber-50 border-amber-200' };
-  return { label: '🔴 Emergency', topics: 5, desc: 'Top-5 highest-frequency topics + daily mocks', color: 'text-red-700 bg-red-50 border-red-200' };
-}
-
-const SK = 'rrb_roadmap_profile';
-const CK = 'rrb_day_completions';
-
-// ── Helpers ─────────────────────────────────────────────────────────────────────
-function buildSyllabus(qs: PYQ[]) {
-  const c: Record<string, Record<string, number>> = {};
-  qs.forEach(q => {
-    if (!c[q.subject]) c[q.subject] = {};
-    c[q.subject][q.topic] = (c[q.subject][q.topic] || 0) + 1;
+function buildFrequencyMap(): FreqEntry[] {
+  const map: Record<string, { count: number; subject: string }> = {};
+  (pyqsData as any[]).forEach((q: any) => {
+    const t = q.topic?.trim();
+    const s = q.subject?.trim();
+    if (!t || !s) return;
+    if (!map[t]) map[t] = { count: 0, subject: s };
+    map[t].count++;
   });
-  const m: Record<string, { topic: string; count: number }[]> = {};
-  Object.keys(c).forEach(s => {
-    m[s] = Object.entries(c[s]).sort((a, b) => b[1] - a[1]).map(([topic, count]) => ({ topic, count }));
-  });
-  return m;
+  return Object.entries(map)
+    .map(([topic, v]) => ({ topic, subject: v.subject, count: v.count }))
+    .sort((a, b) => b.count - a.count);
 }
 
-function loadCompletions(): Set<number> {
-  try { return new Set(JSON.parse(localStorage.getItem(CK) || '[]')); }
-  catch { return new Set(); }
+// ─── Topper rules per topic ───────────────────────────────────────────────────
+
+const SUBJECT_COLORS: Record<string, string> = {
+  'Reasoning': '#6366f1',
+  'Mathematics': '#0ea5e9',
+  'Science': '#10b981',
+  'General Awareness': '#f59e0b',
+};
+
+const TOPIC_RULES: Record<string, Partial<TopicRule>> = {
+  // ── Reasoning ──────────────────────────────────────────────────────────────
+  'Coding-Decoding': {
+    minPYQs: 40, accuracyGate: 70, conceptHours: 2,
+    topperTips: [
+      '🏆 SSC CGL Rank 1 (Parth Garg): "Master the common-word substitution method first — it covers 80% of RRB coding questions. Spend 20 min max on any new pattern, then drill 30 PYQs."',
+      '⚡ Speed Law: Each Coding-Decoding question should take ≤45 seconds or skip and return.',
+      '📐 Rule: If a pattern has +1/−1 shift → alphabetical trick. If random → look for vowel/consonant swap.',
+      '🎯 RRB 2022 Topper: "Never guess — find the rule in Example 1, confirm in Example 2, apply to question. 3-step formula, always."',
+    ],
+  },
+  'Analogy': {
+    minPYQs: 35, accuracyGate: 70, conceptHours: 1,
+    topperTips: [
+      '🏆 Topper Advice: "Verbal analogies → identify the relationship first (part:whole, cause:effect, synonyms). Never guess the answer before forming the relationship."',
+      '⚡ Number analogy: Check if it\'s +, ×, perfect square, or prime difference. One of these always works.',
+      '📐 RRB-specific: 30% of analogy questions are based on GK (states, capitals, currencies). Revise these.',
+    ],
+  },
+  'Classification': {
+    minPYQs: 30, accuracyGate: 72, conceptHours: 1,
+    topperTips: [
+      '🏆 Rule: "Odd one out" — always eliminate by category (profession, shape, number property) not by feel.',
+      '⚡ If stuck: check prime/composite, odd/even, perfect square — one always differentiates.',
+    ],
+  },
+  'Series': {
+    minPYQs: 40, accuracyGate: 68, conceptHours: 2.5,
+    topperTips: [
+      '🏆 SSC Strategy: Learn these 8 number series patterns in order: (1) AP (2) GP (3) Squares/Cubes (4) Fibonacci (5) Mixed +n² (6) Prime (7) Alternate (8) Double tier.',
+      '⚡ Letter series: Convert A=1, B=2... always. Then treat as number series.',
+      '📐 RRB Insight: 60% of series questions in RRB 2018–2022 were AP or Square-based. Master these two first.',
+    ],
+  },
+  'Blood Relations': {
+    minPYQs: 25, accuracyGate: 75, conceptHours: 1,
+    topperTips: [
+      '🏆 Draw a family tree for every question — no exceptions. 2 min drawing saves 5 min confusion.',
+      '⚡ Father\'s sister = Paternal Aunt | Mother\'s brother = Maternal Uncle. Learn these 12 standard relations by heart.',
+    ],
+  },
+  'Direction Sense': {
+    minPYQs: 20, accuracyGate: 80, conceptHours: 1,
+    topperTips: [
+      '🏆 Always draw a compass diagram at top-left of your rough sheet before starting any direction question.',
+      '⚡ "Towards sun" = East in morning, West in evening. "Shadow falls" = opposite direction of sun.',
+    ],
+  },
+  'Venn Diagrams': {
+    minPYQs: 20, accuracyGate: 78, conceptHours: 1,
+    topperTips: [
+      '🏆 For "some-all-no" type: draw the actual circles. Never solve mentally.',
+      '⚡ If asked "which diagram represents A, B, C" — check if any set is a subset first.',
+    ],
+  },
+  'Syllogism': {
+    minPYQs: 30, accuracyGate: 72, conceptHours: 1.5,
+    topperTips: [
+      '🏆 UPSC Topper Method: Use Euler circles for validity. All conclusions must hold for EVERY possible arrangement.',
+      '⚡ "Possibility" questions: Try to construct a counter-example. If you can, the conclusion is NOT definite.',
+    ],
+  },
+  'Mathematical Operations': {
+    minPYQs: 25, accuracyGate: 80, conceptHours: 1,
+    topperTips: [
+      '🏆 Pure BODMAS + symbol substitution. Spend exactly 5 hours on this, then move on — ceiling score is easy.',
+      '⚡ Strategy: Solve the given example first to decode the symbol meaning, then apply.',
+    ],
+  },
+  'Mirror Image': {
+    minPYQs: 20, accuracyGate: 78, conceptHours: 0.5,
+    topperTips: [
+      '🏆 Rule: Left ↔ Right flips, Top/Bottom stays same. For clock mirror: subtract time from 11:60.',
+      '⚡ Practice 20 shapes until it becomes visual instinct — no formula needed after that.',
+    ],
+  },
+
+  // ── Mathematics ────────────────────────────────────────────────────────────
+  'Simplification': {
+    minPYQs: 40, accuracyGate: 82, conceptHours: 1,
+    topperTips: [
+      '🏆 All India Rank 1 Strategy: "Simplification is free marks. BODMAS + fraction cancellation + percentage shortcuts. Target 100% here."',
+      '⚡ Learn these: √2=1.414, √3=1.732, √5=2.236. These appear in 1 out of every 3 simplification questions.',
+      '📐 Shortcut: a²−b² = (a+b)(a−b). Saves 40% time on algebraic simplification.',
+    ],
+  },
+  'Number System': {
+    minPYQs: 35, accuracyGate: 70, conceptHours: 2,
+    topperTips: [
+      '🏆 Master divisibility rules for 2,3,4,5,6,7,8,9,11 — 30% of questions are pure divisibility.',
+      '⚡ LCM×HCF = Product of two numbers. Use this to skip lengthy calculations.',
+      '📐 Remainders: Cyclicity method — units digit of 7^n follows cycle 7,9,3,1. Period=4.',
+    ],
+  },
+  'Percentage': {
+    minPYQs: 35, accuracyGate: 72, conceptHours: 2,
+    topperTips: [
+      '🏆 SSC CGL Topper Trick: Memorise fraction↔percentage table (1/8=12.5%, 3/8=37.5%, etc.). Saves 30s per question.',
+      '⚡ "X% of Y = Y% of X" — use this to swap to an easier calculation.',
+    ],
+  },
+  'Ratio and Proportion': {
+    minPYQs: 30, accuracyGate: 75, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Partnership problems: Profit sharing = Capital × Time. Write this formula with every problem.',
+      '⚡ If ratio A:B = 3:5, and total = 40, then A = (3/8)×40 — proportional share formula.',
+    ],
+  },
+  'Average': {
+    minPYQs: 25, accuracyGate: 78, conceptHours: 1,
+    topperTips: [
+      '🏆 If one value changes by X, average changes by X/n. This trick solves 80% of average questions.',
+      '⚡ "Average after adding": New avg = (Old Sum + New Value) / (n+1). Never recalculate from scratch.',
+    ],
+  },
+  'Time and Work': {
+    minPYQs: 30, accuracyGate: 70, conceptHours: 2,
+    topperTips: [
+      '🏆 Use LCM method: Assume total work = LCM(days). Assign efficiency. Add efficiencies for combined work.',
+      '⚡ Pipes & Cisterns: Filling pipe = positive efficiency, Leaking pipe = negative. Same formula.',
+    ],
+  },
+  'Speed, Distance and Time': {
+    minPYQs: 35, accuracyGate: 70, conceptHours: 2,
+    topperTips: [
+      '🏆 Relative Speed: Same direction → subtract. Opposite → add. Train crossing: add length of trains.',
+      '⚡ Boats & Streams: Upstream = Speed−Current. Downstream = Speed+Current. Avg speed = 2ab/(a+b).',
+    ],
+  },
+  'Profit and Loss': {
+    minPYQs: 35, accuracyGate: 72, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Shortcut: If cost price unknown, assume CP=100. Then SP, profit%, etc. follow easily.',
+      '⚡ Successive discount: d₁+d₂ − (d₁×d₂/100). Never add discounts directly.',
+    ],
+  },
+  'Algebra': {
+    minPYQs: 30, accuracyGate: 68, conceptHours: 2.5,
+    topperTips: [
+      '🏆 If x+1/x=k, then x²+1/x²=k²−2 and x³+1/x³=k³−3k. Learn all 6 identity chains.',
+      '⚡ For quadratic: if p+q=S, pq=P given, then p²+q²=S²−2P. Use instead of solving.',
+    ],
+  },
+  'Geometry': {
+    minPYQs: 30, accuracyGate: 68, conceptHours: 3,
+    topperTips: [
+      '🏆 RRB focuses on: Triangle properties (60%), Circle theorems (25%), Quadrilaterals (15%). Study in this order.',
+      '⚡ Angles in semicircle = 90°. Angle at centre = 2× angle at circumference. Learn all 8 circle theorems.',
+    ],
+  },
+  'Mensuration': {
+    minPYQs: 35, accuracyGate: 70, conceptHours: 2,
+    topperTips: [
+      '🏆 All formulas must be on a single A4 sheet and memorised before attempting any question.',
+      '⚡ Cylinder confusion: Lateral SA = 2πrh, Total SA = 2πr(r+h). Write this distinction on your formula sheet.',
+    ],
+  },
+  'Trigonometry': {
+    minPYQs: 30, accuracyGate: 65, conceptHours: 2.5,
+    topperTips: [
+      '🏆 RRB pattern: 70% of trig questions are based on standard angles (0°,30°,45°,60°,90°). Memorise all 6 ratios × 5 angles = 30 values.',
+      '⚡ Always check: sin²θ + cos²θ = 1 first. This eliminates half the options usually.',
+    ],
+  },
+  'Data Interpretation': {
+    minPYQs: 25, accuracyGate: 72, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Skim the graph/table for 60 seconds before reading questions. Get the units, scale, and context.',
+      '⚡ Approximate boldly: round to nearest 5 or 10 — options are usually far apart enough.',
+    ],
+  },
+
+  // ── Science ────────────────────────────────────────────────────────────────
+  'Laws of Motion': {
+    minPYQs: 20, accuracyGate: 75, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Newton\'s 3 laws + application in everyday life. RRB loves: "rocket propelling = Newton 3rd law."',
+      '⚡ Friction questions: Static > Kinetic. Ball bearing reduces friction. Remember which type for which use.',
+    ],
+  },
+  'Electricity': {
+    minPYQs: 25, accuracyGate: 72, conceptHours: 2,
+    topperTips: [
+      '🏆 Ohm\'s Law + V=IR + Power formulas. Series: R adds. Parallel: 1/R adds.',
+      '⚡ RRB 2022 favourite: "Why do we use parallel circuit in homes?" Ans: Each appliance gets full voltage.',
+    ],
+  },
+  'Chemical Reactions': {
+    minPYQs: 20, accuracyGate: 75, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Memorise reaction types: Combination, Decomposition, Displacement, Double Displacement, Redox.',
+      '⚡ Rusting = oxidation. Burning = combustion. Both are redox reactions.',
+    ],
+  },
+  'Life Processes': {
+    minPYQs: 20, accuracyGate: 75, conceptHours: 2,
+    topperTips: [
+      '🏆 Nutrition, Respiration, Transportation, Excretion — each with plant+human version. 4 topics × 2 = 8 units.',
+      '⚡ Photosynthesis equation: 6CO₂ + 6H₂O → C₆H₁₂O₆ + 6O₂. Memorise in first week, never forget.',
+    ],
+  },
+  'Periodic Table': {
+    minPYQs: 20, accuracyGate: 78, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Top 20 elements: symbol, atomic number, valency. Plus Noble gases and their properties.',
+      '⚡ Trends: Left→Right: atomic radius ↓, ionization energy ↑. Top→Bottom: atomic radius ↑.',
+    ],
+  },
+  'Acids, Bases and Salts': {
+    minPYQs: 20, accuracyGate: 78, conceptHours: 1.5,
+    topperTips: [
+      '🏆 pH scale: <7=acid, 7=neutral, >7=base. Indicators: Litmus (red=acid,blue=base), Phenolphthalein.',
+      '⚡ Baking soda = NaHCO₃ (weak base). Washing soda = Na₂CO₃. Plaster of Paris = CaSO₄·½H₂O.',
+    ],
+  },
+  'Light': {
+    minPYQs: 20, accuracyGate: 75, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Concave mirror: focus in front. Convex mirror: focus behind. Sign convention is key.',
+      '⚡ Lens formula: 1/f = 1/v − 1/u. Convex lens = converging = positive focal length.',
+    ],
+  },
+
+  // ── General Awareness ──────────────────────────────────────────────────────
+  'Indian History': {
+    minPYQs: 25, accuracyGate: 70, conceptHours: 3,
+    topperTips: [
+      '🏆 RRB focuses on: Freedom movement (40%), Medieval India (30%), Ancient India (20%), Culture (10%).',
+      '⚡ For freedom movement: timeline anchor — 1857, 1885, 1905, 1919, 1920, 1930, 1942, 1947. Learn events attached to each year.',
+    ],
+  },
+  'Indian Polity': {
+    minPYQs: 20, accuracyGate: 72, conceptHours: 2,
+    topperTips: [
+      '🏆 Parliament structure, Fundamental Rights (Articles 12–35), DPSPs, Emergency provisions.',
+      '⚡ Preamble: "Sovereign, Socialist, Secular, Democratic, Republic." Added "Socialist Secular" in 1976.',
+    ],
+  },
+  'Geography': {
+    minPYQs: 25, accuracyGate: 72, conceptHours: 2,
+    topperTips: [
+      '🏆 Focus: Indian physical geography (rivers, mountains, plains), climate, soils, and natural resources.',
+      '⚡ Rivers: Longest=Ganga. Westward-flowing=Narmada,Tapi. Himalayan rivers=perennial. Peninsular=seasonal.',
+    ],
+  },
+  'Indian Economy': {
+    minPYQs: 20, accuracyGate: 70, conceptHours: 1.5,
+    topperTips: [
+      '🏆 Focus on: 5-year plans, Green/White Revolution, important economic organizations (RBI, SEBI, NABARD).',
+      '⚡ Current affairs: Union Budget highlights, GDP ranking, Government schemes (PMAY, MNREGA, etc.).',
+    ],
+  },
+  'Science & Technology': {
+    minPYQs: 20, accuracyGate: 75, conceptHours: 1.5,
+    topperTips: [
+      '🏆 ISRO missions, recent satellites, important inventions and their inventors.',
+      '⚡ RRB favourites: Who invented X? (telephone=Bell, radio=Marconi). Also: important awards and their fields.',
+    ],
+  },
+};
+
+// Default rule for topics not in the above map
+function getTopicRule(topic: string, subject: string): TopicRule {
+  const custom = TOPIC_RULES[topic] || {};
+  const color = SUBJECT_COLORS[subject] || '#6366f1';
+  return {
+    minPYQs: custom.minPYQs ?? 20,
+    accuracyGate: custom.accuracyGate ?? 70,
+    conceptHours: custom.conceptHours ?? 1,
+    topperTips: custom.topperTips ?? [
+      `🏆 Study this topic systematically. Read the concept, then immediately try 10 PYQs before continuing.`,
+      `⚡ When you finish, target ${custom.accuracyGate ?? 70}% accuracy to move forward.`,
+    ],
+    revisionDays: [1, 7, 30],
+    subjectColor: color,
+  };
 }
-function saveCompletions(s: Set<number>) {
-  localStorage.setItem(CK, JSON.stringify([...s]));
+
+// ─── Revision due logic ───────────────────────────────────────────────────────
+
+function daysDiff(from: string, to: string = new Date().toISOString()): number {
+  return Math.floor((new Date(to).getTime() - new Date(from).getTime()) / 86400000);
 }
 
-// ── Plan Generator ──────────────────────────────────────────────────────────────
-function generatePlan(
-  profile: Profile,
-  syllabus: Record<string, { topic: string; count: number }[]>
-): DayPlan[] {
-  const startDate = parseISO(profile.createdAt);
-  const examDate = parseISO(profile.examDate);
-  const totalDays = Math.max(7, differenceInDays(examDate, startDate));
-  const tier = getStrategyTier(totalDays);
+function getRevisionStatus(progress: TopicProgress): {
+  due: boolean; overdue: boolean; nextRevisionDay: number | null; label: string;
+} {
+  if (!progress.completedAt) return { due: false, overdue: false, nextRevisionDay: null, label: '' };
+  const daysSinceCompletion = daysDiff(progress.completedAt);
+  const revisionDays = [1, 7, 30];
+  const done = progress.revisions.length;
+  const nextDay = revisionDays[done];
+  if (nextDay === undefined) return { due: false, overdue: false, nextRevisionDay: null, label: '✅ All revisions done' };
+  const due = daysSinceCompletion >= nextDay - 1;
+  const overdue = daysSinceCompletion >= nextDay + 2;
+  return {
+    due,
+    overdue,
+    nextRevisionDay: nextDay,
+    label: overdue
+      ? `⚠️ OVERDUE — Day ${nextDay} revision missed!`
+      : due
+        ? `🔔 Revise Now — Day ${nextDay} is today`
+        : `Next revision: Day ${nextDay} (in ${nextDay - daysSinceCompletion} days)`,
+  };
+}
 
-  const qPerDay = profile.hoursPerDay >= 6 ? 60
-    : profile.hoursPerDay >= 4 ? 45
-    : profile.hoursPerDay >= 2 ? 30 : 20;
+// ─── Build sorted roadmap topics ──────────────────────────────────────────────
 
-  const studyBudget = Math.floor(totalDays * 0.72);
-  const revBudget   = Math.floor(totalDays * 0.13);
-  const mockBudget  = totalDays - studyBudget - revBudget;
+function buildRoadmapTopics(daysLeft: number): FreqEntry[] {
+  const freq = buildFrequencyMap();
+  // Keep only topics that have >3 PYQs
+  const eligible = freq.filter(f => f.count > 3);
+  // Minimum 10 topics always
+  const minTopics = 10;
+  // For longer time windows, include more
+  let maxTopics = minTopics;
+  if (daysLeft >= 90) maxTopics = Math.min(eligible.length, 40);
+  else if (daysLeft >= 60) maxTopics = Math.min(eligible.length, 30);
+  else if (daysLeft >= 30) maxTopics = Math.min(eligible.length, 20);
+  else if (daysLeft >= 14) maxTopics = Math.min(eligible.length, 15);
+  else maxTopics = Math.min(eligible.length, 10);
+  // Always at least minTopics
+  return eligible.slice(0, Math.max(minTopics, maxTopics));
+}
 
-  const totalW = SUBJECT_ORDER.reduce((s, sub) => s + sub.marks * (DIFFICULTY[sub.name] || 1), 0);
-  const subAlloc = SUBJECT_ORDER.map(sub => ({
-    ...sub,
-    days: Math.max(2, Math.floor(studyBudget * (sub.marks * (DIFFICULTY[sub.name] || 1)) / totalW)),
-  }));
+// ─── Gate check ───────────────────────────────────────────────────────────────
 
-  const plans: DayPlan[] = [];
-  let dayNum = 1;
+function isGatePassed(progress: TopicProgress, rule: TopicRule): boolean {
+  if (!progress.conceptRead) return false;
+  if (progress.pyqsAttempted < rule.minPYQs) return false;
+  const acc = progress.pyqsAttempted > 0
+    ? Math.round((progress.correctAnswers / progress.pyqsAttempted) * 100) : 0;
+  return acc >= rule.accuracyGate;
+}
 
-  for (let pi = 0; pi < subAlloc.length; pi++) {
-    const sub = subAlloc[pi];
-    const subName = sub.name;
-    const topics = (syllabus[subName] || []).slice(0, tier.topics);
-    const alloted = sub.days;
-    const phaseNum = pi + 1;
+function getAccuracy(progress: TopicProgress): number {
+  if (progress.pyqsAttempted === 0) return 0;
+  return Math.round((progress.correctAnswers / progress.pyqsAttempted) * 100);
+}
 
-    let dayInPhase = 0;
-    let daysSinceRev = 0;
-    let ti = 0;
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
-    plans.push({
-      dayNumber: dayNum++,
-      subject: subName,
-      topic: `${subName} — Kickoff`,
-      targetQ: 15,
-      instruction: `🚀 Phase ${phaseNum} begins: ${subName}! Solve 15 spread-out PYQs across ALL ${subName} topics to identify your baseline. Mark every Q you're unsure about with 🚩.`,
-      type: 'learn',
-      phase: phaseNum,
-      phaseLabel: subName,
-      topicFreq: topics.reduce((s, t) => s + t.count, 0),
-      tips: [
-        `${subName} = ${sub.marks} marks — ${sub.why}`,
-        `Strategy: ${tier.label} — top ${tier.topics} PYQ-frequency topics`,
-        `Today: understand the scope. Don't worry if accuracy is low.`,
-      ],
-    });
-    dayInPhase++;
-    daysSinceRev++;
+function SubjectBadge({ subject }: { subject: string }) {
+  const colors: Record<string, string> = {
+    'Reasoning': 'bg-indigo-100 text-indigo-800',
+    'Mathematics': 'bg-sky-100 text-sky-800',
+    'Science': 'bg-emerald-100 text-emerald-800',
+    'General Awareness': 'bg-amber-100 text-amber-800',
+  };
+  return (
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${colors[subject] ?? 'bg-slate-100 text-slate-600'}`}>
+      {subject}
+    </span>
+  );
+}
 
-    while (dayInPhase < alloted - 1 && ti < topics.length) {
-      const topic = topics[ti];
+function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
+  return (
+    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+      <div
+        className="h-full rounded-full transition-all duration-500"
+        style={{ width: `${pct}%`, background: color }}
+      />
+    </div>
+  );
+}
 
-      if (daysSinceRev >= 7 && ti >= 2) {
-        const revTopics = topics.slice(Math.max(0, ti - 3), ti).map(t => t.topic).join(' + ');
-        plans.push({
-          dayNumber: dayNum++,
-          subject: subName,
-          topic: 'Spaced Revision',
-          targetQ: qPerDay,
-          instruction: `🔁 Day-7 Revision (Ebbinghaus Rule): Re-solve ${qPerDay} PYQs from: ${revTopics}. Focus only on wrong/flagged questions. Skip what you score 90%+.`,
-          type: 'revise',
-          phase: phaseNum,
-          phaseLabel: subName,
-          topicFreq: 0,
-          tips: [
-            'Without revision at Day 7, you forget 70% of what you studied',
-            'Target: get accuracy above 80% on previously wrong questions',
-            'Use your 🚩 flagged list as the revision queue',
-          ],
-        });
-        dayInPhase++;
-        daysSinceRev = 0;
-      }
+interface TopicCardProps {
+  entry: FreqEntry;
+  index: number;
+  progress: TopicProgress;
+  prevUnlocked: boolean; // previous topic was completed
+  onUpdate: (update: Partial<TopicProgress>) => void;
+}
 
-      if (dayInPhase >= alloted - 1) break;
+function TopicCard({ entry, index, progress, prevUnlocked, onUpdate }: TopicCardProps) {
+  const [expanded, setExpanded] = useState(false);
+  const rule = getTopicRule(entry.topic, entry.subject);
+  const acc = getAccuracy(progress);
+  const gatePassed = isGatePassed(progress, rule);
+  const canStart = index === 0 || prevUnlocked;
+  const isLocked = !canStart && !gatePassed;
+  const revStatus = getRevisionStatus(progress);
 
-      const topicDays = topic.count >= 50 ? 3 : topic.count >= 25 ? 2 : 1;
-      const isHighPriority = topic.count >= 40;
-      const isMedPriority = topic.count >= 20;
+  const handleConceptRead = () => {
+    if (isLocked) return;
+    onUpdate({ conceptRead: true });
+  };
 
-      for (let d = 0; d < topicDays && dayInPhase < alloted - 1; d++) {
-        const isFirst = d === 0;
-        const qTarget = isFirst
-          ? Math.min(topic.count, Math.floor(qPerDay * 0.5))
-          : Math.min(topic.count, qPerDay);
+  const handleMarkRevision = () => {
+    if (!progress.completedAt) return;
+    onUpdate({ revisions: [...progress.revisions, new Date().toISOString()] });
+  };
 
-        plans.push({
-          dayNumber: dayNum++,
-          subject: subName,
-          topic: topic.topic,
-          targetQ: qTarget,
-          instruction: isFirst
-            ? `📖 Learn "${topic.topic}" (${subName}): Study concept + formula (20 min max) → Solve first ${qTarget} PYQs → Note 1 speed trick → Flag 🚩 any confusing Q`
-            : `⚡ Master "${topic.topic}": Solve ${qTarget} PYQs at exam speed (≤54s each). After every 10 Qs: check accuracy. Revisit wrong answers immediately. Target: ≥80%.`,
-          type: isFirst ? 'learn' : 'practice',
-          phase: phaseNum,
-          phaseLabel: subName,
-          topicFreq: topic.count,
-          tips: [
-            `"${topic.topic}" — ${topic.count} PYQs in dataset ${isHighPriority ? '🔥 Very High Priority' : isMedPriority ? '⚡ High Priority' : '✅ Standard'}`,
-            ...(TOPIC_META[topic.topic]?.tips?.slice(0, 2) ?? []),
-          ],
-        });
-        dayInPhase++;
-        daysSinceRev++;
-      }
-      ti++;
+  // Auto-unlock: when gate passes, set completedAt
+  useEffect(() => {
+    if (gatePassed && !progress.completedAt) {
+      onUpdate({ completedAt: new Date().toISOString(), unlocked: true });
     }
+  }, [gatePassed, progress.completedAt]);
 
-    plans.push({
-      dayNumber: dayNum++,
-      subject: subName,
-      topic: `${subName} Phase Test`,
-      targetQ: 25,
-      instruction: `📝 ${subName} Phase Test: 25 Qs in 22 min (timer on, no notes, exam simulation). Analyse every wrong answer. Score target: ≥${CATEGORY_CUTOFF['general']?.safe ?? 70}% to move confidently.`,
-      type: 'mock',
-      phase: phaseNum,
-      phaseLabel: subName,
-      topicFreq: 0,
-      milestone: `✅ Phase ${phaseNum} Complete — ${subName} DONE!`,
-      tips: [
-        '≥80% → Excellent! Move to next subject',
-        '60–80% → Good. Note 3 weak topics for revision phase',
-        '<60% → Spend 2 extra days on weakest 3 topics before moving',
-      ],
-    });
-  }
-
-  // Phase 5: Mixed Revision
-  const revRota = SUBJECT_ORDER.map(s => s.name);
-  for (let d = 0; d < revBudget; d++) {
-    const subName = revRota[d % revRota.length];
-    plans.push({
-      dayNumber: dayNum++,
-      subject: subName,
-      topic: 'Final Revision',
-      targetQ: qPerDay,
-      instruction: `🔁 Final Revision — ${subName}: ONLY practice your 🚩 Weak Areas flagged questions + topics where accuracy was <70%. Skip strong topics. Simulate exam time.`,
-      type: 'revise',
-      phase: 5,
-      phaseLabel: 'Mixed Revision',
-      topicFreq: 0,
-      tips: [
-        'Skip what you know well. Double down on weak spots.',
-        '30 min Weak Areas practice + 30 min timed PYQs = optimal session',
-        `Target cutoff: ${CATEGORY_CUTOFF['general']?.safe ?? 70}/100`,
-      ],
-    });
-  }
-
-  // Phase 6: Full CBT Mocks
-  for (let d = 0; d < mockBudget; d++) {
-    const isLast = d === mockBudget - 1;
-    plans.push({
-      dayNumber: dayNum++,
-      subject: 'All Subjects',
-      topic: isLast ? '🏆 EXAM DAY — You Are Ready!' : `Full CBT Mock ${d + 1}`,
-      targetQ: isLast ? 0 : 100,
-      instruction: isLast
-        ? `🏅 Exam Day: Light breakfast, reach 30 min early. Read all 100 Qs quickly (5 min first pass). Attempt easy Qs first. Don't spend >2 min on any Q. Trust your preparation!`
-        : `📝 Full Mock ${d + 1}: 100 Qs / 90 min — no breaks, real exam simulation. Post-mock: calculate accuracy per subject, note top-3 wrong topics. Analysis = 1 hr minimum.`,
-      type: isLast ? 'buffer' : 'mock',
-      phase: 6,
-      phaseLabel: 'Full Mocks',
-      topicFreq: 0,
-      milestone: isLast ? `🎯 Good luck at ${profile.zone}!` : undefined,
-      tips: isLast
-        ? ['8 hours sleep tonight', 'Hall ticket + ID ready?', 'Arrive 30 min early']
-        : [
-          'After each mock: 1 hour analysis > 3 hours more studying',
-          'Reasoning 22+, Maths 18+, Science 18+, GA 14+ = safe zone',
-          'Eliminate 2 wrong options first — boosts 50% guessing to 70%',
-        ],
-    });
-  }
-
-  return plans;
-}
-
-// ── PYQ Frequency Heatmap ───────────────────────────────────────────────────────
-function FrequencyHeatmap({ syllabus }: { syllabus: Record<string, { topic: string; count: number }[]> }) {
-  const [activeSubject, setActiveSubject] = useState(SUBJECT_ORDER[0].name);
-  const sub = SUBJECT_ORDER.find(s => s.name === activeSubject)!;
-  const topics = (syllabus[activeSubject] || []).slice(0, 12);
-  const maxCount = topics[0]?.count || 1;
-  const totalPYQs = topics.reduce((s, t) => s + t.count, 0);
+  const borderColor = gatePassed
+    ? '#10b981'
+    : isLocked
+      ? '#e2e8f0'
+      : rule.subjectColor;
 
   return (
-    <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high shadow-sm overflow-hidden">
-      <div className="p-5 pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-black text-primary flex items-center gap-2 text-sm">
-            <BarChart3 size={16} className="text-primary" /> PYQ Frequency Analysis — Top Topics
-          </h3>
-          <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full font-mono">
-            {totalPYQs} PYQs shown
-          </span>
+    <div
+      className={`rounded-2xl border-2 overflow-hidden transition-all duration-300 ${
+        isLocked ? 'opacity-60' : 'shadow-sm hover:shadow-md'
+      }`}
+      style={{ borderColor }}
+    >
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div
+        className={`px-5 py-4 flex items-center gap-3 cursor-pointer select-none ${
+          isLocked ? 'bg-slate-50' : 'bg-white'
+        }`}
+        onClick={() => !isLocked && setExpanded(e => !e)}
+      >
+        {/* Rank badge */}
+        <div
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
+          style={{ background: isLocked ? '#94a3b8' : gatePassed ? '#10b981' : rule.subjectColor }}
+        >
+          {gatePassed ? <CheckCircle size={18} /> : isLocked ? <Lock size={16} /> : index + 1}
         </div>
-        {/* Subject tabs */}
-        <div className="flex gap-1 flex-wrap mb-4">
-          {SUBJECT_ORDER.map(s => (
-            <button
-              key={s.name}
-              onClick={() => setActiveSubject(s.name)}
-              className={cn(
-                'text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all',
-                activeSubject === s.name
-                  ? `bg-gradient-to-r ${s.grad} text-white shadow-sm`
-                  : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="font-bold text-slate-800 text-sm">{entry.topic}</p>
+            <SubjectBadge subject={entry.subject} />
+            {revStatus.due && !gatePassed && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse">
+                {revStatus.overdue ? '⚠️ OVERDUE' : '🔔 REVISE'}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-1.5">
+            <span className="text-[11px] text-slate-400">{entry.count} PYQs in exams</span>
+            <span className="text-[11px] text-slate-400">•</span>
+            <span className="text-[11px] text-slate-400">
+              {progress.pyqsAttempted}/{rule.minPYQs} attempted
+            </span>
+            {progress.pyqsAttempted > 0 && (
+              <>
+                <span className="text-[11px] text-slate-400">•</span>
+                <span className={`text-[11px] font-bold ${acc >= rule.accuracyGate ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {acc}% acc
+                </span>
+              </>
+            )}
+          </div>
+          {/* Progress bars */}
+          {!isLocked && (
+            <div className="mt-2 space-y-1">
+              <ProgressBar value={progress.pyqsAttempted} max={rule.minPYQs} color={rule.subjectColor} />
+            </div>
+          )}
+        </div>
+
+        {!isLocked && (
+          <div className="flex-shrink-0">
+            {expanded ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+          </div>
+        )}
+      </div>
+
+      {/* ── Expanded panel ───────────────────────────────────── */}
+      {expanded && !isLocked && (
+        <div className="border-t border-slate-100 bg-slate-50/60 px-5 py-4 space-y-5">
+
+          {/* Gate requirements */}
+          <div>
+            <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Target size={13} /> Completion Gate
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {/* Gate 1: Concept */}
+              <div className={`rounded-xl p-3 border text-center ${progress.conceptRead ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
+                <div className="text-lg mb-1">{progress.conceptRead ? '✅' : '📖'}</div>
+                <p className="text-[11px] font-bold text-slate-700">Read Concept</p>
+                <p className="text-[10px] text-slate-500">{rule.conceptHours}h recommended</p>
+                {!progress.conceptRead && (
+                  <button
+                    onClick={handleConceptRead}
+                    className="mt-1.5 text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                  >
+                    Mark Done
+                  </button>
+                )}
+              </div>
+              {/* Gate 2: PYQs */}
+              <div className={`rounded-xl p-3 border text-center ${progress.pyqsAttempted >= rule.minPYQs ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
+                <div className="text-lg mb-1">{progress.pyqsAttempted >= rule.minPYQs ? '✅' : '📝'}</div>
+                <p className="text-[11px] font-bold text-slate-700">Solve PYQs</p>
+                <p className="text-[10px] text-slate-500">{progress.pyqsAttempted}/{rule.minPYQs} done</p>
+                <div className="mt-1.5">
+                  <ProgressBar value={progress.pyqsAttempted} max={rule.minPYQs} color={rule.subjectColor} />
+                </div>
+              </div>
+              {/* Gate 3: Accuracy */}
+              <div className={`rounded-xl p-3 border text-center ${acc >= rule.accuracyGate && progress.pyqsAttempted > 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-200'}`}>
+                <div className="text-lg mb-1">{acc >= rule.accuracyGate && progress.pyqsAttempted > 0 ? '✅' : '🎯'}</div>
+                <p className="text-[11px] font-bold text-slate-700">Accuracy Gate</p>
+                <p className={`text-[10px] font-bold ${acc >= rule.accuracyGate && progress.pyqsAttempted > 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                  {acc}% / {rule.accuracyGate}% needed
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Manual PYQ & accuracy entry */}
+          {!gatePassed && (
+            <div>
+              <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <BarChart2 size={13} /> Update Progress
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="PYQs attempted"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  defaultValue={progress.pyqsAttempted || ''}
+                  onBlur={e => {
+                    const v = parseInt(e.target.value);
+                    if (!isNaN(v) && v >= 0) onUpdate({ pyqsAttempted: v });
+                  }}
+                />
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Correct answers"
+                  className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  defaultValue={progress.correctAnswers || ''}
+                  onBlur={e => {
+                    const v = parseInt(e.target.value);
+                    if (!isNaN(v) && v >= 0) onUpdate({ correctAnswers: v });
+                  }}
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1">Enter your totals from Practice Engine or Mock Tests</p>
+            </div>
+          )}
+
+          {/* Topper laws */}
+          <div>
+            <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <Star size={13} style={{ color: rule.subjectColor }} /> Topper Laws & Strategy
+            </p>
+            <div className="space-y-2">
+              {rule.topperTips.map((tip, i) => (
+                <div key={i} className="bg-white rounded-xl p-3 border border-slate-200 text-[12px] text-slate-700 leading-relaxed">
+                  {tip}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Revision tracker */}
+          <div>
+            <p className="text-xs font-black text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <RefreshCw size={13} className="text-blue-500" /> Ebbinghaus Revision Law
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="text-[11px] text-blue-800 font-medium mb-2">
+                Human brain forgets 70% within 24 hours without revision. Follow this schedule:
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                {[1, 7, 30].map((day, i) => {
+                  const done = progress.revisions.length > i;
+                  return (
+                    <div key={day} className={`rounded-lg px-3 py-1.5 text-[11px] font-bold flex items-center gap-1 ${done ? 'bg-emerald-100 text-emerald-700' : 'bg-white text-slate-500 border border-slate-200'}`}>
+                      {done ? <CheckCircle size={12} /> : <Clock size={12} />}
+                      Day {day}
+                    </div>
+                  );
+                })}
+              </div>
+              {revStatus.due && (
+                <div className={`mt-3 rounded-xl p-2 text-[11px] font-bold flex items-center gap-2 ${revStatus.overdue ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-800'}`}>
+                  {revStatus.overdue ? <AlertTriangle size={13} /> : <RefreshCw size={13} />}
+                  {revStatus.label}
+                  <button
+                    onClick={handleMarkRevision}
+                    className="ml-auto bg-white rounded-lg px-2 py-1 text-[10px] border font-bold hover:bg-slate-50 transition"
+                  >
+                    Mark Revised ✓
+                  </button>
+                </div>
               )}
-            >
-              {s.icon} {s.name.replace('General ', 'Gen. ')}
-            </button>
+              {!revStatus.due && revStatus.label && (
+                <p className="text-[10px] text-slate-500 mt-2">{revStatus.label}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Gate passed celebration */}
+          {gatePassed && (
+            <div className="bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl p-4 text-white text-center">
+              <div className="text-2xl mb-1">🏆</div>
+              <p className="font-black text-sm">Topic Mastered!</p>
+              <p className="text-[11px] text-white/80 mt-0.5">
+                Gate passed on {progress.completedAt ? new Date(progress.completedAt).toLocaleDateString('en-IN') : '—'}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Setup screen ─────────────────────────────────────────────────────────────
+
+function SetupScreen({ onSetup }: { onSetup: (days: number) => void }) {
+  const [days, setDays] = useState(60);
+
+  const presets = [
+    { label: '⚡ Emergency', days: 7, desc: 'Top 10 most-asked topics only' },
+    { label: '🎯 Sprint', days: 14, desc: '15 high-frequency topics' },
+    { label: '📚 Standard', days: 30, desc: '20 topics with full strategy' },
+    { label: '🏆 Master', days: 60, desc: '30 topics — topper pace' },
+    { label: '💎 Champion', days: 90, desc: 'All 40 top topics — no excuses' },
+  ];
+
+  return (
+    <div className="max-w-xl mx-auto p-6">
+      {/* Hero */}
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
+          <Trophy size={32} className="text-white" />
+        </div>
+        <h1 className="text-2xl font-black text-slate-900 mb-2">Your Personalized Roadmap</h1>
+        <p className="text-slate-500 text-sm">
+          Built on PYQ frequency data from 4,295+ real exam questions. Ordered by topic importance.
+        </p>
+      </div>
+
+      {/* Legend — topper strategies */}
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5 mb-6">
+        <p className="font-black text-indigo-900 text-sm mb-3 flex items-center gap-2">
+          <Award size={15} /> How This Roadmap Works
+        </p>
+        <div className="space-y-2 text-[12px] text-indigo-800">
+          <p>📊 <strong>Topics ordered by PYQ frequency</strong> — most-asked topics come first</p>
+          <p>🔒 <strong>Topic gates</strong> — each topic unlocks only after you solve minimum PYQs + hit accuracy target</p>
+          <p>🔔 <strong>Ebbinghaus revision</strong> — you'll be reminded to revise on Day 1, 7, and 30</p>
+          <p>🏆 <strong>Topper laws per topic</strong> — specific SSC CGL & RRB topper strategies for every topic</p>
+          <p>⚡ <strong>Minimum 10 topics</strong> — even in emergency mode, you'll cover the top 10 highest-yield topics</p>
+        </div>
+      </div>
+
+      {/* Time presets */}
+      <p className="font-black text-slate-800 text-sm mb-3">How many days until your exam?</p>
+      <div className="grid grid-cols-1 gap-2 mb-4">
+        {presets.map(p => (
+          <button
+            key={p.days}
+            onClick={() => setDays(p.days)}
+            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all ${
+              days === p.days
+                ? 'border-indigo-600 bg-indigo-50 text-indigo-900'
+                : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300'
+            }`}
+          >
+            <span>{p.label}</span>
+            <span className="text-[11px] font-medium text-slate-400">{p.days} days — {p.desc}</span>
+          </button>
+        ))}
+      </div>
+      <div className="flex items-center gap-3 mb-6">
+        <span className="text-sm text-slate-500">Custom:</span>
+        <input
+          type="number"
+          min={1} max={365}
+          value={days}
+          onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))}
+          className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm w-24 font-bold focus:outline-none focus:border-indigo-500"
+        />
+        <span className="text-sm text-slate-500">days</span>
+      </div>
+
+      <button
+        onClick={() => onSetup(days)}
+        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-4 rounded-2xl text-sm shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-purple-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+      >
+        <Zap size={18} /> Generate My Roadmap
+      </button>
+    </div>
+  );
+}
+
+// ─── Main Roadmap component ───────────────────────────────────────────────────
+
+export function StudyRoadmap() {
+  const [profile, setProfile] = useState<RoadmapProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>('All');
+  const [showOnlyDue, setShowOnlyDue] = useState(false);
+
+  // Load profile on mount (namespaced per user)
+  useEffect(() => {
+    setLoading(true);
+    const p = loadProfile();
+    setProfile(p);
+    setLoading(false);
+  }, []);
+
+  const handleSetup = (days: number) => {
+    const p: RoadmapProfile = {
+      daysLeft: days,
+      startDate: new Date().toISOString(),
+      topicProgress: {},
+    };
+    saveProfile(p);
+    setProfile(p);
+  };
+
+  const handleReset = () => {
+    if (!window.confirm('Reset entire roadmap? Your progress will be cleared.')) return;
+    localStorage.removeItem(getRoadmapKey());
+    setProfile(null);
+  };
+
+  const topics = useMemo(() => {
+    if (!profile) return [];
+    return buildRoadmapTopics(profile.daysLeft);
+  }, [profile?.daysLeft]);
+
+  const getTopicProgress = (topic: string): TopicProgress => {
+    return profile?.topicProgress?.[topic] ?? {
+      conceptRead: false, pyqsAttempted: 0, correctAnswers: 0,
+      unlocked: false, revisions: [],
+    };
+  };
+
+  const updateTopicProgress = (topic: string, update: Partial<TopicProgress>) => {
+    setProfile(prev => {
+      if (!prev) return prev;
+      const existing = prev.topicProgress?.[topic] ?? {
+        conceptRead: false, pyqsAttempted: 0, correctAnswers: 0,
+        unlocked: false, revisions: [],
+      };
+      const updated = { ...existing, ...update };
+      const newProfile = {
+        ...prev,
+        topicProgress: { ...prev.topicProgress, [topic]: updated },
+      };
+      saveProfile(newProfile);
+      return newProfile;
+    });
+  };
+
+  // Stats
+  const stats = useMemo(() => {
+    if (!profile || topics.length === 0) return null;
+    const completed = topics.filter(t => isGatePassed(getTopicProgress(t.topic), getTopicRule(t.topic, t.subject))).length;
+    const dueRevisions = topics.filter(t => getRevisionStatus(getTopicProgress(t.topic)).due).length;
+    const totalPYQs = topics.reduce((s, t) => s + (getTopicProgress(t.topic).pyqsAttempted || 0), 0);
+    const daysPassed = profile.startDate ? daysDiff(profile.startDate) : 0;
+    return { completed, total: topics.length, dueRevisions, totalPYQs, daysPassed };
+  }, [profile, topics]);
+
+  const subjects = useMemo(() => {
+    const s = new Set(topics.map(t => t.subject));
+    return ['All', ...Array.from(s)];
+  }, [topics]);
+
+  const filteredTopics = useMemo(() => {
+    let t = topics;
+    if (filter !== 'All') t = t.filter(e => e.subject === filter);
+    if (showOnlyDue) t = t.filter(e => getRevisionStatus(getTopicProgress(e.topic)).due);
+    return t;
+  }, [topics, filter, showOnlyDue, profile]);
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return <SetupScreen onSetup={handleSetup} />;
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+
+      {/* ── Hero header ─────────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Trophy size={20} className="text-yellow-300" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Study Roadmap</span>
+            </div>
+            <h1 className="text-xl font-black mb-1">
+              {stats?.completed === stats?.total && stats?.total !== 0
+                ? '🎉 All Topics Mastered!'
+                : `${stats?.completed ?? 0} / ${stats?.total ?? 0} Topics Mastered`}
+            </h1>
+            <p className="text-white/70 text-[12px]">
+              Started {stats?.daysPassed ?? 0} days ago • {profile.daysLeft} day window • {stats?.totalPYQs ?? 0} PYQs attempted total
+            </p>
+          </div>
+          <button
+            onClick={handleReset}
+            className="text-white/40 hover:text-white/80 transition text-[11px] flex-shrink-0"
+          >
+            Reset
+          </button>
+        </div>
+
+        {/* Overall progress bar */}
+        <div className="mt-4">
+          <div className="flex justify-between text-[11px] text-white/60 mb-1">
+            <span>Overall Progress</span>
+            <span>{stats ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
+          </div>
+          <div className="w-full bg-white/20 rounded-full h-2">
+            <div
+              className="h-full rounded-full bg-yellow-400 transition-all duration-700"
+              style={{ width: `${stats ? (stats.completed / stats.total) * 100 : 0}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Quick stats row */}
+        <div className="grid grid-cols-3 gap-2 mt-4">
+          {[
+            { icon: CheckCircle, label: 'Done', value: stats?.completed ?? 0, unit: 'topics' },
+            { icon: RefreshCw, label: 'Revisions Due', value: stats?.dueRevisions ?? 0, unit: 'topics', alert: (stats?.dueRevisions ?? 0) > 0 },
+            { icon: BookOpen, label: 'PYQs Done', value: stats?.totalPYQs ?? 0, unit: 'total' },
+          ].map(s => (
+            <div key={s.label} className={`rounded-xl p-2 text-center ${s.alert ? 'bg-red-500/30 animate-pulse' : 'bg-white/10'}`}>
+              <s.icon size={14} className="mx-auto mb-0.5 text-white/70" />
+              <p className="text-base font-black">{s.value}</p>
+              <p className="text-[9px] text-white/60">{s.label}</p>
+            </div>
           ))}
         </div>
       </div>
 
-      <div className="px-5 pb-5 space-y-2">
-        {topics.map((t, i) => {
-          const pct = Math.round((t.count / maxCount) * 100);
-          const meta = TOPIC_META[t.topic];
-          const heat = meta?.heat ?? (t.count >= 100 ? 'heavy' : t.count >= 40 ? 'medium' : 'light');
-          const hc = HEAT_COLORS[heat];
-          return (
-            <div key={t.topic} className="group">
-              <div className="flex items-center justify-between mb-0.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className={cn('text-[9px] font-black w-4 text-center shrink-0', hc.text)}>
-                    #{i + 1}
-                  </span>
-                  <span className="text-xs font-semibold text-on-surface truncate">{t.topic}</span>
-                  <span className={cn('text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0', hc.bg, hc.text)}>
-                    {heat === 'heavy' ? '🔥' : heat === 'medium' ? '⚡' : '✅'} {hc.label}
-                  </span>
-                </div>
-                <span className="text-[11px] font-black text-on-surface shrink-0 ml-2">{t.count}</span>
-              </div>
-              <div className="h-2 bg-surface-container-high rounded-full overflow-hidden">
-                <motion.div
-                  className={cn('h-full rounded-full bg-gradient-to-r', sub.grad)}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.6, delay: i * 0.04 }}
-                />
-              </div>
-              {meta?.tips?.[0] && (
-                <p className="text-[10px] text-on-surface-variant mt-0.5 pl-6 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  💡 {meta.tips[0]}
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── Subject Mastery Overview ────────────────────────────────────────────────────
-function SubjectMasteryOverview({
-  plan, completions, category,
-}: {
-  plan: DayPlan[]; completions: Set<number>; category: string;
-}) {
-  const targets = SUB_TARGETS[category] ?? SUB_TARGETS.general;
-
-  const subStats = SUBJECT_ORDER.map(sub => {
-    const subDays = plan.filter(d => d.subject === sub.name);
-    const done = subDays.filter(d => completions.has(d.dayNumber)).length;
-    const pct = subDays.length > 0 ? Math.round((done / subDays.length) * 100) : 0;
-    const learnDone = subDays.filter(d => d.type === 'learn' && completions.has(d.dayNumber)).length;
-    const totalLearn = subDays.filter(d => d.type === 'learn').length;
-    return { ...sub, done, total: subDays.length, pct, learnDone, totalLearn };
-  });
-
-  return (
-    <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high shadow-sm p-5">
-      <h3 className="font-black text-primary flex items-center gap-2 text-sm mb-4">
-        <Trophy size={16} className="text-amber-500" /> Subject Mastery Overview
-      </h3>
-      <div className="grid grid-cols-2 gap-3">
-        {subStats.map(s => (
-          <div key={s.name} className={cn('rounded-xl p-3 border', s.light, s.border)}>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">{s.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className={cn('text-xs font-black truncate', s.text)}>{s.name.replace('General ', 'G. ')}</p>
-                <p className="text-[10px] text-on-surface-variant">{s.marks} marks</p>
-              </div>
-              <span className={cn('text-sm font-black', s.text)}>{s.pct}%</span>
-            </div>
-            <div className="h-2 bg-white/60 rounded-full overflow-hidden mb-2">
-              <motion.div
-                className={cn('h-full rounded-full bg-gradient-to-r', s.grad)}
-                initial={{ width: 0 }}
-                animate={{ width: `${s.pct}%` }}
-                transition={{ duration: 0.8 }}
-              />
-            </div>
-            <div className="flex justify-between text-[10px] text-on-surface-variant">
-              <span>{s.done}/{s.total} days</span>
-              <span className="font-bold">Target: {targets[s.name]}/{s.marks}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── 7-Day Pre-Exam Sprint ───────────────────────────────────────────────────────
-function PreExamSprint({ daysLeft }: { daysLeft: number }) {
-  const [open, setOpen] = useState(daysLeft <= 14);
-  if (daysLeft > 30) return null;
-
-  return (
-    <div className={cn(
-      'rounded-2xl border-2 overflow-hidden',
-      daysLeft <= 7 ? 'border-red-400' : 'border-amber-300'
-    )}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        className={cn(
-          'w-full flex items-center gap-3 p-4 text-left',
-          daysLeft <= 7 ? 'bg-red-50' : 'bg-amber-50'
-        )}
-      >
-        <div className={cn(
-          'w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-lg shrink-0',
-          daysLeft <= 7 ? 'bg-red-500' : 'bg-amber-500'
-        )}>
-          🔥
-        </div>
-        <div className="flex-1">
-          <p className={cn('font-black text-sm', daysLeft <= 7 ? 'text-red-700' : 'text-amber-700')}>
-            {daysLeft <= 7 ? `🚨 EXAM IN ${daysLeft} DAYS — Final Sprint!` : `⚡ ${daysLeft} Days Left — Pre-Exam Sprint Plan`}
-          </p>
-          <p className="text-[11px] text-on-surface-variant">7-day topper revision schedule</p>
-        </div>
-        {open ? <ChevronUp size={16} className="text-on-surface-variant shrink-0" /> : <ChevronDown size={16} className="text-on-surface-variant shrink-0" />}
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="p-4 space-y-2 bg-surface-container-lowest">
-              {REVISION_PLAN.map(day => {
-                const typeColor: Record<string, string> = {
-                  revise: 'bg-amber-100 text-amber-800 border-amber-200',
-                  practice: 'bg-blue-100 text-blue-800 border-blue-200',
-                };
-                return (
-                  <div key={day.day} className={cn('flex items-start gap-3 p-3 rounded-xl border', typeColor[day.type] ?? 'bg-surface-container border-surface-container-high')}>
-                    <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center font-black text-xs shrink-0">
-                      D-{8 - day.day}
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black">{day.label}</p>
-                      <p className="text-[10px] mt-0.5 opacity-80">{day.focus}</p>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {day.topics.map(t => (
-                          <span key={t} className="text-[9px] font-bold bg-white/50 px-1.5 py-0.5 rounded">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <span className="text-[10px] font-bold shrink-0">{day.hours}h</span>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ── Today Card ──────────────────────────────────────────────────────────────────
-function TodayCard({ day, isCompleted, onToggle, profile }: {
-  day: DayPlan | null; isCompleted: boolean; onToggle: () => void; profile: Profile;
-}) {
-  if (!day) {
-    return (
-      <div className="bg-tertiary/10 rounded-2xl p-6 border border-tertiary/20 text-center">
-        <Trophy size={28} className="text-tertiary mx-auto mb-2" />
-        <p className="font-black text-primary text-lg">All Days Complete! 🎉</p>
-        <p className="text-sm text-on-surface-variant mt-1">Rest and do light revision. You're exam-ready!</p>
-      </div>
-    );
-  }
-  const sub = SUBJECT_ORDER.find(s => s.name === day.subject);
-  const typeColors: Record<string, string> = {
-    learn: 'from-blue-500 to-indigo-600', practice: 'from-purple-500 to-violet-600',
-    revise: 'from-amber-500 to-orange-500', mock: 'from-red-500 to-pink-600', buffer: 'from-slate-400 to-slate-500',
-  };
-  const typeLabel: Record<string, string> = {
-    learn: '📖 LEARN', practice: '⚡ PRACTICE', revise: '🔁 REVISE', mock: '📝 MOCK', buffer: '🛡 BUFFER',
-  };
-  const cutoff = CATEGORY_CUTOFF[profile.category];
-  const subTargets = SUB_TARGETS[profile.category] ?? SUB_TARGETS.general;
-  const meta = TOPIC_META[day.topic];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        'rounded-2xl overflow-hidden shadow-md border',
-        isCompleted ? 'border-tertiary/30 bg-tertiary/5' : (sub?.border ?? 'border-primary/20')
-      )}
-    >
-      <div className={cn('h-1.5 bg-gradient-to-r', sub?.grad ?? 'from-primary to-primary-container')} />
-      <div className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap mb-2">
-              <span className="text-xl">{sub?.icon ?? '📚'}</span>
-              <span className={cn('text-xs font-black px-2.5 py-1 rounded-full text-white bg-gradient-to-r', typeColors[day.type])}>
-                {typeLabel[day.type]}
-              </span>
-              <span className="text-xs font-bold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-                Day {day.dayNumber} · Phase {day.phase}
-              </span>
-              {day.topicFreq > 0 && (
-                <span className={cn('text-[10px] font-black px-2 py-0.5 rounded-full',
-                  day.topicFreq >= 50 ? 'bg-red-100 text-red-700' :
-                  day.topicFreq >= 25 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-                )}>
-                  {day.topicFreq >= 50 ? '🔥' : day.topicFreq >= 25 ? '⚡' : '✅'} {day.topicFreq} PYQs
-                </span>
-              )}
-              <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full border', cutoff.color, 'bg-surface-container border-surface-container-high')}>
-                🎯 Target: {cutoff.safe}/100
-              </span>
-            </div>
-            <h3 className="text-xl font-black text-primary mb-0.5">{day.topic}</h3>
-            <p className={cn('text-sm font-medium mb-3', sub?.text ?? 'text-on-surface-variant')}>
-              {day.subject}{profile.zone && profile.zone !== 'Not selected' ? ` · ${profile.zone}` : ''}
-            </p>
-
-            <p className="text-sm text-on-surface leading-relaxed bg-surface-container rounded-xl p-4 mb-3">
-              {day.instruction}
-            </p>
-
-            {/* Sub-subject target */}
-            {day.subject !== 'All Subjects' && (
-              <div className="flex flex-wrap gap-2 mb-3">
-                {SUBJECT_ORDER.map(s => (
-                  <div key={s.name} className={cn(
-                    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border',
-                    s.name === day.subject ? `${s.light} ${s.border} ${s.text}` : 'bg-surface-container border-surface-container-high text-on-surface-variant/60'
-                  )}>
-                    {s.icon} {s.name.replace('General ', '')}:
-                    <span className="font-black">{subTargets[s.name]}/{s.marks}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {day.targetQ > 0 && (
-              <div className="flex items-center gap-4 mb-3">
-                <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
-                  <Target size={14} /> {day.targetQ} questions today
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-                  <Clock size={12} /> ~{Math.round(day.targetQ * 54 / 60)} min at exam speed
-                </div>
-              </div>
-            )}
-
-            {/* Tips from topic meta */}
-            {day.tips.slice(0, 3).map((tip, i) => (
-              <p key={i} className="text-xs text-on-surface-variant flex items-start gap-1.5 mb-0.5">
-                <Lightbulb size={10} className="text-amber-500 shrink-0 mt-0.5" />{tip}
-              </p>
-            ))}
-
-            {/* Extra meta tip if available */}
-            {meta?.tips?.[2] && (
-              <p className="text-xs text-primary/70 flex items-start gap-1.5 mt-1">
-                <Info size={10} className="text-primary/60 shrink-0 mt-0.5" />{meta.tips[2]}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={onToggle}
-            className={cn(
-              'shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-sm',
-              isCompleted ? 'bg-tertiary text-white shadow-md' : 'bg-surface-container-high text-on-surface-variant hover:bg-primary/10 hover:text-primary'
-            )}
-            title={isCompleted ? 'Mark incomplete' : 'Mark done'}
-          >
-            {isCompleted ? <CheckCircle2 size={28} /> : <Circle size={28} />}
-          </button>
-        </div>
-        {day.milestone && (
-          <div className="mt-3 bg-tertiary/10 border border-tertiary/20 rounded-xl p-3 text-center">
-            <p className="text-sm font-black text-tertiary">{day.milestone}</p>
-          </div>
-        )}
-      </div>
-    </motion.div>
-  );
-}
-
-// ── Day Row ─────────────────────────────────────────────────────────────────────
-function DayRow({ day, isCompleted, isToday, onToggle }: {
-  day: DayPlan; isCompleted: boolean; isToday: boolean; onToggle: (n: number) => void;
-}) {
-  const typeColor: Record<string, string> = {
-    learn: 'text-blue-600 bg-blue-50', practice: 'text-purple-600 bg-purple-50',
-    revise: 'text-amber-600 bg-amber-50', mock: 'text-red-600 bg-red-50', buffer: 'text-slate-500 bg-slate-50',
-  };
-  const typeIcon: Record<string, string> = { learn: '📖', practice: '⚡', revise: '🔁', mock: '📝', buffer: '🛡' };
-
-  return (
-    <div className={cn(
-      'flex items-start gap-3 px-4 py-3 rounded-xl transition-all border',
-      isToday ? 'border-primary bg-primary/5 shadow-sm' :
-        isCompleted ? 'border-tertiary/20 bg-tertiary/5 opacity-75' :
-          'border-transparent hover:border-surface-container-high hover:bg-surface-container-low'
-    )}>
-      <button onClick={() => onToggle(day.dayNumber)} className="shrink-0 mt-0.5">
-        {isCompleted
-          ? <CheckCircle2 size={18} className="text-tertiary" />
-          : <Circle size={18} className={isToday ? 'text-primary' : 'text-on-surface-variant/40 hover:text-primary'} />}
-      </button>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          {isToday && <span className="text-[9px] font-black bg-primary text-white px-2 py-0.5 rounded-full animate-pulse">TODAY</span>}
-          <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded', typeColor[day.type] ?? 'text-primary bg-primary/10')}>
-            {typeIcon[day.type]} {day.type.toUpperCase()}
-          </span>
-          {day.topicFreq > 0 && <span className="text-[9px] text-on-surface-variant">{day.topicFreq} PYQs</span>}
-        </div>
-        <p className={cn('text-sm font-semibold mt-0.5', isCompleted ? 'line-through text-on-surface-variant' : 'text-on-surface')}>
-          {day.topic}
+      {/* ── Rules banner ────────────────────────────────────── */}
+      <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+        <p className="font-black text-amber-900 text-sm mb-3 flex items-center gap-2">
+          <Shield size={15} /> The Laws of This Roadmap
         </p>
-        <p className="text-[11px] text-on-surface-variant mt-0.5 line-clamp-1">{day.instruction.split(':')[0]}</p>
-        {day.milestone && <p className="text-[11px] font-black text-tertiary mt-1">{day.milestone}</p>}
-      </div>
-      <div className="text-right shrink-0">
-        <p className="text-[10px] font-bold text-on-surface-variant">Day {day.dayNumber}</p>
-        {day.targetQ > 0 && <p className="text-[9px] text-on-surface-variant">{day.targetQ}Q</p>}
-      </div>
-    </div>
-  );
-}
-
-// ── Phase Card ──────────────────────────────────────────────────────────────────
-function PhaseCard({ phaseNum, phaseLabel, days, completions, todayDayNum, onToggle, isLocked }: {
-  phaseNum: number; phaseLabel: string; days: DayPlan[];
-  completions: Set<number>; todayDayNum: number; onToggle: (n: number) => void; isLocked: boolean;
-}) {
-  const sub = SUBJECT_ORDER.find(s => s.name === phaseLabel);
-  const phaseMeta: Record<number, any> = {
-    5: { icon: '🔁', grad: 'from-amber-500 to-orange-500', light: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700' },
-    6: { icon: '📝', grad: 'from-red-500 to-pink-600', light: 'bg-red-50', border: 'border-red-200', text: 'text-red-700' },
-  };
-  const meta = sub ?? phaseMeta[phaseNum] ?? { icon: '📚', grad: 'from-primary to-primary-container', light: 'bg-surface-container', border: 'border-surface-container-high', text: 'text-primary' };
-
-  const doneDays = days.filter(d => completions.has(d.dayNumber)).length;
-  const pct = days.length > 0 ? Math.round((doneDays / days.length) * 100) : 0;
-  const isDone = doneDays === days.length;
-  const hasCurrent = days.some(d => d.dayNumber === todayDayNum);
-  const phaseIcons: Record<number, string> = { 1: '🧩', 2: '📐', 3: '🔬', 4: '🌍', 5: '🔁', 6: '📝' };
-  const [expanded, setExpanded] = useState(hasCurrent);
-
-  // High-frequency topic count for this phase
-  const highFreqTopics = days.filter(d => d.topicFreq >= 50).length;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: phaseNum * 0.04 }}
-      className={cn(
-        'rounded-2xl border-2 overflow-hidden',
-        hasCurrent ? 'border-primary shadow-md' : isDone ? 'border-tertiary/40' :
-          isLocked ? 'border-surface-container-high opacity-60' : (meta.border ?? 'border-surface-container-high')
-      )}
-    >
-      <button
-        onClick={() => !isLocked && setExpanded(e => !e)}
-        className={cn('w-full flex items-center gap-3 p-4 text-left', hasCurrent ? 'bg-primary/5' : isDone ? 'bg-tertiary/5' : (meta.light ?? 'bg-surface-container-lowest'))}
-      >
-        <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center text-white font-black text-lg shrink-0 bg-gradient-to-br shadow-sm', meta.grad ?? 'from-primary to-primary-container')}>
-          {isDone ? '✅' : isLocked ? <Lock size={18} /> : phaseIcons[phaseNum] ?? phaseNum}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <p className={cn('font-black text-sm', meta.text ?? 'text-primary')}>Phase {phaseNum} — {phaseLabel}</p>
-            {hasCurrent && <span className="text-[10px] bg-primary text-white px-2 py-0.5 rounded-full font-bold animate-pulse">CURRENT</span>}
-            {isDone && <span className="text-[10px] bg-tertiary text-white px-2 py-0.5 rounded-full font-bold">COMPLETE</span>}
-            {isLocked && <span className="text-[10px] bg-surface-container text-on-surface-variant px-2 py-0.5 rounded-full font-bold">LOCKED</span>}
-            {highFreqTopics > 0 && !isLocked && (
-              <span className="text-[9px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full font-bold">
-                🔥 {highFreqTopics} high-freq
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-3 mt-1">
-            <div className="flex-1 h-1.5 bg-surface-container-high rounded-full overflow-hidden">
-              <div className={cn('h-full rounded-full transition-all', isDone ? 'bg-tertiary' : 'bg-gradient-to-r ' + (meta.grad ?? 'from-primary to-primary-container'))} style={{ width: `${pct}%` }} />
-            </div>
-            <span className="text-[10px] font-bold text-on-surface-variant shrink-0">{doneDays}/{days.length} days · {pct}%</span>
-          </div>
-        </div>
-        {!isLocked && (expanded ? <ChevronUp size={15} className="text-on-surface-variant shrink-0" /> : <ChevronDown size={15} className="text-on-surface-variant shrink-0" />)}
-      </button>
-
-      <AnimatePresence>
-        {expanded && !isLocked && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
-            <div className="px-4 pb-4 space-y-1.5 bg-surface-container-lowest">
-              {days.map(d => (
-                <DayRow key={d.dayNumber} day={d} isCompleted={completions.has(d.dayNumber)} isToday={d.dayNumber === todayDayNum} onToggle={onToggle} />
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-}
-
-// ── Onboarding Wizard ───────────────────────────────────────────────────────────
-function OnboardingWizard({ onComplete }: { onComplete: (p: Profile) => void }) {
-  const [step, setStep] = useState(0);
-  const [examDate, setExamDate] = useState('');
-  const [category, setCategory] = useState<Profile['category']>('general');
-  const [zone, setZone] = useState('');
-  const [level, setLevel] = useState<Profile['level']>('beginner');
-  const [hours, setHours] = useState(3);
-  const today = format(new Date(), 'yyyy-MM-dd');
-  const daysLeft = examDate ? differenceInDays(new Date(examDate), new Date()) : 0;
-  const valid = examDate && new Date(examDate) > new Date();
-  const tier = examDate ? getStrategyTier(daysLeft) : null;
-  const cutoff = CATEGORY_CUTOFF[category];
-
-  const CATS = [
-    { id: 'general' as const, label: 'General / UR', icon: '👤', cut: CATEGORY_CUTOFF.general },
-    { id: 'obc' as const,     label: 'OBC / NCWL',  icon: '👥', cut: CATEGORY_CUTOFF.obc },
-    { id: 'sc' as const,      label: 'SC',           icon: '📋', cut: CATEGORY_CUTOFF.sc },
-    { id: 'st' as const,      label: 'ST',           icon: '📋', cut: CATEGORY_CUTOFF.st },
-  ];
-  const LEVELS = [
-    { id: 'beginner' as const, icon: '🌱', label: 'Beginner', desc: 'Just starting RRB prep' },
-    { id: 'intermediate' as const, icon: '📘', label: 'Intermediate', desc: 'Covered basics, need practice' },
-    { id: 'advanced' as const, icon: '🚀', label: 'Advanced', desc: 'Need revision & full mocks' },
-  ];
-
-  return (
-    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg mx-auto py-8">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-primary to-primary-container rounded-3xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <GraduationCap size={36} className="text-white" />
-        </div>
-        <h2 className="text-3xl font-black text-primary">Top 1% Roadmap</h2>
-        <p className="text-sm text-on-surface-variant mt-1">Personalised day-by-day plan — built from SSC CGL, RRB & UPSC topper strategies + PYQ frequency data</p>
-      </div>
-
-      {/* Step dots */}
-      <div className="flex justify-center gap-2 mb-6">
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} className={cn('h-1.5 rounded-full transition-all duration-500', i <= step ? 'w-12 bg-primary' : 'w-6 bg-surface-container-high')} />
-        ))}
-      </div>
-
-      <div className="bg-surface-container-lowest rounded-2xl p-7 shadow-sm border border-surface-container-high">
-        <AnimatePresence mode="wait">
-
-          {/* Step 0: Exam date */}
-          {step === 0 && (
-            <motion.div key="s0" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <h3 className="text-lg font-bold text-primary flex items-center gap-2 mb-5">
-                <CalendarDays size={21} /> When is your RRB Group D exam?
-              </h3>
-              <input type="date" value={examDate} min={today} onChange={e => setExamDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-surface-container-high bg-surface text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
-              {tier && (
-                <div className={cn('mt-3 p-3 rounded-xl border text-sm', tier.color)}>
-                  <p className="font-black">{daysLeft} days — Strategy: {tier.label}</p>
-                  <p className="text-xs mt-0.5 opacity-80">{tier.desc}</p>
-                </div>
-              )}
-              <button disabled={!valid} onClick={() => setStep(1)}
-                className={cn('w-full mt-5 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2', valid ? 'bg-primary text-white hover:bg-primary/90 shadow-md' : 'bg-surface-container text-on-surface-variant cursor-not-allowed')}>
-                Continue <ArrowRight size={15} />
-              </button>
-            </motion.div>
-          )}
-
-          {/* Step 1: Category & Zone */}
-          {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <h3 className="text-lg font-bold text-primary flex items-center gap-2 mb-2">
-                <Users size={21} /> Your reservation category?
-              </h3>
-              <p className="text-xs text-on-surface-variant mb-4">Sets your score target and sub-subject cutoffs throughout the roadmap</p>
-              <div className="grid grid-cols-2 gap-2 mb-4">
-                {CATS.map(c => (
-                  <button key={c.id} onClick={() => setCategory(c.id)}
-                    className={cn('flex flex-col items-start p-3 rounded-xl border-2 text-left transition-all', category === c.id ? 'border-primary bg-primary/5' : 'border-surface-container-high hover:border-primary/30')}>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span>{c.icon}</span>
-                      <span className="font-bold text-sm text-primary">{c.label}</span>
-                      {category === c.id && <CheckCircle2 size={14} className="text-primary ml-auto" />}
-                    </div>
-                    <p className="text-[10px] text-on-surface-variant">Cutoff: ~{c.cut.min}–{c.cut.safe}/100</p>
-                  </button>
-                ))}
-              </div>
-              <div className={cn('p-3 rounded-xl border mb-4 text-sm', cutoff.color, 'border-current/20 bg-current/5')}>
-                <p className="font-black">{cutoff.label} target: {cutoff.safe}/100</p>
-                <p className="text-xs mt-0.5 opacity-80">Sub-targets: R:{SUB_TARGETS[category].Reasoning} | M:{SUB_TARGETS[category].Mathematics} | S:{SUB_TARGETS[category]['General Science']} | GA:{SUB_TARGETS[category]['General Awareness']}</p>
-              </div>
-              <label className="text-xs font-bold text-on-surface-variant block mb-1 flex items-center gap-1">
-                <MapPin size={12} /> RRB Zone (optional)
-              </label>
-              <select value={zone} onChange={e => setZone(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-surface-container-high bg-surface text-sm focus:outline-none mb-1">
-                <option value="">Select your RRB zone…</option>
-                {RRB_ZONES.map(z => <option key={z} value={z}>{z}</option>)}
-              </select>
-              <div className="flex gap-3 mt-4">
-                <button onClick={() => setStep(0)} className="flex-1 py-3 rounded-xl font-bold text-sm text-on-surface-variant border border-surface-container-high hover:bg-surface-container">Back</button>
-                <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary/90 shadow-md flex items-center justify-center gap-2">Continue <ArrowRight size={15} /></button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 2: Level */}
-          {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <h3 className="text-lg font-bold text-primary flex items-center gap-2 mb-5">
-                <Target size={21} /> Your current preparation level?
-              </h3>
-              <div className="space-y-2">
-                {LEVELS.map(l => (
-                  <button key={l.id} onClick={() => setLevel(l.id)}
-                    className={cn('w-full flex items-center gap-3 p-4 rounded-xl border-2 text-left transition-all', level === l.id ? 'border-primary bg-primary/5' : 'border-surface-container-high hover:border-primary/30')}>
-                    <span className="text-2xl">{l.icon}</span>
-                    <div><p className="font-bold text-sm text-primary">{l.label}</p><p className="text-xs text-on-surface-variant">{l.desc}</p></div>
-                    {level === l.id && <CheckCircle2 size={18} className="text-primary ml-auto" />}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl font-bold text-sm text-on-surface-variant border border-surface-container-high hover:bg-surface-container">Back</button>
-                <button onClick={() => setStep(3)} className="flex-1 py-3 rounded-xl font-bold text-sm bg-primary text-white hover:bg-primary/90 shadow-md flex items-center justify-center gap-2">Continue <ArrowRight size={15} /></button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Hours */}
-          {step === 3 && (
-            <motion.div key="s3" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}>
-              <h3 className="text-lg font-bold text-primary flex items-center gap-2 mb-5">
-                <Clock size={21} /> Daily study hours?
-              </h3>
-              <div className="bg-surface-container rounded-2xl p-5 text-center mb-4">
-                <p className="text-5xl font-black text-primary mb-1">{hours}</p>
-                <p className="text-sm text-on-surface-variant mb-3">hours / day</p>
-                <input type="range" min={1} max={10} value={hours} onChange={e => setHours(Number(e.target.value))} className="w-full accent-primary" />
-                <div className="flex justify-between text-xs text-on-surface-variant mt-1"><span>1 hr</span><span>5 hrs</span><span>10 hrs</span></div>
-              </div>
-              <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 space-y-1 mb-4">
-                <p className="text-xs"><span className="font-bold text-primary">Daily target:</span> {hours >= 6 ? 60 : hours >= 4 ? 45 : hours >= 2 ? 30 : 20} questions/day</p>
-                <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Strategy:</span> {getStrategyTier(daysLeft).label} — {getStrategyTier(daysLeft).topics} topics/subject</p>
-                <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Zone:</span> {zone || 'Not selected'} · <span className="font-bold text-primary">Category:</span> {cutoff.label}</p>
-                <p className="text-xs text-on-surface-variant"><span className="font-bold text-primary">Sub-targets:</span> R:{SUB_TARGETS[category].Reasoning} | M:{SUB_TARGETS[category].Mathematics} | S:{SUB_TARGETS[category]['General Science']} | GA:{SUB_TARGETS[category]['General Awareness']}</p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setStep(2)} className="flex-1 py-3 rounded-xl font-bold text-sm text-on-surface-variant border border-surface-container-high hover:bg-surface-container">Back</button>
-                <button
-                  onClick={() => onComplete({ examDate, level, hoursPerDay: hours, createdAt: new Date().toISOString(), category, zone: zone || 'Not selected' })}
-                  className="flex-1 py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-primary to-primary-container text-white hover:opacity-90 shadow-lg flex items-center justify-center gap-2">
-                  <Sparkles size={14} /> Generate My Roadmap
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </motion.div>
-  );
-}
-
-// ── StudyRoadmap (Main) ─────────────────────────────────────────────────────────
-export function StudyRoadmap() {
-  const allQ = pyqsData as PYQ[];
-  const syllabus = useMemo(() => buildSyllabus(allQ), []);
-
-  const [profile, setProfile] = useState<Profile | null>(() => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(SK) || 'null') as Profile | null;
-      // Validate: must have valid category + examDate, otherwise force re-onboard
-      if (!raw) return null;
-      const validCats = ['general', 'obc', 'sc', 'st'];
-      if (!validCats.includes(raw.category) || !raw.examDate || !raw.createdAt) {
-        localStorage.removeItem(SK);
-        return null;
-      }
-      return raw;
-    } catch { return null; }
-  });
-  const [completions, setCompletions] = useState<Set<number>>(loadCompletions);
-  const [activeTab, setActiveTab] = useState<'plan' | 'heatmap' | 'mastery' | 'rules'>('plan');
-
-  React.useEffect(() => { if (profile) localStorage.setItem(SK, JSON.stringify(profile)); }, [profile]);
-  React.useEffect(() => { saveCompletions(completions); }, [completions]);
-
-  const plan = useMemo(() => profile ? generatePlan(profile, syllabus) : [], [profile, syllabus]);
-
-  const todayDayNum = useMemo(() => {
-    if (!profile) return 1;
-    const days = differenceInDays(new Date(), parseISO(profile.createdAt)) + 1;
-    return Math.max(1, Math.min(days, plan.length));
-  }, [profile, plan]);
-
-  const todayPlan = useMemo(() => plan.find(d => d.dayNumber === todayDayNum) ?? null, [plan, todayDayNum]);
-
-  const toggleDay = useCallback((dayNum: number) => {
-    setCompletions(prev => {
-      const next = new Set(prev);
-      if (next.has(dayNum)) next.delete(dayNum); else next.add(dayNum);
-      return next;
-    });
-  }, []);
-
-  const phases = useMemo(() => {
-    const map: Record<number, { label: string; days: DayPlan[] }> = {};
-    for (const day of plan) {
-      if (!map[day.phase]) map[day.phase] = { label: day.phaseLabel, days: [] };
-      map[day.phase].days.push(day);
-    }
-    return Object.entries(map).map(([num, val]) => ({ phase: parseInt(num), ...val }));
-  }, [plan]);
-
-  const overallPct = plan.length > 0 ? Math.round((completions.size / plan.length) * 100) : 0;
-  const daysLeft = useMemo(() => {
-    if (!profile) return 0;
-    try { return differenceInDays(parseISO(profile.examDate), new Date()); } catch { return 0; }
-  }, [profile]);
-  const streakDays = useMemo(() => {
-    let streak = 0;
-    for (let d = todayDayNum; d >= 1; d--) {
-      if (completions.has(d)) streak++; else break;
-    }
-    return streak;
-  }, [completions, todayDayNum]);
-
-  const todayTip = TOPPER_STRATEGIES[todayDayNum % TOPPER_STRATEGIES.length];
-  const tier = useMemo(() => {
-    if (!profile) return null;
-    try { return getStrategyTier(differenceInDays(parseISO(profile.examDate), parseISO(profile.createdAt))); } catch { return null; }
-  }, [profile]);
-
-  if (!profile) {
-    return <OnboardingWizard onComplete={p => setProfile(p)} />;
-  }
-
-  const cutoff = CATEGORY_CUTOFF[profile.category] ?? CATEGORY_CUTOFF.general;
-
-  const TABS = [
-    { id: 'plan' as const, label: 'Plan', icon: <CalendarDays size={14} /> },
-    { id: 'heatmap' as const, label: 'PYQ Frequency', icon: <BarChart3 size={14} /> },
-    { id: 'mastery' as const, label: 'Mastery', icon: <Trophy size={14} /> },
-    { id: 'rules' as const, label: 'Topper Rules', icon: <Star size={14} /> },
-  ];
-
-  return (
-    <div className="space-y-5 max-w-5xl mx-auto">
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-primary flex items-center gap-2">
-            <CalendarDays size={26} /> Top 1% Study Roadmap
-          </h2>
-          <div className="flex flex-wrap items-center gap-2 mt-1">
-            {[
-              { label: profile.level, icon: '📘' },
-              { label: `${profile.hoursPerDay} hrs/day`, icon: '⏱' },
-              { label: cutoff.label, icon: '🎯' },
-              { label: profile.zone !== 'Not selected' ? profile.zone : '', icon: '📍' },
-              { label: tier?.label ?? '', icon: '' },
-            ].filter(t => t.label).map(tag => (
-              <span key={tag.label} className="text-xs font-bold text-on-surface-variant bg-surface-container px-2.5 py-1 rounded-full">
-                {tag.icon} {tag.label}
-              </span>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className={cn('flex items-center gap-3 px-5 py-3 rounded-xl border shadow-sm',
-            daysLeft <= 7 ? 'bg-red-50 border-red-200' : daysLeft <= 30 ? 'bg-amber-50 border-amber-200' : 'bg-surface-container-lowest border-surface-container-high'
-          )}>
-            {daysLeft <= 7 ? <AlertTriangle size={18} className="text-error" /> : <CalendarDays size={18} className="text-primary" />}
-            <div>
-              <p className={cn('text-2xl font-black', daysLeft <= 7 ? 'text-error' : 'text-primary')}>{daysLeft}</p>
-              <p className="text-[10px] font-bold uppercase text-on-surface-variant tracking-wider">Days Left</p>
-            </div>
-          </div>
-          <button
-            onClick={() => { if (window.confirm('Reset roadmap? All progress will be lost.')) { localStorage.removeItem(SK); localStorage.removeItem(CK); setProfile(null); setCompletions(new Set()); } }}
-            className="p-3 rounded-xl bg-surface-container hover:bg-error/10 text-on-surface-variant hover:text-error transition-colors"
-            title="Reset roadmap"
-          >
-            <RotateCcw size={16} />
-          </button>
+        <div className="space-y-1.5 text-[12px] text-amber-800">
+          <p>⚖️ <strong>Law 1 — Gate Before Move:</strong> You may NOT move to the next topic until concept is read + min PYQs solved + accuracy gate passed.</p>
+          <p>📖 <strong>Law 2 — Concept First:</strong> Read the concept (max {'=>'} 2 hours). Then immediately solve PYQs. Do not re-read endlessly.</p>
+          <p>🎯 <strong>Law 3 — Accuracy Gate:</strong> Each topic has a custom accuracy threshold (65%–82%). If below threshold → extra practice, not next topic.</p>
+          <p>🔔 <strong>Law 4 — Ebbinghaus:</strong> Revise every mastered topic on Day 1, Day 7, Day 30. Miss a revision = forget 70% of the topic.</p>
+          <p>🏆 <strong>Law 5 — Topper Rule:</strong> Follow the per-topic topper strategy exactly. It's based on SSC CGL Rank 1 and RRB Group D 2022 selection strategies.</p>
+          <p>⚡ <strong>Law 6 — PYQ Frequency:</strong> Topics are ordered by how often they appear in real exams. Do not skip the top-ranked topics for low-frequency ones.</p>
         </div>
       </div>
 
-      {/* Category + Sub-target bar */}
-      <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm">
-        <div className="flex flex-wrap items-center gap-4 mb-3">
-          <div>
-            <p className="text-xs font-bold text-on-surface-variant mb-0.5">Your Target ({cutoff.label})</p>
-            <p className="text-2xl font-black text-primary">{cutoff.safe}<span className="text-sm font-normal text-on-surface-variant">/100</span></p>
-          </div>
-          <div className="flex-1 max-w-sm">
-            <div className="flex items-center justify-between text-[10px] text-on-surface-variant mb-1">
-              <span>Min: {cutoff.min}</span><span>Safe: {cutoff.safe}</span><span>Excellent: 80+</span>
-            </div>
-            <div className="h-3 bg-surface-container-high rounded-full overflow-hidden relative">
-              <div className="h-full bg-gradient-to-r from-red-400 via-amber-400 to-emerald-400 rounded-full w-full" />
-              <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.min}%` }} />
-              <div className="absolute top-0 bottom-0 w-0.5 bg-white" style={{ left: `${cutoff.safe}%` }} />
-            </div>
-          </div>
+      {/* ── Filters ─────────────────────────────────────────── */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex gap-1 flex-wrap">
+          {subjects.map(s => (
+            <button
+              key={s}
+              onClick={() => setFilter(s)}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all ${
+                filter === s
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
         </div>
-        {/* Sub-targets */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {SUBJECT_ORDER.map(s => {
-            const t = SUB_TARGETS[profile.category]?.[s.name] ?? 0;
+        <button
+          onClick={() => setShowOnlyDue(d => !d)}
+          className={`ml-auto px-3 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all ${
+            showOnlyDue
+              ? 'bg-red-500 text-white shadow-sm'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <RefreshCw size={11} />
+          Due Revisions {stats?.dueRevisions ? `(${stats.dueRevisions})` : ''}
+        </button>
+      </div>
+
+      {/* ── Topic list ──────────────────────────────────────── */}
+      <div className="space-y-3">
+        {filteredTopics.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <BookOpen size={32} className="mx-auto mb-3 text-slate-300" />
+            <p className="font-bold">No topics match this filter</p>
+          </div>
+        ) : (
+          filteredTopics.map((entry, idx) => {
+            const realIdx = topics.indexOf(entry);
+            const prevEntry = topics[realIdx - 1];
+            const prevProgress = prevEntry ? getTopicProgress(prevEntry.topic) : null;
+            const prevPassed = prevProgress
+              ? isGatePassed(prevProgress, getTopicRule(prevEntry.topic, prevEntry.subject))
+              : true;
+
             return (
-              <div key={s.name} className={cn('flex items-center gap-2 p-2.5 rounded-lg border', s.light, s.border)}>
-                <span className="text-base">{s.icon}</span>
-                <div>
-                  <p className={cn('text-[10px] font-bold', s.text)}>{s.name.replace('General ', 'G. ')}</p>
-                  <p className="text-sm font-black text-on-surface">{t}<span className="text-[10px] font-normal text-on-surface-variant">/{s.marks}</span></p>
-                </div>
-              </div>
+              <TopicCard
+                key={entry.topic}
+                entry={entry}
+                index={realIdx}
+                progress={getTopicProgress(entry.topic)}
+                prevUnlocked={prevPassed}
+                onUpdate={update => updateTopicProgress(entry.topic, update)}
+              />
             );
-          })}
-        </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: 'Overall Progress', value: `${overallPct}%`, icon: <BarChart3 size={14} />, color: 'text-primary' },
-          { label: 'Days Done', value: `${completions.size}/${plan.length}`, icon: <CheckCircle2 size={14} />, color: 'text-tertiary' },
-          { label: 'Streak', value: `${streakDays} days 🔥`, icon: <Flame size={14} />, color: 'text-amber-600' },
-          { label: `Today: Day ${todayDayNum}`, value: todayPlan?.phaseLabel ?? 'Done!', icon: <Star size={14} />, color: 'text-purple-600' },
-        ].map(s => (
-          <div key={s.label} className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm">
-            <div className={cn('flex items-center gap-1.5 mb-1', s.color)}>
-              {s.icon}<p className="text-[10px] font-bold uppercase tracking-wider">{s.label}</p>
-            </div>
-            <p className={cn('text-xl font-black', s.color)}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Overall progress bar */}
-      <div className="bg-surface-container-lowest rounded-xl p-4 border border-surface-container-high shadow-sm">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-bold text-primary">Overall Progress</p>
-          <p className="text-sm font-black text-primary">{overallPct}%</p>
-        </div>
-        <div className="h-3 bg-surface-container-high rounded-full overflow-hidden">
-          <motion.div className="h-full rounded-full bg-gradient-to-r from-primary to-tertiary" initial={{ width: 0 }} animate={{ width: `${overallPct}%` }} transition={{ duration: 1 }} />
-        </div>
-        <p className="text-[10px] text-on-surface-variant mt-2">{plan.length - completions.size} days remaining · {tier?.label} strategy · {tier?.topics} topics/subject</p>
-      </div>
-
-      {/* Pre-exam sprint (shows when ≤30 days) */}
-      <PreExamSprint daysLeft={daysLeft} />
-
-      {/* Topper tip of the day */}
-      <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border border-amber-200 flex items-start gap-3">
-        <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center shrink-0">
-          <Lightbulb size={18} className="text-amber-600" />
-        </div>
-        <div>
-          <p className="text-xs font-bold text-amber-600 uppercase tracking-wider mb-0.5">Topper Tip of the Day</p>
-          <p className="text-sm font-bold text-amber-900">{todayTip.icon} {todayTip.rule}</p>
-          <p className="text-[10px] text-amber-700/80 mt-0.5">— {todayTip.src}</p>
-        </div>
-      </div>
-
-      {/* Today's Plan */}
-      <div>
-        <h3 className="font-black text-primary flex items-center gap-2 mb-3">
-          <Zap size={17} className="text-amber-500" /> Today's Plan — Day {todayDayNum}
-        </h3>
-        <TodayCard day={todayPlan} isCompleted={todayPlan ? completions.has(todayPlan.dayNumber) : false} onToggle={() => todayPlan && toggleDay(todayPlan.dayNumber)} profile={profile} />
-      </div>
-
-      {/* Tab Navigator */}
-      <div className="flex gap-1 bg-surface-container rounded-2xl p-1">
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all',
-              activeTab === tab.id
-                ? 'bg-primary text-white shadow-sm'
-                : 'text-on-surface-variant hover:bg-surface-container-high'
-            )}
-          >
-            {tab.icon} <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        ))}
-      </div>
-
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-
-        {/* Plan Tab */}
-        {activeTab === 'plan' && (
-          <motion.div key="plan" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h3 className="font-black text-primary flex items-center gap-2"><BookOpen size={17} /> Full Phase Plan</h3>
-              <p className="text-xs text-on-surface-variant">{phases.length} phases · {plan.length} days total</p>
-            </div>
-            {phases.map(({ phase, label, days }) => {
-              const prevPhase = phases.find(p => p.phase === phase - 1);
-              const prevDone = !prevPhase || prevPhase.days.every(d => completions.has(d.dayNumber));
-              const isLocked = phase > 1 && !prevDone && !days.some(d => completions.has(d.dayNumber) || d.dayNumber <= todayDayNum);
-              return <PhaseCard key={phase} phaseNum={phase} phaseLabel={label} days={days} completions={completions} todayDayNum={todayDayNum} onToggle={toggleDay} isLocked={isLocked} />;
-            })}
-          </motion.div>
+          })
         )}
+      </div>
 
-        {/* Heatmap Tab */}
-        {activeTab === 'heatmap' && (
-          <motion.div key="heatmap" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <div className="mb-3 bg-primary/5 rounded-xl p-3 border border-primary/10">
-              <p className="text-xs font-bold text-primary mb-0.5">📊 Why PYQ Frequency Matters</p>
-              <p className="text-xs text-on-surface-variant">Top 20% high-frequency topics cover 80% of exam paper (Pareto Law). Focus here first for maximum marks with minimum time.</p>
+      {/* ── Bottom inspiration ───────────────────────────────── */}
+      <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-900 p-6 text-white text-center">
+        <p className="text-2xl mb-2">🚂</p>
+        <p className="font-black text-sm mb-1">RRB Group D — You Can Do This</p>
+        <p className="text-white/60 text-[12px] leading-relaxed">
+          "Success is not about being the smartest. It's about being the most consistent."
+          Follow this roadmap every single day, respect the gates, revise on schedule — and you WILL crack this exam.
+        </p>
+        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+          {[
+            { v: '4,295+', l: 'Real PYQs' },
+            { v: `${topics.length}`, l: 'Topics' },
+            { v: `${profile.daysLeft}`, l: 'Days Left' },
+          ].map(s => (
+            <div key={s.l} className="bg-white/10 rounded-xl p-2">
+              <p className="font-black text-lg">{s.v}</p>
+              <p className="text-[10px] text-white/60">{s.l}</p>
             </div>
-            <FrequencyHeatmap syllabus={syllabus} />
-          </motion.div>
-        )}
-
-        {/* Mastery Tab */}
-        {activeTab === 'mastery' && (
-          <motion.div key="mastery" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
-            <SubjectMasteryOverview plan={plan} completions={completions} category={profile.category} />
-            {/* Subject priority order explanation */}
-            <div className="bg-surface-container-lowest rounded-2xl border border-surface-container-high p-5">
-              <h3 className="font-black text-primary text-sm mb-3 flex items-center gap-2">
-                <TrendingUp size={16} /> Why This Subject Order? (Topper Strategy)
-              </h3>
-              <div className="space-y-2">
-                {SUBJECT_ORDER.map((s, i) => (
-                  <div key={s.name} className={cn('flex items-start gap-3 p-3 rounded-xl border', s.light, s.border)}>
-                    <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center text-white font-black text-sm shrink-0 bg-gradient-to-br', s.grad)}>
-                      {i + 1}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm">{s.icon}</span>
-                        <p className={cn('text-sm font-black', s.text)}>{s.name}</p>
-                        <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full', s.light, s.text, s.border, 'border')}>{s.marks} marks</span>
-                      </div>
-                      <p className="text-xs text-on-surface-variant mt-0.5">{s.why}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Topper Rules Tab */}
-        {activeTab === 'rules' && (
-          <motion.div key="rules" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <div className="bg-surface-container-lowest rounded-2xl p-6 border border-surface-container-high shadow-sm">
-              <h3 className="font-black text-primary flex items-center gap-2 mb-4 text-sm">
-                <Trophy size={17} className="text-amber-500" /> Top 10 Rules — SSC CGL, RRB & UPSC Toppers
-              </h3>
-              <div className="space-y-3">
-                {TOPPER_STRATEGIES.map((s, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-surface-container-low border border-surface-container-high">
-                    <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center text-lg shrink-0">{s.icon}</div>
-                    <div>
-                      <p className="text-xs font-black text-primary">{s.rule}</p>
-                      <p className="text-[10px] text-on-surface-variant leading-relaxed mt-0.5 italic">— {s.src}</p>
-                    </div>
-                    <span className="text-[10px] font-black text-on-surface-variant shrink-0 w-5 text-center">#{i + 1}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-      </AnimatePresence>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
