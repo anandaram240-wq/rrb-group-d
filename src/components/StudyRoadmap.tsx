@@ -102,7 +102,7 @@ function buildFrequencyMap(): FreqEntry[] {
 // Priority order: 1=first to unlock, 4=last
 const SUBJECT_PRIORITY: Record<string, number> = {
   'Reasoning': 1,
-  'Science': 2,
+  'General Science': 2,
   'Mathematics': 3,
   'General Awareness': 4,
 };
@@ -110,16 +110,32 @@ const SUBJECT_PRIORITY: Record<string, number> = {
 const SUBJECT_COLORS: Record<string, string> = {
   'Reasoning': '#6366f1',
   'Mathematics': '#0ea5e9',
-  'Science': '#10b981',
+  'General Science': '#10b981',
   'General Awareness': '#f59e0b',
 };
 
 const SUBJECT_ICONS: Record<string, string> = {
   'Reasoning': '🧠',
-  'Science': '🔬',
+  'General Science': '🔬',
   'Mathematics': '➗',
   'General Awareness': '📰',
 };
+
+// Difficulty label from accuracy gate
+function getDifficulty(accuracyGate: number): { label: string; color: string; bg: string } {
+  if (accuracyGate >= 78) return { label: 'Hard', color: '#ef4444', bg: '#fef2f2' };
+  if (accuracyGate >= 72) return { label: 'Medium', color: '#f59e0b', bg: '#fffbeb' };
+  return { label: 'Easy', color: '#10b981', bg: '#f0fdf4' };
+}
+
+// Estimated study days for a topic (rough: 1hr concept + PYQs at ~5/min)
+function estimateDays(rule: TopicRule): string {
+  const totalHours = rule.conceptHours + rule.minPYQs / 30; // ~30 PYQs/hr
+  if (totalHours <= 1.5) return '1–2 days';
+  if (totalHours <= 3) return '2–3 days';
+  if (totalHours <= 5) return '3–5 days';
+  return '5–7 days';
+}
 
 const TOPIC_RULES: Record<string, Partial<TopicRule>> = {
   // ── Reasoning ──────────────────────────────────────────────────────────────
@@ -563,13 +579,26 @@ function TopicCard({ entry, index, progress, prevUnlocked, onUpdate }: TopicCard
           <div className="flex items-center gap-2 flex-wrap">
             <p className="font-bold text-slate-800 text-sm">{entry.topic}</p>
             <SubjectBadge subject={entry.subject} />
+            {/* Difficulty badge */}
+            {(() => {
+              const d = getDifficulty(rule.accuracyGate);
+              return (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ color: d.color, background: d.bg }}>
+                  {d.label === 'Hard' ? '🔥' : d.label === 'Medium' ? '⚡' : '✨'} {d.label}
+                </span>
+              );
+            })()}
+            {/* Est. time */}
+            <span className="text-[10px] text-slate-400 px-1.5 py-0.5 bg-slate-100 rounded-full">
+              📅 {estimateDays(rule)}
+            </span>
             {revStatus.due && !gatePassed && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 animate-pulse">
                 {revStatus.overdue ? '⚠️ OVERDUE' : '🔔 REVISE'}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3 mt-1.5">
+          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
             <span className="text-[11px] text-slate-400">{entry.count} PYQs in exams</span>
             <span className="text-[11px] text-slate-400">•</span>
             <span className="text-[11px] text-slate-400">
@@ -583,10 +612,11 @@ function TopicCard({ entry, index, progress, prevUnlocked, onUpdate }: TopicCard
                 </span>
               </>
             )}
+            <span className="text-[11px] text-slate-400">• 🎯 Gate: {rule.accuracyGate}%</span>
           </div>
-          {/* Progress bars */}
+          {/* Progress bar */}
           {!isLocked && (
-            <div className="mt-2 space-y-1">
+            <div className="mt-2">
               <ProgressBar value={progress.pyqsAttempted} max={rule.minPYQs} color={rule.subjectColor} />
             </div>
           )}
@@ -893,7 +923,52 @@ export function StudyRoadmap() {
     const dueRevisions = topics.filter(t => getRevisionStatus(getTopicProgress(t.topic)).due).length;
     const totalPYQs = topics.reduce((s, t) => s + (getTopicProgress(t.topic).pyqsAttempted || 0), 0);
     const daysPassed = profile.startDate ? daysDiff(profile.startDate) : 0;
-    return { completed, total: topics.length, dueRevisions, totalPYQs, daysPassed };
+    const remaining = profile.daysLeft - daysPassed;
+    const topicsLeft = topics.length - completed;
+    const pyqsPerDay = remaining > 0 && topicsLeft > 0
+      ? Math.ceil((topicsLeft * 25) / remaining)  // ~25 PYQs avg per topic
+      : 0;
+    return { completed, total: topics.length, dueRevisions, totalPYQs, daysPassed, remaining: Math.max(0, remaining), pyqsPerDay, topicsLeft };
+  }, [profile, topics]);
+
+  // Per-subject progress
+  const subjectStats = useMemo(() => {
+    const order = Object.keys(SUBJECT_PRIORITY).sort((a, b) => SUBJECT_PRIORITY[a] - SUBJECT_PRIORITY[b]);
+    return order.map(subj => {
+      const subTopics = topics.filter(t => t.subject === subj);
+      if (subTopics.length === 0) return null;
+      const done = subTopics.filter(t => isGatePassed(getTopicProgress(t.topic), getTopicRule(t.topic, t.subject))).length;
+      const pct = Math.round((done / subTopics.length) * 100);
+      return { subject: subj, done, total: subTopics.length, pct, color: SUBJECT_COLORS[subj] ?? '#6366f1', icon: SUBJECT_ICONS[subj] ?? '📚' };
+    }).filter(Boolean) as { subject: string; done: number; total: number; pct: number; color: string; icon: string }[];
+  }, [profile, topics]);
+
+  // "Today's Mission" — first unlocked-but-not-completed topic
+  const todaysMission = useMemo(() => {
+    for (const entry of topics) {
+      const progress = getTopicProgress(entry.topic);
+      const rule = getTopicRule(entry.topic, entry.subject);
+      if (isGatePassed(progress, rule)) continue;
+      const subjectTopics = topics.filter(t => t.subject === entry.subject);
+      const posInSubject = subjectTopics.indexOf(entry);
+      const groupUnlocked = (() => {
+        const priority = SUBJECT_PRIORITY[entry.subject] ?? 1;
+        if (priority <= 1) return true;
+        return Object.keys(SUBJECT_PRIORITY)
+          .filter(s => SUBJECT_PRIORITY[s] < priority)
+          .every(s => {
+            const st = topics.filter(t => t.subject === s);
+            return st.length === 0 || st.every(t => isGatePassed(getTopicProgress(t.topic), getTopicRule(t.topic, t.subject)));
+          });
+      })();
+      if (!groupUnlocked) continue;
+      if (posInSubject === 0) return { entry, progress, rule };
+      const prev = subjectTopics[posInSubject - 1];
+      if (isGatePassed(getTopicProgress(prev.topic), getTopicRule(prev.topic, prev.subject))) {
+        return { entry, progress, rule };
+      }
+    }
+    return null;
   }, [profile, topics]);
 
   const subjects = useMemo(() => {
@@ -957,7 +1032,7 @@ export function StudyRoadmap() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Trophy size={20} className="text-yellow-300" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Study Roadmap</span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Study Roadmap v4</span>
             </div>
             <h1 className="text-xl font-black mb-1">
               {stats?.completed === stats?.total && stats?.total !== 0
@@ -965,7 +1040,7 @@ export function StudyRoadmap() {
                 : `${stats?.completed ?? 0} / ${stats?.total ?? 0} Topics Mastered`}
             </h1>
             <p className="text-white/70 text-[12px]">
-              Started {stats?.daysPassed ?? 0} days ago • {profile.daysLeft} day window • {stats?.totalPYQs ?? 0} PYQs attempted total
+              Day {stats?.daysPassed ?? 0} of {profile.daysLeft} • {stats?.remaining ?? 0} days left • {stats?.totalPYQs ?? 0} PYQs done
             </p>
           </div>
           <button
@@ -979,32 +1054,129 @@ export function StudyRoadmap() {
         {/* Overall progress bar */}
         <div className="mt-4">
           <div className="flex justify-between text-[11px] text-white/60 mb-1">
-            <span>Overall Progress</span>
+            <span>Overall Mastery</span>
             <span>{stats ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
           </div>
-          <div className="w-full bg-white/20 rounded-full h-2">
+          <div className="w-full bg-white/20 rounded-full h-3">
             <div
-              className="h-full rounded-full bg-yellow-400 transition-all duration-700"
-              style={{ width: `${stats ? (stats.completed / stats.total) * 100 : 0}%` }}
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${stats ? (stats.completed / stats.total) * 100 : 0}%`,
+                background: 'linear-gradient(90deg, #fbbf24, #f59e0b)'
+              }}
             />
           </div>
         </div>
 
-        {/* Quick stats row */}
-        <div className="grid grid-cols-3 gap-2 mt-4">
+        {/* Quick stats row — 4 tiles */}
+        <div className="grid grid-cols-4 gap-2 mt-4">
           {[
-            { icon: CheckCircle, label: 'Done', value: stats?.completed ?? 0, unit: 'topics' },
-            { icon: RefreshCw, label: 'Revisions Due', value: stats?.dueRevisions ?? 0, unit: 'topics', alert: (stats?.dueRevisions ?? 0) > 0 },
-            { icon: BookOpen, label: 'PYQs Done', value: stats?.totalPYQs ?? 0, unit: 'total' },
+            { icon: CheckCircle, label: 'Done', value: stats?.completed ?? 0 },
+            { icon: Target,      label: 'Remaining', value: stats?.topicsLeft ?? 0 },
+            { icon: RefreshCw,  label: 'Revise Due', value: stats?.dueRevisions ?? 0, alert: (stats?.dueRevisions ?? 0) > 0 },
+            { icon: Zap,        label: 'PYQs/Day', value: stats?.pyqsPerDay ?? 0, highlight: true },
           ].map(s => (
-            <div key={s.label} className={`rounded-xl p-2 text-center ${s.alert ? 'bg-red-500/30 animate-pulse' : 'bg-white/10'}`}>
-              <s.icon size={14} className="mx-auto mb-0.5 text-white/70" />
+            <div key={s.label} className={`rounded-xl p-2 text-center ${
+              (s as any).alert ? 'bg-red-500/40 animate-pulse'
+              : (s as any).highlight ? 'bg-yellow-400/20 border border-yellow-400/40'
+              : 'bg-white/10'
+            }`}>
+              <s.icon size={13} className="mx-auto mb-0.5 text-white/70" />
               <p className="text-base font-black">{s.value}</p>
               <p className="text-[9px] text-white/60">{s.label}</p>
             </div>
           ))}
         </div>
       </div>
+
+      {/* ── Per-subject progress overview ───────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        {subjectStats.map(s => (
+          <div
+            key={s.subject}
+            className="rounded-2xl border-2 p-4 bg-white"
+            style={{ borderColor: s.pct === 100 ? '#10b981' : s.color + '44' }}
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <div
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
+                style={{ background: s.color + '22' }}
+              >
+                {s.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-black text-slate-700 truncate">{s.subject}</p>
+                <p className="text-[10px] text-slate-400">{s.done}/{s.total} mastered</p>
+              </div>
+              <span
+                className="text-[11px] font-black"
+                style={{ color: s.pct === 100 ? '#10b981' : s.color }}
+              >
+                {s.pct}%
+              </span>
+            </div>
+            {/* Progress bar */}
+            <div className="w-full bg-slate-100 rounded-full h-2">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${s.pct}%`, background: s.pct === 100 ? '#10b981' : s.color }}
+              />
+            </div>
+            {s.pct === 100 && (
+              <p className="text-[10px] text-emerald-600 font-bold mt-1.5">✅ Complete — next subject unlocked!</p>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Today's Mission ──────────────────────────────────── */}
+      {todaysMission && (
+        <div
+          className="rounded-2xl p-5 border-2"
+          style={{
+            borderColor: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1',
+            background: `linear-gradient(135deg, ${(SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1')}12 0%, #ffffff 100%)`,
+          }}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <div className="text-xl">🎯</div>
+            <p className="font-black text-slate-800 text-sm">Today's Mission</p>
+            <span
+              className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: (SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1') + '22', color: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1' }}
+            >
+              {SUBJECT_ICONS[todaysMission.entry.subject] ?? '📚'} {todaysMission.entry.subject}
+            </span>
+          </div>
+          <p className="font-black text-lg text-slate-900 mb-1">{todaysMission.entry.topic}</p>
+          <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 mb-3">
+            <span>📝 {todaysMission.progress.pyqsAttempted}/{todaysMission.rule.minPYQs} PYQs done</span>
+            <span>🎯 Need {todaysMission.rule.accuracyGate}% accuracy</span>
+            <span>⏱ ~{todaysMission.rule.conceptHours}h concept</span>
+            <span>📅 {estimateDays(todaysMission.rule)}</span>
+          </div>
+          {/* Mini progress bar */}
+          <div className="w-full bg-slate-100 rounded-full h-2.5">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(100, Math.round((todaysMission.progress.pyqsAttempted / todaysMission.rule.minPYQs) * 100))}%`,
+                background: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1'
+              }}
+            />
+          </div>
+          <p className="text-[10px] text-slate-400 mt-1">
+            {Math.min(100, Math.round((todaysMission.progress.pyqsAttempted / todaysMission.rule.minPYQs) * 100))}% PYQ target reached
+          </p>
+        </div>
+      )}
+      {!todaysMission && stats && stats.completed === stats.total && (
+        <div className="rounded-2xl p-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-center">
+          <div className="text-3xl mb-2">🏆</div>
+          <p className="font-black text-lg">You Have Mastered Everything!</p>
+          <p className="text-white/80 text-sm mt-1">Now focus on revision and mock tests.</p>
+        </div>
+      )}
 
       {/* ── Rules banner ────────────────────────────────────── */}
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
