@@ -99,11 +99,26 @@ function buildFrequencyMap(): FreqEntry[] {
 
 // ─── Topper rules per topic ───────────────────────────────────────────────────
 
+// Priority order: 1=first to unlock, 4=last
+const SUBJECT_PRIORITY: Record<string, number> = {
+  'Reasoning': 1,
+  'Science': 2,
+  'Mathematics': 3,
+  'General Awareness': 4,
+};
+
 const SUBJECT_COLORS: Record<string, string> = {
   'Reasoning': '#6366f1',
   'Mathematics': '#0ea5e9',
   'Science': '#10b981',
   'General Awareness': '#f59e0b',
+};
+
+const SUBJECT_ICONS: Record<string, string> = {
+  'Reasoning': '🧠',
+  'Science': '🔬',
+  'Mathematics': '➗',
+  'General Awareness': '📰',
 };
 
 const TOPIC_RULES: Record<string, Partial<TopicRule>> = {
@@ -428,8 +443,15 @@ function buildRoadmapTopics(daysLeft: number): FreqEntry[] {
   else if (daysLeft >= 30) maxTopics = Math.min(eligible.length, 20);
   else if (daysLeft >= 14) maxTopics = Math.min(eligible.length, 15);
   else maxTopics = Math.min(eligible.length, 10);
-  // Always at least minTopics
-  return eligible.slice(0, Math.max(minTopics, maxTopics));
+  const sliced = eligible.slice(0, Math.max(minTopics, maxTopics));
+
+  // ── Sort by SUBJECT PRIORITY first, then PYQ frequency within each subject ──
+  return sliced.sort((a, b) => {
+    const pa = SUBJECT_PRIORITY[a.subject] ?? 99;
+    const pb = SUBJECT_PRIORITY[b.subject] ?? 99;
+    if (pa !== pb) return pa - pb;
+    return b.count - a.count; // within same subject: most PYQs first
+  });
 }
 
 // ─── Gate check ───────────────────────────────────────────────────────────────
@@ -875,9 +897,35 @@ export function StudyRoadmap() {
   }, [profile, topics]);
 
   const subjects = useMemo(() => {
-    const s = new Set(topics.map(t => t.subject));
-    return ['All', ...Array.from(s)];
+    // Order subjects by priority in the filter bar
+    const present = new Set(topics.map(t => t.subject));
+    const ordered = Object.keys(SUBJECT_PRIORITY)
+      .sort((a, b) => SUBJECT_PRIORITY[a] - SUBJECT_PRIORITY[b])
+      .filter(s => present.has(s));
+    return ['All', ...ordered];
   }, [topics]);
+
+  // Helper: check if ALL topics of a given subject group are gate-passed
+  const isSubjectGroupComplete = (subject: string): boolean => {
+    return topics
+      .filter(t => t.subject === subject)
+      .every(t => isGatePassed(getTopicProgress(t.topic), getTopicRule(t.topic, t.subject)));
+  };
+
+  // Helper: is a subject group unlocked (i.e. all previous-priority subjects done)?
+  const isSubjectGroupUnlocked = (subject: string): boolean => {
+    const priority = SUBJECT_PRIORITY[subject] ?? 1;
+    if (priority <= 1) return true; // first subject is always open
+    const prevSubjects = Object.keys(SUBJECT_PRIORITY).filter(
+      s => SUBJECT_PRIORITY[s] < priority
+    );
+    // All higher-priority subjects that appear in our topic list must be fully complete
+    return prevSubjects.every(s => {
+      const subjectTopics = topics.filter(t => t.subject === s);
+      if (subjectTopics.length === 0) return true; // not in list, skip
+      return isSubjectGroupComplete(s);
+    });
+  };
 
   const filteredTopics = useMemo(() => {
     let t = topics;
@@ -969,7 +1017,7 @@ export function StudyRoadmap() {
           <p>🎯 <strong>Law 3 — Accuracy Gate:</strong> Each topic has a custom accuracy threshold (65%–82%). If below threshold → extra practice, not next topic.</p>
           <p>🔔 <strong>Law 4 — Ebbinghaus:</strong> Revise every mastered topic on Day 1, Day 7, Day 30. Miss a revision = forget 70% of the topic.</p>
           <p>🏆 <strong>Law 5 — Topper Rule:</strong> Follow the per-topic topper strategy exactly. It's based on SSC CGL Rank 1 and RRB Group D 2022 selection strategies.</p>
-          <p>⚡ <strong>Law 6 — PYQ Frequency:</strong> Topics are ordered by how often they appear in real exams. Do not skip the top-ranked topics for low-frequency ones.</p>
+          <p>⚡ <strong>Law 6 — Subject Priority Order:</strong> 🧠 Reasoning → 🔬 Science → ➗ Mathematics → 📰 General Awareness. Each subject unlocks only after the previous is fully mastered.</p>
         </div>
       </div>
 
@@ -1010,16 +1058,104 @@ export function StudyRoadmap() {
             <BookOpen size={32} className="mx-auto mb-3 text-slate-300" />
             <p className="font-bold">No topics match this filter</p>
           </div>
-        ) : (
-          filteredTopics.map((entry, idx) => {
-            const realIdx = topics.indexOf(entry);
-            const prevEntry = topics[realIdx - 1];
-            const prevProgress = prevEntry ? getTopicProgress(prevEntry.topic) : null;
-            const prevPassed = prevProgress
-              ? isGatePassed(prevProgress, getTopicRule(prevEntry.topic, prevEntry.subject))
-              : true;
+        ) : (() => {
+          // Group topics by subject to render section headers
+          const rendered: React.ReactNode[] = [];
+          let lastSubject = '';
 
-            return (
+          filteredTopics.forEach((entry, _idx) => {
+            const realIdx = topics.indexOf(entry);
+
+            // ── Subject group header ────────────────────────────────────────
+            if (entry.subject !== lastSubject) {
+              lastSubject = entry.subject;
+              const groupUnlocked = isSubjectGroupUnlocked(entry.subject);
+              const groupComplete = isSubjectGroupComplete(entry.subject);
+              const color = SUBJECT_COLORS[entry.subject] ?? '#6366f1';
+              const icon = SUBJECT_ICONS[entry.subject] ?? '📚';
+              const priority = SUBJECT_PRIORITY[entry.subject] ?? 0;
+              const prevSubjectName = Object.keys(SUBJECT_PRIORITY)
+                .sort((a, b) => SUBJECT_PRIORITY[a] - SUBJECT_PRIORITY[b])
+                .filter(s => SUBJECT_PRIORITY[s] === priority - 1)[0];
+
+              rendered.push(
+                <div
+                  key={`header-${entry.subject}`}
+                  className="rounded-2xl overflow-hidden"
+                  style={{ border: `2px solid ${groupUnlocked ? color : '#e2e8f0'}` }}
+                >
+                  <div
+                    className="px-5 py-4 flex items-center gap-3"
+                    style={{
+                      background: groupUnlocked
+                        ? `linear-gradient(135deg, ${color}18 0%, ${color}06 100%)`
+                        : '#f8fafc',
+                    }}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 shadow-sm"
+                      style={{ background: groupUnlocked ? color : '#cbd5e1' }}
+                    >
+                      {groupComplete ? '✅' : groupUnlocked ? icon : <Lock size={18} color="white" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-black text-slate-800 text-sm">
+                          Priority {priority}: {entry.subject}
+                        </p>
+                        {groupComplete && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                            ✅ Subject Complete!
+                          </span>
+                        )}
+                        {!groupUnlocked && (
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-500">
+                            🔒 Locked
+                          </span>
+                        )}
+                        {groupUnlocked && !groupComplete && (
+                          <span
+                            className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                            style={{ background: `${color}22`, color }}
+                          >
+                            🔓 Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        {groupUnlocked
+                          ? groupComplete
+                            ? 'All topics mastered — next subject unlocked!'
+                            : `Work through all ${entry.subject} topics to unlock the next subject`
+                          : `Complete all ${prevSubjectName ?? 'previous'} topics first to unlock this subject`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // ── Unlock logic for the topic ──────────────────────────────────
+            // First topic of a subject group: locked unless group is unlocked
+            // Subsequent topics: locked unless previous topic in same subject is gate-passed
+            const subjectTopics = topics.filter(t => t.subject === entry.subject);
+            const posInSubject = subjectTopics.indexOf(entry);
+            const groupUnlocked = isSubjectGroupUnlocked(entry.subject);
+
+            let prevPassed: boolean;
+            if (!groupUnlocked) {
+              prevPassed = false; // whole group locked
+            } else if (posInSubject === 0) {
+              prevPassed = true; // first in group and group is open
+            } else {
+              const prevInSubject = subjectTopics[posInSubject - 1];
+              prevPassed = isGatePassed(
+                getTopicProgress(prevInSubject.topic),
+                getTopicRule(prevInSubject.topic, prevInSubject.subject)
+              );
+            }
+
+            rendered.push(
               <TopicCard
                 key={entry.topic}
                 entry={entry}
@@ -1029,8 +1165,10 @@ export function StudyRoadmap() {
                 onUpdate={update => updateTopicProgress(entry.topic, update)}
               />
             );
-          })
-        )}
+          });
+
+          return rendered;
+        })()}
       </div>
 
       {/* ── Bottom inspiration ───────────────────────────────── */}
