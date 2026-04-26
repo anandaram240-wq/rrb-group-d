@@ -1,4 +1,5 @@
-import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, CalendarDays, BarChart2, Download, CloudUpload, CheckCircle, GraduationCap, AlertTriangle } from 'lucide-react';
+import { BookOpen, LayoutDashboard, History, TrendingUp, LogOut, X, CalendarDays, BarChart2, Download, CloudUpload, CheckCircle, GraduationCap, AlertTriangle, Crown } from 'lucide-react';
+import { isAdmin } from '../lib/adminGuard';
 import { cn } from '../lib/utils';
 import { useState } from 'react';
 
@@ -47,6 +48,8 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
     { id: 'planner',    label: 'Exam Planner',        icon: CalendarDays },
     { id: 'weakareas',  label: 'Weak Areas',          icon: AlertTriangle, badge: flagCount },
   ];
+
+  const showAdmin = isAdmin(user?.email);
 
   return (
     <>
@@ -105,6 +108,21 @@ export function Sidebar({ activeTab, setActiveTab, isOpen, setIsOpen, user, onLo
               </button>
             );
           })}
+          {/* ── Admin Link — only for anandakiccha240@gmail.com ── */}
+          {showAdmin && (
+            <button
+              onClick={() => { setActiveTab('admin'); setIsOpen(false); }}
+              className={cn(
+                'w-full flex items-center gap-3 px-6 py-3 rounded-lg ml-2 transition-all duration-200 font-bold text-sm mt-2',
+                activeTab === 'admin'
+                  ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-md'
+                  : 'text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200'
+              )}
+            >
+              <Crown size={18} />
+              👑 Admin Console
+            </button>
+          )}
         </nav>
 
         <div className="px-4 mt-auto">

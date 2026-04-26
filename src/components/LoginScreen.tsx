@@ -135,13 +135,26 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
         {/* Stats */}
         <div className="mt-8 grid grid-cols-3 gap-3">
           {[
-            { label: '4,295+ PYQs', desc: 'Real Questions' },
-            { label: '60+ Topics', desc: 'All Subjects' },
-            { label: 'CBT Mode', desc: 'Exam Pattern' },
+            { label: '4,295+ PYQs', desc: '2018 & 2022 CBT' },
+            { label: '100 Qs / 90 Min', desc: 'Real Exam Pattern' },
+            { label: '-1/3 Marking', desc: 'Negative Marking' },
           ].map(f => (
-            <div key={f.label} className="text-center p-3 bg-white/5 rounded-xl border border-white/5">
+            <div key={f.label} className="text-center p-3 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
               <p className="text-white font-bold text-sm">{f.label}</p>
               <p className="text-blue-300/60 text-[10px] mt-1">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {[
+            { label: '40%', desc: 'Pass Mark' },
+            { label: '4 Subjects', desc: 'Full Syllabus' },
+            { label: '60+ Topics', desc: 'Classified' },
+            { label: '☁️ Synced', desc: 'All Devices' },
+          ].map(f => (
+            <div key={f.label} className="text-center p-2 bg-white/5 rounded-lg border border-white/5">
+              <p className="text-white font-bold text-xs">{f.label}</p>
+              <p className="text-blue-300/60 text-[9px] mt-0.5">{f.desc}</p>
             </div>
           ))}
         </div>

@@ -16,6 +16,7 @@ const LoginScreen       = lazy(() => import('./components/LoginScreen').then(m =
 const StudyRoadmap      = lazy(() => import('./components/StudyRoadmap').then(m => ({ default: m.StudyRoadmap })));
 const ExamPlanner       = lazy(() => import('./components/ExamPlanner').then(m => ({ default: m.ExamPlanner })));
 const WeakAreas         = lazy(() => import('./components/WeakAreas').then(m => ({ default: m.WeakAreas })));
+const AdminPanel        = lazy(() => import('./components/AdminPanel').then(m => ({ default: m.AdminPanel })));
 
 // ── Tiny tab fallback spinner ──────────────────────────────────────────────────
 function TabSpinner() {
@@ -38,11 +39,13 @@ const PATH_TO_TAB: Record<string, string> = {
   '/practice': 'practice', '/papers': 'papers',
   '/analytics': 'analytics', '/performance': 'performance',
   '/roadmap': 'roadmap', '/planner': 'planner', '/weakareas': 'weakareas',
+  '/admin': 'admin',
 };
 const TAB_TO_PATH: Record<string, string> = {
   dashboard: '/dashboard', practice: '/practice',
   papers: '/papers', analytics: '/analytics', performance: '/performance',
   roadmap: '/roadmap', planner: '/planner', weakareas: '/weakareas',
+  admin: '/admin',
 };
 function getInitialTab(): string {
   const p = window.location.pathname;
@@ -398,6 +401,7 @@ export default function App() {
                 {activeTab === 'roadmap'     && <StudyRoadmap />}
                 {activeTab === 'planner'     && <ExamPlanner />}
                 {activeTab === 'weakareas'   && <WeakAreas onPractice={(subject, topic) => { navigateToPractice(subject, topic); refreshFlagCount(); }} />}
+                {activeTab === 'admin'       && <AdminPanel userEmail={user.email} />}
               </TabErrorBoundary>
             </Suspense>
           </div>

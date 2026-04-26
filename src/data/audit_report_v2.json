@@ -1,0 +1,1812 @@
+{
+  "summary": {
+    "unclassified": 2051,
+    "alias": 443,
+    "content_fix": 123,
+    "borderline": 110
+  },
+  "changes": [
+    {
+      "id": 24,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 100,
+      "q_preview": "A cistern has a hole in the bottom through which water is leaking. A tap can fil",
+      "answer": "7.5 hours",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)",
+        "[E] Explanation: cistern|pipe.{0,20}(fill|empty) → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 41,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "After allowing a discount of 75% on the marked price of an article, it is sold f",
+      "answer": "2,77,424",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 60,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A ± B’ means ‘A is the wife of B’, ‘A * B’ means ‘A",
+      "answer": "Sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 121,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 25% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 30%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 154,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the son of B’, ‘A – B’ means ‘A ",
+      "answer": "Mother’s brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother’s brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 215,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A dealer purchased an oven for ₹651. After allowing a discount of 86% on its mar",
+      "answer": "₹7,812",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 217,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "Two pipes, A and B, can fill a tank in 30 minutes and 45 minutes, respectively, ",
+      "answer": "54 minutes",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 223,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 25% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 10.4%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 225,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A - B means ‘A is t",
+      "answer": "Son's wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Son's wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 310,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "The marked price of a jeans was ₹7,750 but the shopkeeper offered successive dis",
+      "answer": "₹4,340",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 313,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A shopkeeper offers the following four schemes. A) Two successive discounts of 1",
+      "answer": "B",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 332,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the sister of B’, A – B means ‘A i",
+      "answer": "Father's mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father's mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 393,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A shopkeeper marks an article at ₹x and offers a discount of 63% on the marked p",
+      "answer": "1,040",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 420,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A+ B means ‘A is the sister of B’ A # B means ‘A is ",
+      "answer": "Father's brother's wife",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father's brother's wife → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 483,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A retailer offers the given discount schemes for buyers on an article. Which of ",
+      "answer": "Scheme iii",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 508,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes L, M, N, O, Q, R and S are kept one over the other but not necessari",
+      "answer": "Zero",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 510,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A - B means ‘A is t",
+      "answer": "Brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 564,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "An item is sold for ₹7,200 after two successive discounts of 36% and 10%. What i",
+      "answer": "12,500",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 605,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the son of B’, ‘A – B’ means ‘A ",
+      "answer": "Brother’s son",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother’s son → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 655,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "Ravi buys a shirt with a marked price of ₹1,620. He receives two successive disc",
+      "answer": "₹1,166.40",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 664,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 100,
+      "q_preview": "A cistern has a hole at the bottom through which water leaks. A tap can fill the",
+      "answer": "36 hours",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)",
+        "[E] Explanation: cistern|pipe.{0,20}(fill|empty) → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 693,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a code language, A + B means ‘A is the father of B’ A - B means ‘A is the mot",
+      "answer": "Mother’s father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother’s father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 749,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A retailer offers the following discount schemes for buyers on an article. Which",
+      "answer": "Scheme i",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 864,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the mother of B’, A – B means ‘A i",
+      "answer": "Brother’s wife",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother’s wife → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 933,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 97.0,
+      "q_preview": "Rohit goes to a shop to purchase a truck priced at ₹6,900. He is offered 4 disco",
+      "answer": "Two successive discounts of 38% and 46%",
+      "top_signals": [
+        "[Q] age|years older|years younger|sum of ages → Algebra / Linear Equations (1 & 2 Variables) (92%)",
+        "[O] Option-text: (successive discount|two discount) → Profit and Loss / Successive Discount (91%)",
+        "[A] Answer pattern: (successive discount|two discount) → Profit and Loss / Successive Discount (95%)"
+      ]
+    },
+    {
+      "id": 934,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "Pipes A and B can fill an empty cistern in 46 minutes and 32 minutes, respective",
+      "answer": "16 minutes",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 939,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "The marked price of a painting was ₹6,400, but the shopkeeper offered a double d",
+      "answer": "₹4,224",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 962,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A - B means ‘A is t",
+      "answer": "Wife's brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 966,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes, D, E, F, U, V, W and X, are kept one over the other, but not necess",
+      "answer": "Three",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 1012,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A shopkeeper marks an article at ₹x and offers a discount of 54% on the marked p",
+      "answer": "625",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1038,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A - B means ‘A is t",
+      "answer": "Brother's son's wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother's son's wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1110,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "The difference between a single discount of 46% and two successive discounts of ",
+      "answer": "12,800",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1111,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Simple Interest",
+      "new_sub": "CI Formula & Applications",
+      "confidence": 86.9,
+      "q_preview": "A sum of ₹15,000 is lent at the rate of 15% per annum compound interest, compoun",
+      "answer": "4,837.50",
+      "top_signals": [
+        "[Q] (compound interest|compounded) → Simple Interest / CI Formula & Applications (97%)",
+        "[E] Explanation: ci\\s*=.*p.*\\(1\\+|compound interest → Simple Interest / CI Formula & Applications (97%)"
+      ]
+    },
+    {
+      "id": 1121,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A+ B means ‘A is the sister of B’ A # B means ‘A is ",
+      "answer": "Wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1130,
+      "subject": "Reasoning",
+      "old_topic": "Number Series",
+      "new_topic": "Syllogism",
+      "new_sub": "Two-Statement Syllogism",
+      "confidence": 93.9,
+      "q_preview": "What should come in place of the question mark (?) in the given series? 76 81 91",
+      "answer": "231",
+      "top_signals": [
+        "[O] Options pattern: (conclusion|follows|syllogism) → Syllogism / Two-Statement Syllogism (84%)",
+        "[E] Explanation: (all .+ are|some .+ are|conclusion) → Syllogism / Two-Statement Syllogism (93%)"
+      ]
+    },
+    {
+      "id": 1194,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Trigonometry",
+      "new_sub": "Trigonometric Ratios (Sin, Cos, Tan, etc.)",
+      "confidence": 95.0,
+      "q_preview": "The speed of a train 200 m long is 50 km/hr. How much time will it take to pass ",
+      "answer": "57.6 sec",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[O] Option-text: (sin\\b|cos\\b|tan\\b|cot\\b|sec\\b|cosec\\b|t → Trigonometry / Trigonometric Ratios (Sin, Cos, Tan, etc.) (90%)",
+        "[A] Answer pattern: (sin\\b|cos\\b|tan\\b|cot\\b|sec\\b|cosec\\b|t → Trigonometry / Trigonometric Ratios (Sin, Cos, Tan, etc.) (95%)"
+      ]
+    },
+    {
+      "id": 1199,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A shopkeeper fixed the marked price of an article as ₹2,40,000. He gave 30% and ",
+      "answer": "First article; ₹12,960",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1200,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "An item is sold for ₹8,900 after two successive discounts of 20% and 11%. What i",
+      "answer": "12,500",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1225,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the father of B’, A - B means ‘A i",
+      "answer": "Wife’s father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife’s father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1304,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A+ B means ‘A is the sister of B’ A # B means ‘A is ",
+      "answer": "Wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1375,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A shopkeeper offers the following four schemes. A) Two successive discounts of 2",
+      "answer": "B",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1381,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "An item is sold for ₹660 after allowing a discount of 20% on its marked price. F",
+      "answer": "₹825",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 1395,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A+ B means ‘A is the sister of B’ A # B means ‘A is ",
+      "answer": "Brother's wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother's wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1477,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "Two pipes, M and N, can fill a tank in 10 minutes and 15 minutes, respectively. ",
+      "answer": "7.5 minutes",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 1590,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, P + Q means ‘P is the mother of Q’, P # Q means ‘P i",
+      "answer": "Father's brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father's brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1648,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 50% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 17%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 1652,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "Nisha buys a mobile phone for her child. The phone is marked at ₹24,500 and is o",
+      "answer": "33",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1654,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "After allowing a discount of 60% on the marked price of an article, it is sold f",
+      "answer": "1,24,585",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 1660,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes, A, B, C, D, E, F and G, are kept one over the other, but not necess",
+      "answer": "Two",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 1679,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A ? B means ‘A is the daughter of B’, A = B means ‘A",
+      "answer": "Daughter",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Daughter → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1748,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A ? B’ means ‘A is the daughter of B’ ‘A = B’ means",
+      "answer": "Sister's daughter",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Sister's daughter → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1827,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A dealer purchased a dryer for ₹92,000. He allows a discount of 77% on its marke",
+      "answer": "₹7,32,000",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 1849,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the sister of B’, A @ B means ‘A i",
+      "answer": "Mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 1857,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes, B, C, D, I, J, K and L, are kept one over the other but not necessa",
+      "answer": "One",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 1913,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A dealer purchased a ceiling fan for ₹391. After allowing a discount of 31% on i",
+      "answer": "₹952",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 1953,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes B, D, E, P, S, T and W are kept one over the other but not necessari",
+      "answer": "Five",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 1954,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, P + Q means ‘P is the mother of Q’, P # Q means ‘P i",
+      "answer": "Mother's mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother's mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2002,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 97.0,
+      "q_preview": "Bharat goes to a shop to purchase a toy train priced at ₹5,000. He is offered 4 ",
+      "answer": "Two successive discounts of 44% and 18%",
+      "top_signals": [
+        "[Q] age|years older|years younger|sum of ages → Algebra / Linear Equations (1 & 2 Variables) (92%)",
+        "[O] Option-text: (successive discount|two discount) → Profit and Loss / Successive Discount (91%)",
+        "[A] Answer pattern: (successive discount|two discount) → Profit and Loss / Successive Discount (95%)"
+      ]
+    },
+    {
+      "id": 2044,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A ± B means ‘A is the wife of B’, A * B means ‘A is ",
+      "answer": "Wife's sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2108,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 25% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 4.5%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 2118,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, P + Q means ‘P is the husband of Q’, P # Q means ‘P ",
+      "answer": "Father’s brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father’s brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2186,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "A water tank can be filled in 12 hours using three pipes. Pipe Z is three times ",
+      "answer": "108 hours",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 2212,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes, L, M, N, O, Q, R and S, are kept one over the other but not necessa",
+      "answer": "Two",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 2218,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A ± B means ‘A is the wife of B’, A * B means ‘A is ",
+      "answer": "Wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2282,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "Aarti got a new bed at 50% discount. If Aarti did not get any discount, Aarti wo",
+      "answer": "₹8,453",
+      "top_signals": [
+        "[Q] (discount.{0,20}%|%\\s*discount) → Profit and Loss / Marked Price & Discount (91%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 2310,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes D, E, F, U, V, W and X are kept one over the other but not necessari",
+      "answer": "Five",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 2317,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the father of B’, ‘A – B’ means ",
+      "answer": "Father's mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father's mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2409,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A ± B’ means ‘A is the wife of B’, ‘A * B’ means ‘A",
+      "answer": "Wife's sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2467,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A scheme like ‘Buy 6, Get 2 Free’ on the same kind of articles with the same MRP",
+      "answer": "25",
+      "top_signals": [
+        "[Q] (discount.{0,20}%|%\\s*discount) → Profit and Loss / Marked Price & Discount (91%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 2471,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A cash payment that will settle a bill for 625 pairs of boots at ₹94 per pair of",
+      "answer": "₹34,968",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 2508,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, P + Q means ‘P is the father of Q’, P # Q means ‘P i",
+      "answer": "Mother’s mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother’s mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2553,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "Pipes A and B can fill an empty cistern in 65 minutes and 26 minutes, respective",
+      "answer": "14 minutes",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 2558,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "An item is sold for ₹6,500 after two successive discounts of 35% and 20%. What i",
+      "answer": "12,500",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 2661,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "After allowing a discount of 9% on the marked price of an article, it is sold fo",
+      "answer": "58,300",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 2662,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the mother of B’, A – B means ‘A i",
+      "answer": "Mother’s father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother’s father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2733,
+      "subject": "Mathematics",
+      "old_topic": "Number System",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 86.9,
+      "q_preview": "A motorist travels 30 km in 50 minutes. He drives at a speed of x km/hr for the ",
+      "answer": "25",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 2760,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the mother of B’, ‘A – B’ means ",
+      "answer": "Sister’s husband",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Sister’s husband → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2833,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A retailer offers the following discount schemes for buyers on an article. Which",
+      "answer": "Scheme iii ∠ ∠ ∠ ∠",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 2857,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes A, B, C, D, M, N and O are kept one over the other but not necessari",
+      "answer": "Two",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 2868,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A x B’ means ‘A is the wife of B’, ‘A – B’ means ‘A",
+      "answer": "Sister's son",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Sister's son → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 2928,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A shopkeeper offers the following four schemes: A) Two successive discounts of 3",
+      "answer": "C",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 2951,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A ± B means ‘A is the wife of B’, A * B means ‘A is ",
+      "answer": "Brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3018,
+      "subject": "Mathematics",
+      "old_topic": "Ratio and Proportion",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "The ratio of the speeds of two trucks is 5 : 4. The time taken by the faster tru",
+      "answer": "20 km/hr",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[O] Option-text: (speed|distance|time|km/h|km per hour|m/ → Speed Distance Time / Basic Speed-Distance-Time (83%)",
+        "[A] Answer unit km/h: '20 km/hr' → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 3039,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A – B means ‘A is t",
+      "answer": "Son's wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Son's wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3099,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 26% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 36%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 3108,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "The marked price of a painting was ₹3,800, but the shopkeeper offered a double d",
+      "answer": "₹2,223",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 3128,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A ± B means ‘A is the wife of B’, A * B means ‘A is ",
+      "answer": "Mother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3219,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, P + Q means ‘P is the mother of Q’, P # Q means ‘P i",
+      "answer": "Father’s father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Father’s father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3307,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the brother of B’, ‘A – B’ means",
+      "answer": "Wife's brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3411,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "After allowing a discount of 54% on the marked price of an article, it is sold f",
+      "answer": "65,100",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 3441,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the mother of B’, ‘A – B’ means ",
+      "answer": "Husband’s sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Husband’s sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3501,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 40% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 0.8%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 3509,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "A scheme like ‘Buy 6, Get 4 Free’ on the same kind of articles with the same MRP",
+      "answer": "40",
+      "top_signals": [
+        "[Q] (discount.{0,20}%|%\\s*discount) → Profit and Loss / Marked Price & Discount (91%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 3510,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the sister of B’, A @ B means ‘A i",
+      "answer": "Wife's father's sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's father's sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3672,
+      "subject": "Mathematics",
+      "old_topic": "Trigonometry",
+      "new_topic": "Percentage",
+      "new_sub": "Percentage Increase/Decrease",
+      "confidence": 96.5,
+      "q_preview": "The cost of a washing machine is 40% less than the cost of a TV. If the cost of ",
+      "answer": "Increase by 20%",
+      "top_signals": [
+        "[Q] (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+\\s*%) → Percentage / Percentage Increase/Decrease (90%)",
+        "[O] Option-text: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (85%)",
+        "[A] Answer pattern: (increas.{0,20}\\d+\\s*%|decreas.{0,20}\\d+ → Percentage / Percentage Increase/Decrease (90%)"
+      ]
+    },
+    {
+      "id": 3689,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the sister of B’, A @ B means ‘A i",
+      "answer": "Mother's sister",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother's sister → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3764,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "Priya buys a mobile phone for her child. The phone is marked at ₹34,400 and is o",
+      "answer": "25",
+      "top_signals": [
+        "[Q] (successive discount|two discount) → Profit and Loss / Successive Discount (96%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 3783,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the mother of B’, ‘A – B’ means ",
+      "answer": "Sister’s husband",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Sister’s husband → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3871,
+      "subject": "Reasoning",
+      "old_topic": "Seating Arrangement",
+      "new_topic": "Puzzle",
+      "new_sub": "Box/Floor/Day Puzzle",
+      "confidence": 86.9,
+      "q_preview": "Seven boxes A, B, C, D, P, Q and R are kept one over the other but not necessari",
+      "answer": "Three",
+      "top_signals": [
+        "[Q] (boxes?|floors?).{0,40}(stacked|kept one over|placed one ove → Puzzle / Box/Floor/Day Puzzle (97%)",
+        "[E] Explanation: (floor|box|puzzle|arrangement) → Puzzle / Box/Floor/Day Puzzle (90%)"
+      ]
+    },
+    {
+      "id": 3879,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A + B’ means ‘A is the mother of B’, ‘A – B’ means ",
+      "answer": "Son’s wife",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Son’s wife → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 3977,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A x B means ‘A is the father of B’, A – B means ‘A i",
+      "answer": "Wife's father",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Wife's father → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 4038,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "The marked price of a painting was ₹7,500, but the shopkeeper offered a double d",
+      "answer": "₹4,644",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 4054,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A+ B’ means ‘A is the son of B’, ‘A # B’ means ‘A i",
+      "answer": "Mother's sister's son",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother's sister's son → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 4166,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, ‘A ± B’ means ‘A is the wife of B’, ‘A * B’ means ‘A",
+      "answer": "Brother",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Brother → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 4227,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "Ajeet got a new table at 20% discount. If Ajeet did not get any discount, Ajeet ",
+      "answer": "₹27,700",
+      "top_signals": [
+        "[Q] (discount.{0,20}%|%\\s*discount) → Profit and Loss / Marked Price & Discount (91%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 4230,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 100,
+      "q_preview": "A dealer purchased an AC for ₹1,848. After allowing a discount of 58% on its mar",
+      "answer": "₹7,172",
+      "top_signals": [
+        "[Q] (marked price|list price|market price) → Profit and Loss / Marked Price & Discount (95%)",
+        "[O] Options: rupee values → Profit and Loss / Cost Price / Selling Price (72%)",
+        "[A] Answer Rs + profit/loss in Q → Profit and Loss / Cost Price / Selling Price (95%)"
+      ]
+    },
+    {
+      "id": 4256,
+      "subject": "Reasoning",
+      "old_topic": "Coding-Decoding",
+      "new_topic": "Blood Relations",
+      "new_sub": "Direct Family Tree",
+      "confidence": 97.0,
+      "q_preview": "In a certain code language, A + B means ‘A is the son of B’, A - B means ‘A is t",
+      "answer": "Mother's brother's son",
+      "top_signals": [
+        "[Q] (how is|what is the code for|decode) → Coding-Decoding / Number Coding (92%)",
+        "[O] Options pattern: (father|mother|son|daughter|brother|sist → Blood Relations / Direct Family Tree (87%)",
+        "[A] Answer is family term: Mother's brother's son → Blood Relations / Direct Family Tree (97%)"
+      ]
+    },
+    {
+      "id": 4286,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Profit and Loss",
+      "new_sub": "Profit % and Loss %",
+      "confidence": 86.9,
+      "q_preview": "Find SP when MP = 160 and discount = 12%?",
+      "answer": "140.80",
+      "top_signals": [
+        "[Q] (cost price|selling price|cp\\b|sp\\b) → Profit and Loss / Cost Price / Selling Price (93%)",
+        "[E] Explanation: profit\\s*%\\s*=|loss\\s*%\\s*= → Profit and Loss / Profit % and Loss % (97%)"
+      ]
+    },
+    {
+      "id": 4295,
+      "subject": "Mathematics",
+      "old_topic": "Speed Distance Time",
+      "new_topic": "Time and Work",
+      "new_sub": "Pipes & Cisterns",
+      "confidence": 87.9,
+      "q_preview": "Two pipes X and Y can fill up a tank in 32 minutes and 16 minutes respectively. ",
+      "answer": "6 minutes",
+      "top_signals": [
+        "[Q] (pipe|cistern|tap|tank).{0,40}(fill|empty|leak) → Time and Work / Pipes & Cisterns (95%)",
+        "[A] Answer days + pipe/cistern → Time and Work / Pipes & Cisterns (97%)"
+      ]
+    },
+    {
+      "id": 4340,
+      "subject": "Mathematics",
+      "old_topic": "Ratio and Proportion",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 87.9,
+      "q_preview": "A car accelerates uniformly from 18 km/h to 36 km/h in 5 s. Calculate the accele",
+      "answer": "1 ms²",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '1 ms²' → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 4423,
+      "subject": "Reasoning",
+      "old_topic": "Direction Sense",
+      "new_topic": "Calendar and Clock",
+      "new_sub": "Clock Problems",
+      "confidence": 99.1,
+      "q_preview": "Narendra and Sunil are facing north direction. Narendra rotates 45° clockwise an",
+      "answer": "90° anticlockwise",
+      "top_signals": [
+        "[Q] (clock|angle between.{0,20}hands|minute hand|hour hand|overl → Calendar and Clock / Clock Problems (93%)",
+        "[O] Options pattern: (clock|angle between.{0,20}hands|minute  → Calendar and Clock / Clock Problems (85%)",
+        "[A] Answer pattern: (clock|angle between.{0,20}hands|minute  → Calendar and Clock / Clock Problems (90%)"
+      ]
+    },
+    {
+      "id": 4725,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "An object travels 10 m in 4 s and then another 14 m in 2 s. What is the average ",
+      "answer": "4.5 ms¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '4.5 ms¹' → Speed Distance Time / Basic Speed-Distance-Time (97%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 4726,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "An object travels 15 m in 4 s and then another 16 m in 3 s. What is the average ",
+      "answer": "5.17 ms¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '5.17 ms¹' → Speed Distance Time / Basic Speed-Distance-Time (97%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 4747,
+      "subject": "Mathematics",
+      "old_topic": "Percentage",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 86.9,
+      "q_preview": "The usual average speed of a car on a particular stretch of road is 75 km/hr. On",
+      "answer": "155",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 4980,
+      "subject": "Mathematics",
+      "old_topic": "Number System",
+      "new_topic": "Algebra",
+      "new_sub": "Quadratic Equations",
+      "confidence": 85.5,
+      "q_preview": "Find the HCF of 6xy²z, 8x²y³z², 12x³y³z³",
+      "answer": "2xyz",
+      "top_signals": [
+        "[Q] (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)",
+        "[O] Option-text: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (90%)"
+      ]
+    },
+    {
+      "id": 5010,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "Ram swims in a 72 m long pool. He covers 144 m in one minute by swimming from on",
+      "answer": "2.04 ms¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '2.04 ms¹' → Speed Distance Time / Basic Speed-Distance-Time (97%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 5011,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "Ram swims in a 95 m long pool. He covers 190 m in one minute by swimming from on",
+      "answer": "3.10 ms¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '3.10 ms¹' → Speed Distance Time / Basic Speed-Distance-Time (97%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 5135,
+      "subject": "Reasoning",
+      "old_topic": "Calendar and Clock",
+      "new_topic": "Direction Sense",
+      "new_sub": "Final Direction Finding",
+      "confidence": 100,
+      "q_preview": "Pallavi's house faces East. On entering her home, you will find a gallery to the",
+      "answer": "East",
+      "top_signals": [
+        "[Q] (turn(s|ed)?|face(s|d)?).{0,20}(north|south|east|west|left|r → Direction Sense / Final Direction Finding (93%)",
+        "[O] All options = directions → Direction Sense / Final Direction Finding (95%)",
+        "[A] Answer is a direction: East → Direction Sense / Final Direction Finding (98%)"
+      ]
+    },
+    {
+      "id": 5197,
+      "subject": "Mathematics",
+      "old_topic": "Number System",
+      "new_topic": "Algebra",
+      "new_sub": "Quadratic Equations",
+      "confidence": 100,
+      "q_preview": "If α and β are roots of the equation x² – x – 1 = 0, then the equation where roo",
+      "answer": "x² + 3x – 1 = 0",
+      "top_signals": [
+        "[Q] (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)",
+        "[O] Option-text: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (90%)",
+        "[A] Answer pattern: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)"
+      ]
+    },
+    {
+      "id": 5203,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 100,
+      "q_preview": "An object travels 23 m in 3 s and then another 15 m in 2 s. What is the average ",
+      "answer": "7.6 ms¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[A] Answer unit km/h: '7.6 ms¹' → Speed Distance Time / Basic Speed-Distance-Time (97%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 5204,
+      "subject": "Mathematics",
+      "old_topic": "Average",
+      "new_topic": "Speed Distance Time",
+      "new_sub": "Basic Speed-Distance-Time",
+      "confidence": 86.9,
+      "q_preview": "An object travels 24 m in 3 s and then another 15 m in 2 s. What is the average ",
+      "answer": "7.8 s¹",
+      "top_signals": [
+        "[Q] (speed|distance|time|km/h|km per hour|m/s|mph) → Speed Distance Time / Basic Speed-Distance-Time (88%)",
+        "[E] Explanation: speed\\s*=\\s*distance|d\\s*=\\s*s\\s*×\\s*t → Speed Distance Time / Basic Speed-Distance-Time (97%)"
+      ]
+    },
+    {
+      "id": 5488,
+      "subject": "Mathematics",
+      "old_topic": "Number System",
+      "new_topic": "Algebra",
+      "new_sub": "Quadratic Equations",
+      "confidence": 100,
+      "q_preview": "Find the quadratic equation whose roots are √3 + 1 and √3 − 1.",
+      "answer": "x² − 2√3 x + 2 = 0",
+      "top_signals": [
+        "[Q] (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)",
+        "[O] Option-text: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (90%)",
+        "[A] Answer pattern: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)"
+      ]
+    },
+    {
+      "id": 5539,
+      "subject": "Mathematics",
+      "old_topic": "Number System",
+      "new_topic": "Algebra",
+      "new_sub": "Quadratic Equations",
+      "confidence": 100,
+      "q_preview": "A quadratic equation whose roots are m and n is:",
+      "answer": "x² − (m+n)x + mn = 0",
+      "top_signals": [
+        "[Q] (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)",
+        "[O] Option-text: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (90%)",
+        "[A] Answer pattern: (quadratic equation|x\\^2|x²) → Algebra / Quadratic Equations (95%)"
+      ]
+    }
+  ]
+}

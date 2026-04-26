@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">RRB Group D</string>
+    <string name="title_activity_main">RRB Group D</string>
+    <string name="package_name">com.rrbgroupd.mastery</string>
+    <string name="custom_url_scheme">com.rrbgroupd.mastery</string>
+</resources>

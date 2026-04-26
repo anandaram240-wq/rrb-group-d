@@ -1,3 +1,5 @@
+import { EXTRA_MATHS, EXTRA_REASONING } from './extraEnrichers';
+
 /**
  * RRB Group D — Smart Solution Enricher  v3.0
  *
@@ -2039,15 +2041,16 @@ export function enrichSolution(ctx: QuestionContext): EnrichedSolution | null {
   if (!ctx.options || ctx.options.length < 2) return null;
 
   if (ctx.subject === 'Mathematics') {
-    const fn = MATHS_ENRICHERS[ctx.topic];
+    const fn = MATHS_ENRICHERS[ctx.topic] ?? EXTRA_MATHS[ctx.topic];
     if (fn) return fn(ctx);
   }
 
   if (ctx.subject === 'Reasoning') {
-    const fn = REASONING_ENRICHERS[ctx.topic];
+    const fn = REASONING_ENRICHERS[ctx.topic] ?? EXTRA_REASONING[ctx.topic];
     if (fn) return fn(ctx);
   }
 
+  // Science & GA: use stored solution only (not the focus right now)
   if (ctx.subject === 'General Science' || ctx.subject === 'General Awareness') {
     return enrichScienceGA(ctx);
   }

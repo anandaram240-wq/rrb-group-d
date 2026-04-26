@@ -102,3 +102,93 @@
   100% { box-shadow: 0 0 0 0   rgba(251,191,36,0);   }
 }
 
+/* ── Answer feedback animations ──────────────────────────────────────────── */
+@keyframes correctPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+  50%  { box-shadow: 0 0 0 10px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+
+@keyframes wrongShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-5px); }
+  40%       { transform: translateX(5px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Utility classes ─────────────────────────────────────────────────────── */
+.animate-correct {
+  animation: correctPulse 0.5s ease-out;
+}
+
+.animate-wrong {
+  animation: wrongShake 0.4s ease-in-out;
+}
+
+.animate-fade-in {
+  animation: fadeSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Skeleton loading shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e8f0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+.dark .skeleton {
+  background: linear-gradient(90deg, #1e2229 25%, #252c35 50%, #1e2229 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Tab transition */
+.tab-enter {
+  animation: fadeSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Number tabular layout to prevent shift */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth color transitions on all elements */
+*, *::before, *::after {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Progress bar fill animation */
+.progress-fill {
+  transition: width 0.6s ease-out;
+}
+
+/* Admin crown glow */
+@keyframes crownGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+  50%       { box-shadow: 0 0 18px rgba(251, 191, 36, 0.8); }
+}
+.crown-glow {
+  animation: crownGlow 2s ease-in-out infinite;
+}
+
+/* Offline indicator */
+@keyframes offlinePop {
+  from { opacity: 0; transform: translateY(-100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.offline-banner {
+  animation: offlinePop 0.3s ease-out;
+}
+

@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Each user: read/write their own document only ────────────────────────
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Admin (anandakiccha240@gmail.com) can read ALL user documents
+      allow read: if request.auth != null
+        && request.auth.token.email == 'anandakiccha240@gmail.com';
+    }
+
+    // ── Broadcasts: admin writes, any authenticated user reads ───────────────
+    match /broadcasts/{docId} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null
+        && request.auth.token.email == 'anandakiccha240@gmail.com';
+    }
+
+    // ── Admin logs: admin only ────────────────────────────────────────────────
+    match /adminLogs/{logId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.email == 'anandakiccha240@gmail.com';
+    }
+
+    // ── FCM tokens: user writes own, admin reads all ──────────────────────────
+    match /fcmTokens/{userId} {
+      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null
+        && request.auth.token.email == 'anandakiccha240@gmail.com';
+    }
+
+    // ── Content flags: any user can create, admin reads/updates ──────────────
+    match /contentFlags/{flagId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null
+        && request.auth.token.email == 'anandakiccha240@gmail.com';
+    }
+
+    // ── Deny everything else ──────────────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
