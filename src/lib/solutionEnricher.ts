@@ -34,8 +34,9 @@ export interface QuestionContext {
 
 export interface EnrichedSolution {
   answer: string;
+  formula?: string;        // e.g. "Profit% = (SP−CP)/CP × 100"
   steps: string[];
-  speedTrick: string[];
+  speedTrick: string[];    // line[0] = formula/rule name, line[1] = numbers→answer
   wrongOptions: string[];
   concept: string[];
   examTip: string;
@@ -90,21 +91,14 @@ function enrichPercentage(ctx: QuestionContext): EnrichedSolution {
     const net = p1 + p2 - (p1 * p2) / 100;
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `Successive % = a + b − ab/100`,
       steps: [
-        `Given: Two successive % changes: ${p1}% and ${p2}%`,
-        `❌ WRONG: ${p1} + ${p2} = ${p1 + p2}% (simple addition ignores the compound effect)`,
-        `✅ Successive % formula: a + b − (a×b)/100`,
-        `= ${p1} + ${p2} − (${p1}×${p2})/100`,
-        `= ${p1 + p2} − ${((p1 * p2) / 100).toFixed(2)}`,
-        `= ${net.toFixed(2)}%`,
-        `∴ Answer = ${correct}`,
+        `${p1} + ${p2} − (${p1}×${p2})/100`,
+        `${p1 + p2} − ${((p1 * p2) / 100).toFixed(2)} = ${net.toFixed(2)}%`,
       ],
       speedTrick: [
-        `⚡ Chain Multiplier (fastest):`,
-        `Multiplier = (1 + ${p1}/100) × (1 + ${p2}/100)`,
-        `= ${1 + p1 / 100} × ${1 + p2 / 100}`,
-        `= ${((1 + p1 / 100) * (1 + p2 / 100)).toFixed(4)}`,
-        `Net % = (${((1 + p1 / 100) * (1 + p2 / 100)).toFixed(4)} − 1) × 100 = ${net.toFixed(2)}%`,
+        `Successive % = a + b − ab/100`,
+        `${p1} + ${p2} − (${p1}×${p2})/100 = ${net.toFixed(2)}%`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => `Adding them directly: ${p1}+${p2}=${p1 + p2}% ≠ ${nums(o)[0] ?? o}. Use formula!`),
       concept: [
@@ -122,20 +116,14 @@ function enrichPercentage(ctx: QuestionContext): EnrichedSolution {
     const pct10 = total / 10;
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `x% of N = x×N/100`,
       steps: [
-        `Given: ${pct}% of ${total.toLocaleString()}`,
-        `Formula: = (${pct}/100) × ${total.toLocaleString()}`,
-        `= ${total.toLocaleString()} × ${pct}/100`,
-        `= ${(total * pct).toLocaleString()} ÷ 100`,
-        `= ${ans.toLocaleString()}`,
-        `∴ Answer = ${correct}`,
+        `${pct} × ${total.toLocaleString()} = ${(pct * total).toLocaleString()}`,
+        `${(pct * total).toLocaleString()} ÷ 100 = ${ans.toLocaleString()}`,
       ],
       speedTrick: [
-        `⚡ 1% Breakdown Method:`,
-        `10% of ${total.toLocaleString()} = ${pct10.toLocaleString()}`,
-        `${pct}% = ${Math.floor(pct / 10)} × ${pct10} + ${pct % 10}% of ${total}`,
-        `= ${(Math.floor(pct / 10) * pct10).toLocaleString()} + ${((pct % 10) * total / 100).toLocaleString()}`,
-        `= ${ans.toLocaleString()} ✓`,
+        `x% of N = x×N/100`,
+        `${pct}×${total}/100 = ${ans.toLocaleString()}`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => {
         const n = nums(o)[0];
@@ -156,17 +144,14 @@ function enrichPercentage(ctx: QuestionContext): EnrichedSolution {
     const change = ((newVal - oldVal) / oldVal) * 100;
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `% Change = (New−Old)/Old × 100`,
       steps: [
-        `Old value = ${oldVal}, New value = ${newVal}`,
-        `Change = ${newVal} − ${oldVal} = ${newVal - oldVal}`,
-        `% Change = (Change/Original) × 100 = (${newVal - oldVal}/${oldVal}) × 100`,
-        `= ${change.toFixed(2)}%`,
-        `∴ Answer = ${correct}`,
+        `${newVal} − ${oldVal} = ${newVal - oldVal}`,
+        `${newVal - oldVal} ÷ ${oldVal} × 100 = ${change.toFixed(2)}%`,
       ],
       speedTrick: [
-        `⚡ % Change = (New−Old)/Old × 100`,
-        `= (${newVal}−${oldVal})/${oldVal} × 100 = ${change.toFixed(2)}%`,
-        `Positive → Increase. Negative → Decrease.`,
+        `% Change = (New−Old)/Old × 100`,
+        `(${newVal}−${oldVal})/${oldVal} × 100 = ${change.toFixed(2)}%`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => `Incorrect base or calculation. (${newVal}−${oldVal})/${oldVal}×100 = ${change.toFixed(2)}% ≠ ${nums(o)[0] ?? o}`),
       concept: [`→ % increase: (New−Old)/Old × 100`, `→ % decrease: (Old−New)/Old × 100`],
@@ -214,20 +199,15 @@ function enrichProfitLoss(ctx: QuestionContext): EnrichedSolution {
     const profitPct = ((sp - cp) / cp) * 100;
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `Profit% = (SP−CP)/CP × 100`,
       steps: [
-        `Given: CP = ₹${cp}, Markup = ${p1}%, Discount = ${p2}%`,
-        `Step 1: MP = CP × (1 + ${p1}/100) = ${cp} × ${(1 + p1 / 100).toFixed(2)} = ₹${mp.toFixed(2)}`,
-        `Step 2: SP = MP × (1 − ${p2}/100) = ${mp.toFixed(2)} × ${(1 - p2 / 100).toFixed(2)} = ₹${sp.toFixed(2)}`,
-        `Step 3: Profit/Loss% = (SP−CP)/CP × 100 = (${sp.toFixed(2)}−${cp})/${cp} × 100`,
-        `= ${profitPct.toFixed(2)}%`,
-        `∴ Answer = ${correct}`,
+        `MP = ${cp} × (1+${p1}/100) = ₹${mp.toFixed(2)}`,
+        `SP = ${mp.toFixed(2)} × (1−${p2}/100) = ₹${sp.toFixed(2)}`,
+        `(${sp.toFixed(2)}−${cp})/${cp} × 100 = ${profitPct.toFixed(2)}%`,
       ],
       speedTrick: [
-        `⚡ Chain Multiplier (10 seconds):`,
-        `CP × (1+${p1}/100) × (1−${p2}/100)`,
-        `= CP × ${(1 + p1 / 100).toFixed(3)} × ${(1 - p2 / 100).toFixed(3)}`,
-        `= CP × ${((1 + p1 / 100) * (1 - p2 / 100)).toFixed(4)}`,
-        `Net effect: ${profitPct >= 0 ? '+' : ''}${profitPct.toFixed(2)}% ${profitPct >= 0 ? 'Profit' : 'Loss'}`,
+        `Profit% = CP×(1+${p1}/100)×(1−${p2}/100) chain`,
+        `${cp}×${(1 + p1 / 100).toFixed(3)}×${(1 - p2 / 100).toFixed(3)} → ${profitPct.toFixed(2)}%`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => `Markup ${p1}% then discount ${p2}% gives ${profitPct.toFixed(2)}% ≠ ${nums(o)[0] ?? o}%. DON'T subtract percentages directly!`),
       concept: [
@@ -245,16 +225,14 @@ function enrichProfitLoss(ctx: QuestionContext): EnrichedSolution {
     const sp = isLoss ? cp * (1 - p1 / 100) : cp * (1 + p1 / 100);
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `Profit% = (SP−CP)/CP × 100`,
       steps: [
-        `CP = ₹${cp}, ${isLoss ? 'Loss' : 'Profit'} = ${p1}%`,
-        isLoss
-          ? `SP = CP × (100−${p1})/100 = ${cp} × ${(100 - p1) / 100} = ₹${sp.toFixed(2)}`
-          : `SP = CP × (100+${p1})/100 = ${cp} × ${(100 + p1) / 100} = ₹${sp.toFixed(2)}`,
-        `∴ Answer = ${correct}`,
+        `SP = ${cp} × ${isLoss ? `(100−${p1})/100` : `(100+${p1})/100`} = ₹${sp.toFixed(2)}`,
+        `(${sp.toFixed(2)}−${cp})/${cp} × 100 = ${isLoss ? '-' : ''}${p1}%`,
       ],
       speedTrick: [
-        `⚡ Multiplier: ${isLoss ? `${cp} × 0.${100 - p1}` : `${cp} × 1.${p1}`} = ₹${sp.toFixed(2)}`,
-        `No need to compute ${p1}% of ${cp} separately!`,
+        `Profit% = (SP−CP)/CP × 100`,
+        `(${sp.toFixed(2)}−${cp})/${cp} × 100 = ${isLoss ? '-' : ''}${p1}%`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => `SP = ${cp}×${isLoss ? (100 - p1) / 100 : (100 + p1) / 100} = ${sp.toFixed(2)} ≠ ${nums(o)[0] ?? o}`),
       concept: [
@@ -309,21 +287,15 @@ function enrichSimpleInterest(ctx: QuestionContext): EnrichedSolution {
 
   return {
     answer: correctLabel(ctx.options, ctx.correctAnswer),
+    formula: `SI = P×R×T/100`,
     steps: [
-      `Given: Principal P = ₹${P.toLocaleString()}, Rate R = ${R}% p.a., Time T = ${Tunit}`,
-      `Formula: SI = (P × R × T) / 100`,
-      `= (${P.toLocaleString()} × ${R} × ${Treal.toFixed(4)}) / 100`,
-      `= ${(P * R * Treal).toFixed(2)} / 100`,
-      `= ₹${si.toLocaleString()}`,
-      `Amount A = P + SI = ${P.toLocaleString()} + ${si} = ₹${amount.toLocaleString()}`,
-      `∴ Answer = ${correct}`,
+      `${P.toLocaleString()} × ${R} × ${Treal.toFixed(3)} = ${(P * R * Treal).toFixed(2)}`,
+      `${(P * R * Treal).toFixed(2)} ÷ 100 = ₹${si.toLocaleString()}`,
     ],
     speedTrick: [
-      `⚡ Cover the unknown formula:`,
-      `SI = P×R×T/100 = ${P}×${R}×${Treal.toFixed(3)}/100 = ₹${si}`,
-      hasDays ? `⚡ Days trick: ${T} days ÷ 365 = ${Treal.toFixed(4)} yr` : ``,
-      `Quick check: ₹${P} at ${R}% for ${T} ${hasDays ? 'days' : 'yr'} → ₹${si}`,
-    ].filter(Boolean),
+      `SI = P×R×T/100`,
+      `${P}×${R}×${Treal.toFixed(3)}/100 = ₹${si}`,
+    ],
     wrongOptions: wrongOpts(ctx, (o) => `P×R×T/100 = ${P}×${R}×${Treal.toFixed(3)}/100 = ${si} ≠ ${nums(o)[0] ?? o}`),
     concept: [
       `→ SI = PRT/100`,
@@ -349,23 +321,15 @@ function enrichCompoundInterest(ctx: QuestionContext): EnrichedSolution {
 
   return {
     answer: correctLabel(ctx.options, ctx.correctAnswer),
+    formula: `A = P×(1+R/100)^T`,
     steps: [
-      `Given: P = ₹${P.toLocaleString()}, R = ${R}%, T = ${T} years`,
-      `Formula: A = P × (1 + R/100)^T`,
-      `= ${P} × (1 + ${R}/100)^${T}`,
-      `= ${P} × (${(1 + R / 100).toFixed(4)})^${T}`,
-      `= ${P} × ${Math.pow(1 + R / 100, T).toFixed(6)}`,
-      `= ₹${A.toFixed(2)}`,
-      `CI = A − P = ${A.toFixed(2)} − ${P} = ₹${CI.toFixed(2)}`,
-      T === 2 ? `SI for same values = ₹${SI.toFixed(2)}` : ``,
-      T === 2 ? `CI − SI = ${CI.toFixed(2)} − ${SI.toFixed(2)} = ₹${diff.toFixed(2)}` : ``,
-      `∴ Answer = ${correct}`,
-    ].filter(Boolean),
+      `${P} × (1+${R}/100)^${T} = ${P} × ${Math.pow(1 + R / 100, T).toFixed(6)} = ₹${A.toFixed(2)}`,
+      `CI = ${A.toFixed(2)} − ${P} = ₹${CI.toFixed(2)}`,
+      T === 2 ? `CI−SI = ${CI.toFixed(2)} − ${SI.toFixed(2)} = ₹${diff.toFixed(2)}` : `Amount = ₹${A.toFixed(2)}`,
+    ],
     speedTrick: [
-      `⚡ CI−SI shortcut (for T=2 years only):`,
-      `CI − SI = P × (R/100)² = ${P} × (${R}/100)²`,
-      `= ${P} × ${(R / 100) ** 2} = ₹${(P * (R / 100) ** 2).toFixed(2)}`,
-      `⚡ For T=2: A = P(1+R/100)² — expand vs formula are same speed`,
+      `CI−SI (T=2) = P×(R/100)²`,
+      `${P}×(${R}/100)² = ₹${(P * (R / 100) ** 2).toFixed(2)}`,
     ],
     wrongOptions: wrongOpts(ctx, (o) => `P×(1+R/100)^T = ${A.toFixed(2)}, so CI = ${CI.toFixed(2)} ≠ ${nums(o)[0] ?? o}`),
     concept: [
@@ -395,20 +359,14 @@ function enrichAverage(ctx: QuestionContext): EnrichedSolution {
     const rise = newAvg - avg1;
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `New Avg = (Old Sum + New Score) / New Count`,
       steps: [
-        `Average in first ${n1} innings = ${avg1} runs`,
-        `Total runs in ${n1} innings = ${avg1} × ${n1} = ${oldSum}`,
-        `Score in ${n1 + 1}th inning = ${newScore} runs`,
-        `New total = ${oldSum} + ${newScore} = ${newSum}`,
-        `New average = ${newSum} / ${n1 + 1} = ${newAvg.toFixed(2)}`,
-        `∴ Answer = ${correct}`,
+        `${avg1} × ${n1} = ${oldSum}, new score = ${newScore}`,
+        `(${oldSum} + ${newScore}) / ${n1 + 1} = ${newAvg.toFixed(2)}`,
       ],
       speedTrick: [
-        `⚡ Rise Trick (no need to calculate total!):`,
-        `Extra over average = ${newScore} − ${avg1} = ${newScore - avg1} runs`,
-        `This extra is distributed over ${n1 + 1} innings`,
-        `Rise in avg = ${newScore - avg1} ÷ ${n1 + 1} = ${rise.toFixed(2)}`,
-        `New avg = ${avg1} + ${rise.toFixed(2)} = ${newAvg.toFixed(2)} ✓`,
+        `Rise = (New Score − Old Avg) / New Count`,
+        `(${newScore}−${avg1})/${n1 + 1} = ${rise.toFixed(2)} → Avg = ${newAvg.toFixed(2)}`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => {
         const n = nums(o)[0];
@@ -496,19 +454,15 @@ function enrichRatioProportion(ctx: QuestionContext): EnrichedSolution {
   if (ratioSum > 0 && total > 0) {
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `1 unit = Total ÷ Sum of ratio`,
       steps: [
-        `Ratio: ${ratioParts.slice(0, 3).join(' : ')}, Total = ${total.toLocaleString()}`,
-        `Step 1: Sum of ratio parts = ${ratioParts.slice(0, 3).join(' + ')} = ${ratioSum}`,
-        `Step 2: 1 ratio unit = Total ÷ Sum = ${total} ÷ ${ratioSum} = ${unit.toFixed(2)}`,
-        ...ratioParts.slice(0, 3).map((r, i) => `Part of person ${i + 1} = ${r} × ${unit.toFixed(2)} = ${(r * unit).toFixed(2)}`),
-        `∴ Answer = ${correct}`,
+        `Sum of parts = ${ratioParts.slice(0, 3).join(' + ')} = ${ratioSum}`,
+        `1 unit = ${total} ÷ ${ratioSum} = ${unit.toFixed(2)}`,
+        `Required share = ratio × ${unit.toFixed(2)}`,
       ],
       speedTrick: [
-        `⚡ Ratio Unit Method:`,
-        `Ratio ${ratioParts.slice(0, 3).join(':')} → Sum = ${ratioSum}`,
-        `1 unit = ${total} ÷ ${ratioSum} = ${unit.toFixed(2)}`,
-        `Required part = its ratio × ${unit.toFixed(2)}`,
-        `Verify: all parts sum back to ${total.toLocaleString()} ✓`,
+        `1 unit = Total ÷ Sum of ratio`,
+        `${total} ÷ ${ratioSum} = ${unit.toFixed(2)} → × target ratio`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => {
         const n = nums(o)[0];
@@ -592,19 +546,15 @@ function enrichSpeedDistanceTime(ctx: QuestionContext): EnrichedSolution {
 
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `T = (L1+L2) / Speed×5/18`,
       steps: [
-        `Train length = ${trainLen} m, Platform/other train = ${platformOrTrain} m`,
-        `Speed = ${speed} km/hr = ${speed} × 5/18 = ${speedMs.toFixed(2)} m/s`,
-        `Total distance to cover = ${trainLen} + ${platformOrTrain} = ${totalDist} m`,
-        `Time = Distance / Speed = ${totalDist} / ${speedMs.toFixed(2)}`,
-        `= ${time.toFixed(2)} seconds`,
-        `∴ Answer = ${correct}`,
+        `${trainLen} + ${platformOrTrain} = ${totalDist} m`,
+        `${speed} km/h × 5/18 = ${speedMs.toFixed(2)} m/s`,
+        `${totalDist} ÷ ${speedMs.toFixed(2)} = ${time.toFixed(2)} sec`,
       ],
       speedTrick: [
-        `⚡ Train formula: T = (Train length + Platform) / Speed`,
-        `Convert speed: ${speed} km/hr × 5/18 = ${speedMs.toFixed(2)} m/s`,
-        `T = ${totalDist} / ${speedMs.toFixed(2)} = ${time.toFixed(2)} sec`,
-        `✓ ALWAYS add lengths. ALWAYS convert to m/s for metres.`,
+        `T = (L1+L2)/(S×5/18)`,
+        `${totalDist} ÷ (${speed}×5/18) = ${time.toFixed(2)} sec`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => `T = ${totalDist}/${speedMs.toFixed(2)} = ${time.toFixed(2)} sec ≠ ${nums(o)[0] ?? o}`),
       concept: [
@@ -712,20 +662,15 @@ function enrichTimeWork(ctx: QuestionContext): EnrichedSolution {
 
     return {
       answer: correctLabel(ctx.options, ctx.correctAnswer),
+      formula: `LCM Method: Days = LCM / Combined Efficiency`,
       steps: [
-        `Given days: ${days.join(', ')}`,
-        `Step 1: LCM(${days.join(',')}) = ${totalWork} (= Total Work units)`,
-        ...days.map((d, i) => `${labels[i]} → efficiency = ${totalWork}/${d} = ${effs[i].toFixed(1)} units/day`),
-        `Step 2: Combined efficiency = ${effs.map(e => e.toFixed(1)).join(' + ')} = ${combined.toFixed(1)} units/day`,
-        `Step 3: Days together = Total Work / Combined = ${totalWork} / ${combined.toFixed(1)} = ${daysTogether.toFixed(2)} days`,
-        `∴ Answer = ${correct}`,
+        `LCM(${days.join(',')}) = ${totalWork}; Eff: ${days.map((d, i) => `${String.fromCharCode(65+i)}=${effs[i].toFixed(0)}`).join(', ')}`,
+        `Combined = ${effs.map(e => e.toFixed(0)).join('+')} = ${combined.toFixed(0)}`,
+        `${totalWork} ÷ ${combined.toFixed(0)} = ${daysTogether.toFixed(2)} days`,
       ],
       speedTrick: [
-        `⚡ LCM Method — 3 steps only:`,
-        `① LCM(${days.join(',')}) = ${totalWork}`,
-        `② Efficiencies: ${days.map((d, i) => `${String.fromCharCode(65 + i)}=${effs[i].toFixed(0)}`).join(', ')}`,
-        `③ Days = ${totalWork} ÷ ${combined.toFixed(0)} = ${daysTogether.toFixed(2)} ✓`,
-        `NO fraction addition needed — LCM avoids all fractions!`,
+        `LCM Method: Days = LCM ÷ Σ Efficiency`,
+        `LCM(${days.join(',')})=${totalWork}; ${totalWork}÷${combined.toFixed(0)} = ${daysTogether.toFixed(2)}`,
       ],
       wrongOptions: wrongOpts(ctx, (o) => {
         const n = nums(o)[0];
@@ -2064,27 +2009,46 @@ export function enrichSolution(ctx: QuestionContext): EnrichedSolution | null {
 export function enrichedToText(e: EnrichedSolution): string {
   const lines: string[] = [];
 
+  // ── ✅ ANSWER ──────────────────────────────────────────────────────────────
   if (e.answer)
     lines.push(`✅ ANSWER: ${e.answer}`, '');
 
+  // ── 📝 SOLUTION (new format: [Formula] then Step 1/2/3) ───────────────────
   if (e.steps.length) {
-    lines.push('📝 STEP-BY-STEP SOLUTION:');
-    e.steps.forEach((s, i) => lines.push(`${i + 1}. ${s}`));
+    lines.push('📝 SOLUTION:');
+    // First line: formula/rule in brackets
+    if (e.formula) lines.push(`[${e.formula}]`);
+    // Numbered steps — at most 3, each one calculation
+    const capped = e.steps.slice(0, 3);
+    capped.forEach((s, i) => lines.push(`Step ${i + 1}: ${s}`));
     lines.push('');
   }
 
+  // ── ⚡ TRICK (formula name line + numbers-only line) ───────────────────────
   if (e.speedTrick.length) {
-    lines.push('⚡ TOP SPEED TRICK:');
-    e.speedTrick.forEach(s => lines.push(s));
+    lines.push('⚡ TRICK:');
+    // speedTrick[0] = formula/rule name (wrap in brackets if not already)
+    // speedTrick[1] = numbers-only → answer
+    const trickFormula = e.speedTrick[0] ?? '';
+    const trickCalc    = e.speedTrick[1] ?? '';
+    if (trickFormula) {
+      const wrapped = trickFormula.startsWith('[') ? trickFormula : `[${trickFormula}]`;
+      lines.push(wrapped);
+    }
+    if (trickCalc) lines.push(trickCalc);
+    // Any additional trick lines
+    e.speedTrick.slice(2).forEach(s => { if (s) lines.push(s); });
     lines.push('');
   }
 
+  // ── ❌ WHY WRONG OPTIONS FAIL ──────────────────────────────────────────────
   if (e.wrongOptions.length) {
     lines.push('❌ WHY WRONG OPTIONS FAIL:');
     e.wrongOptions.forEach(s => lines.push(s));
     lines.push('');
   }
 
+  // ── 🧠 CONCEPT + FORMULA ──────────────────────────────────────────────────
   if (e.concept.length || e.examTip) {
     lines.push('🧠 CONCEPT + FORMULA:');
     e.concept.forEach(s => lines.push(s));

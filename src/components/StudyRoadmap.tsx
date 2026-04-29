@@ -1024,157 +1024,222 @@ export function StudyRoadmap() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
 
-      {/* ── Hero header ─────────────────────────────────────── */}
-      <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-800 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Trophy size={20} className="text-yellow-300" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-white/60">Study Roadmap v4</span>
-            </div>
-            <h1 className="text-xl font-black mb-1">
-              {stats?.completed === stats?.total && stats?.total !== 0
-                ? '🎉 All Topics Mastered!'
-                : `${stats?.completed ?? 0} / ${stats?.total ?? 0} Topics Mastered`}
-            </h1>
-            <p className="text-white/70 text-[12px]">
-              Day {stats?.daysPassed ?? 0} of {profile.daysLeft} • {stats?.remaining ?? 0} days left • {stats?.totalPYQs ?? 0} PYQs done
-            </p>
-          </div>
-          <button
-            onClick={handleReset}
-            className="text-white/40 hover:text-white/80 transition text-[11px] flex-shrink-0"
-          >
-            Reset
-          </button>
-        </div>
+      {/* ── PREMIUM HERO HEADER ───────────────────────────────── */}
+      <div
+        className="relative rounded-3xl p-6 text-white shadow-2xl overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 70%, #1e1b4b 100%)' }}
+      >
+        {/* Glow orbs */}
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+        <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #c084fc, transparent)' }} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 rounded-full opacity-5" style={{ background: 'radial-gradient(circle, #fbbf24, transparent)' }} />
 
-        {/* Overall progress bar */}
-        <div className="mt-4">
-          <div className="flex justify-between text-[11px] text-white/60 mb-1">
-            <span>Overall Mastery</span>
-            <span>{stats ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
-          </div>
-          <div className="w-full bg-white/20 rounded-full h-3">
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${stats ? (stats.completed / stats.total) * 100 : 0}%`,
-                background: 'linear-gradient(90deg, #fbbf24, #f59e0b)'
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Quick stats row — 4 tiles */}
-        <div className="grid grid-cols-4 gap-2 mt-4">
-          {[
-            { icon: CheckCircle, label: 'Done', value: stats?.completed ?? 0 },
-            { icon: Target,      label: 'Remaining', value: stats?.topicsLeft ?? 0 },
-            { icon: RefreshCw,  label: 'Revise Due', value: stats?.dueRevisions ?? 0, alert: (stats?.dueRevisions ?? 0) > 0 },
-            { icon: Zap,        label: 'PYQs/Day', value: stats?.pyqsPerDay ?? 0, highlight: true },
-          ].map(s => (
-            <div key={s.label} className={`rounded-xl p-2 text-center ${
-              (s as any).alert ? 'bg-red-500/40 animate-pulse'
-              : (s as any).highlight ? 'bg-yellow-400/20 border border-yellow-400/40'
-              : 'bg-white/10'
-            }`}>
-              <s.icon size={13} className="mx-auto mb-0.5 text-white/70" />
-              <p className="text-base font-black">{s.value}</p>
-              <p className="text-[9px] text-white/60">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Per-subject progress overview ───────────────────── */}
-      <div className="grid grid-cols-2 gap-3">
-        {subjectStats.map(s => (
-          <div
-            key={s.subject}
-            className="rounded-2xl border-2 p-4 bg-white"
-            style={{ borderColor: s.pct === 100 ? '#10b981' : s.color + '44' }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-base"
-                style={{ background: s.color + '22' }}
-              >
-                {s.icon}
+        <div className="relative">
+          {/* Top row */}
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-yellow-400/20 border border-yellow-400/30 flex items-center justify-center">
+                  <Trophy size={16} className="text-yellow-300" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-indigo-300">RRB Group D · Study Roadmap</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-black text-slate-700 truncate">{s.subject}</p>
-                <p className="text-[10px] text-slate-400">{s.done}/{s.total} mastered</p>
-              </div>
-              <span
-                className="text-[11px] font-black"
-                style={{ color: s.pct === 100 ? '#10b981' : s.color }}
-              >
-                {s.pct}%
-              </span>
+              <h1 className="text-2xl font-black leading-tight">
+                {stats?.completed === stats?.total && stats?.total !== 0
+                  ? '🎉 All Topics Mastered!'
+                  : <>{stats?.completed ?? 0}<span className="text-white/40 font-medium">/{stats?.total ?? 0}</span> Topics Mastered</>}
+              </h1>
+              <p className="text-indigo-300 text-[11px] mt-1">
+                Day {stats?.daysPassed ?? 0} of {profile.daysLeft} &nbsp;·&nbsp; {stats?.remaining ?? 0} days remaining &nbsp;·&nbsp; {stats?.totalPYQs ?? 0} PYQs solved
+              </p>
             </div>
-            {/* Progress bar */}
-            <div className="w-full bg-slate-100 rounded-full h-2">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{ width: `${s.pct}%`, background: s.pct === 100 ? '#10b981' : s.color }}
-              />
-            </div>
-            {s.pct === 100 && (
-              <p className="text-[10px] text-emerald-600 font-bold mt-1.5">✅ Complete — next subject unlocked!</p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      {/* ── Today's Mission ──────────────────────────────────── */}
-      {todaysMission && (
-        <div
-          className="rounded-2xl p-5 border-2"
-          style={{
-            borderColor: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1',
-            background: `linear-gradient(135deg, ${(SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1')}12 0%, #ffffff 100%)`,
-          }}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <div className="text-xl">🎯</div>
-            <p className="font-black text-slate-800 text-sm">Today's Mission</p>
-            <span
-              className="ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: (SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1') + '22', color: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1' }}
+            <button
+              onClick={handleReset}
+              className="text-white/25 hover:text-white/60 transition text-[10px] flex-shrink-0 mt-1 px-2 py-1 rounded-lg hover:bg-white/10"
             >
-              {SUBJECT_ICONS[todaysMission.entry.subject] ?? '📚'} {todaysMission.entry.subject}
-            </span>
+              Reset
+            </button>
           </div>
-          <p className="font-black text-lg text-slate-900 mb-1">{todaysMission.entry.topic}</p>
-          <div className="flex flex-wrap gap-3 text-[11px] text-slate-500 mb-3">
-            <span>📝 {todaysMission.progress.pyqsAttempted}/{todaysMission.rule.minPYQs} PYQs done</span>
-            <span>🎯 Need {todaysMission.rule.accuracyGate}% accuracy</span>
-            <span>⏱ ~{todaysMission.rule.conceptHours}h concept</span>
-            <span>📅 {estimateDays(todaysMission.rule)}</span>
+
+          {/* Overall mastery bar */}
+          <div className="mb-5">
+            <div className="flex justify-between text-[10px] text-indigo-300 mb-1.5">
+              <span className="font-bold">Overall Mastery</span>
+              <span className="font-black text-white">{stats ? Math.round((stats.completed / stats.total) * 100) : 0}%</span>
+            </div>
+            <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-1000 relative"
+                style={{
+                  width: `${stats ? (stats.completed / stats.total) * 100 : 0}%`,
+                  background: 'linear-gradient(90deg, #fbbf24 0%, #f59e0b 50%, #fbbf24 100%)'
+                }}
+              >
+                <div className="absolute inset-0 bg-white/20 animate-pulse rounded-full" />
+              </div>
+            </div>
           </div>
-          {/* Mini progress bar */}
-          <div className="w-full bg-slate-100 rounded-full h-2.5">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(100, Math.round((todaysMission.progress.pyqsAttempted / todaysMission.rule.minPYQs) * 100))}%`,
-                background: SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1'
-              }}
-            />
+
+          {/* Stats tiles — 4 premium cards */}
+          <div className="grid grid-cols-4 gap-2">
+            {[
+              { icon: CheckCircle, label: 'Mastered', value: stats?.completed ?? 0, color: '#10b981', bg: 'rgba(16,185,129,0.15)', border: 'rgba(16,185,129,0.3)' },
+              { icon: Target,      label: 'Remaining', value: stats?.topicsLeft ?? 0, color: '#818cf8', bg: 'rgba(129,140,248,0.15)', border: 'rgba(129,140,248,0.3)' },
+              { icon: RefreshCw,  label: 'Revise Due', value: stats?.dueRevisions ?? 0, color: (stats?.dueRevisions ?? 0) > 0 ? '#f87171' : '#6b7280', bg: (stats?.dueRevisions ?? 0) > 0 ? 'rgba(248,113,113,0.2)' : 'rgba(107,114,128,0.1)', border: (stats?.dueRevisions ?? 0) > 0 ? 'rgba(248,113,113,0.4)' : 'rgba(107,114,128,0.2)', pulse: (stats?.dueRevisions ?? 0) > 0 },
+              { icon: Zap,        label: 'PYQs/Day', value: stats?.pyqsPerDay ?? 0, color: '#fbbf24', bg: 'rgba(251,191,36,0.15)', border: 'rgba(251,191,36,0.3)' },
+            ].map((s, i) => (
+              <div
+                key={s.label}
+                className={`rounded-2xl p-3 text-center border transition-all ${ (s as any).pulse ? 'animate-pulse' : '' }`}
+                style={{ background: (s as any).bg, borderColor: (s as any).border }}
+              >
+                <s.icon size={15} className="mx-auto mb-1" style={{ color: (s as any).color }} />
+                <p className="text-xl font-black" style={{ color: (s as any).color }}>{s.value}</p>
+                <p className="text-[9px] font-bold text-white/50 mt-0.5">{s.label}</p>
+              </div>
+            ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">
-            {Math.min(100, Math.round((todaysMission.progress.pyqsAttempted / todaysMission.rule.minPYQs) * 100))}% PYQ target reached
-          </p>
         </div>
-      )}
+      </div>
+
+      {/* ── PREMIUM SUBJECT PROGRESS CARDS ───────────────────── */}
+      <div className="grid grid-cols-2 gap-3">
+        {subjectStats.map(s => {
+          const circumference = 2 * Math.PI * 20;
+          const filled = circumference * (s.pct / 100);
+          const color = s.pct === 100 ? '#10b981' : s.color;
+          return (
+            <div
+              key={s.subject}
+              className="rounded-2xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+              style={{ borderColor: color + '55' }}
+            >
+              <div className="flex items-center gap-3">
+                {/* Circular progress ring */}
+                <div className="relative shrink-0">
+                  <svg width="52" height="52" viewBox="0 0 52 52" className="-rotate-90">
+                    <circle cx="26" cy="26" r="20" fill="none" stroke={color + '20'} strokeWidth="4" />
+                    <circle
+                      cx="26" cy="26" r="20" fill="none"
+                      stroke={color}
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                      strokeDasharray={`${filled} ${circumference - filled}`}
+                      style={{ transition: 'stroke-dasharray 1s ease' }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-lg">
+                    {s.icon}
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-black text-slate-700 truncate">{s.subject}</p>
+                  <p className="text-[10px] text-slate-400 mb-1.5">{s.done}/{s.total} topics</p>
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${s.pct}%`, background: color }}
+                    />
+                  </div>
+                </div>
+                <span
+                  className="text-sm font-black shrink-0"
+                  style={{ color }}
+                >
+                  {s.pct}%
+                </span>
+              </div>
+              {s.pct === 100 && (
+                <div className="mt-2.5 text-[10px] text-emerald-700 font-bold bg-emerald-50 rounded-lg px-2 py-1 text-center border border-emerald-200">
+                  ✅ Complete · Next subject unlocked!
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* ── PREMIUM TODAY'S MISSION CARD ─────────────────────── */}
+      {todaysMission && (() => {
+        const mc = SUBJECT_COLORS[todaysMission.entry.subject] ?? '#6366f1';
+        const pct = Math.min(100, Math.round((todaysMission.progress.pyqsAttempted / todaysMission.rule.minPYQs) * 100));
+        return (
+          <div
+            className="relative rounded-3xl overflow-hidden border shadow-lg"
+            style={{ borderColor: mc + '44' }}
+          >
+            {/* Gradient background */}
+            <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${mc}18 0%, ${mc}05 60%, #ffffff 100%)` }} />
+            <div className="absolute top-0 right-0 w-32 h-32 rounded-full -translate-y-1/2 translate-x-1/2 opacity-10" style={{ background: mc }} />
+
+            <div className="relative p-5">
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white font-black shadow-md text-lg"
+                    style={{ background: `linear-gradient(135deg, ${mc}, ${mc}cc)` }}
+                  >
+                    🎯
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: mc }}>Today's Mission</p>
+                    <p className="text-[11px] text-slate-400">{SUBJECT_ICONS[todaysMission.entry.subject]} {todaysMission.entry.subject}</p>
+                  </div>
+                </div>
+                <div
+                  className="text-[10px] font-black px-3 py-1 rounded-full border"
+                  style={{ color: mc, borderColor: mc + '55', background: mc + '15' }}
+                >
+                  {pct}% done
+                </div>
+              </div>
+
+              {/* Topic name */}
+              <p className="font-black text-xl text-slate-900 mb-3 leading-tight">{todaysMission.entry.topic}</p>
+
+              {/* Stats chips */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {[
+                  { icon: '📝', label: `${todaysMission.progress.pyqsAttempted}/${todaysMission.rule.minPYQs} PYQs` },
+                  { icon: '🎯', label: `${todaysMission.rule.accuracyGate}% accuracy` },
+                  { icon: '⏱', label: `${todaysMission.rule.conceptHours}h concept` },
+                  { icon: '📅', label: estimateDays(todaysMission.rule) },
+                ].map((chip, i) => (
+                  <span
+                    key={i}
+                    className="text-[10px] font-bold px-2.5 py-1 rounded-full border"
+                    style={{ color: mc, borderColor: mc + '44', background: mc + '10' }}
+                  >
+                    {chip.icon} {chip.label}
+                  </span>
+                ))}
+              </div>
+
+              {/* Progress bar — thick + gradient */}
+              <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden mb-1.5">
+                <div
+                  className="h-full rounded-full transition-all duration-700 relative"
+                  style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${mc}cc, ${mc})` }}
+                >
+                  {pct > 15 && <div className="absolute inset-0 bg-white/20 rounded-full" />}
+                </div>
+              </div>
+              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
+                <span>PYQ Progress</span>
+                <span style={{ color: mc }} className="font-black">{todaysMission.progress.pyqsAttempted}/{todaysMission.rule.minPYQs} solved</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {!todaysMission && stats && stats.completed === stats.total && (
-        <div className="rounded-2xl p-5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-center">
-          <div className="text-3xl mb-2">🏆</div>
-          <p className="font-black text-lg">You Have Mastered Everything!</p>
-          <p className="text-white/80 text-sm mt-1">Now focus on revision and mock tests.</p>
+        <div className="rounded-3xl p-6 text-white text-center shadow-lg" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #0d9488 100%)' }}>
+          <div className="text-4xl mb-3">🏆</div>
+          <p className="font-black text-xl">All Topics Mastered!</p>
+          <p className="text-white/80 text-sm mt-1.5">Focus on revision schedules and full mock tests now.</p>
         </div>
       )}
 

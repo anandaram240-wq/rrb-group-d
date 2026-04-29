@@ -14,15 +14,16 @@ interface SolutionDisplayProps {
 // ─────────────────────────────────────────────────────────────────────────────
 interface ParsedSolution {
   answer: string;
+  formulaLine: string;   // e.g. "Profit% = (SP−CP)/CP × 100" from [bracket] line
   steps: string[];
-  speedTrick: string[];
+  speedTrick: string[];  // [0]=rule name, [1]=numbers→answer
   wrongOptions: string[];
   concept: string[];
   examTip: string;
 }
 
 function parse(raw: string): ParsedSolution {
-  const out: ParsedSolution = { answer: '', steps: [], speedTrick: [], wrongOptions: [], concept: [], examTip: '' };
+  const out: ParsedSolution = { answer: '', formulaLine: '', steps: [], speedTrick: [], wrongOptions: [], concept: [], examTip: '' };
   if (!raw?.trim()) return out;
 
   type Sec = 'none' | 'steps' | 'trick' | 'wrong' | 'concept' | 'tip';
@@ -32,43 +33,53 @@ function parse(raw: string): ParsedSolution {
     const t = rawLine.trim();
     if (!t) continue;
 
-    // ── Section headers ─────────────────────────────────────────────────────
+    // ── Section headers ──────────────────────────────────────────────
     if (t.startsWith('✅')) {
-      out.answer = t.replace(/^✅\s*(ANSWER\s*[:：]?\s*)?/i, '').replace(/^Correct Answer\s*[:：]?\s*/i, '').trim();
+      out.answer = t.replace(/^✅\s*(ANSWER\s*[::：]?\s*)?/i, '').replace(/^Correct Answer\s*[::：]?\s*/i, '').trim();
       sec = 'none'; continue;
     }
     if (t.startsWith('📝') || t.startsWith('📖')) {
       sec = 'steps';
-      const rest = t.replace(/^[📝📖]\s*(STEP[- ]BY[- ]STEP\s*SOLUTION|Step-by-Step\s*Solution|Explanation)\s*[:：]?\s*/i, '').trim();
+      const rest = t.replace(/^[📝📖]\s*(SOLUTION|STEP[- ]BY[- ]STEP\s*SOLUTION|Step-by-Step\s*Solution|Explanation)\s*[::：]?\s*/i, '').trim();
       if (rest) out.steps.push(rest);
       continue;
     }
     if (t.startsWith('⚡')) {
       sec = 'trick';
-      const rest = t.replace(/^⚡\s*(TOP\s*SPEED\s*TRICK|Speed Trick|Shortcut)\s*[:：]?\s*/i, '').trim();
+      const rest = t.replace(/^⚡\s*(TRICK|TOP\s*SPEED\s*TRICK|Speed Trick|Shortcut)\s*[::：]?\s*/i, '').trim();
       if (rest) out.speedTrick.push(rest);
       continue;
     }
     if (t.startsWith('❌')) {
       sec = 'wrong';
-      const rest = t.replace(/^❌\s*(WHY\s*WRONG\s*OPTIONS?\s*(FAIL)?|Wrong Options?)\s*[:：]?\s*/i, '').trim();
+      const rest = t.replace(/^❌\s*(WHY\s*WRONG\s*OPTIONS?\s*(FAIL)?|Wrong Options?)\s*[::：]?\s*/i, '').trim();
       if (rest) out.wrongOptions.push(rest);
       continue;
     }
     if (t.startsWith('🧠') || t.startsWith('📐') || t.startsWith('📘')) {
       sec = 'concept';
-      const rest = t.replace(/^[🧠📐📘]\s*(CONCEPT\s*[+&]\s*FORMULA|Key Concept|Key Formula|Key Approach|Formula Used|Formula)\s*[:：]?\s*/i, '').trim();
+      const rest = t.replace(/^[🧠📐📘]\s*(CONCEPT\s*[+&]\s*FORMULA|Key Concept|Key Formula|Key Approach|Formula Used|Formula)\s*[::：]?\s*/i, '').trim();
       if (rest) out.concept.push(rest);
       continue;
     }
     if (t.startsWith('💡') || t.startsWith('📌')) {
       sec = 'tip';
-      const rest = t.replace(/^[💡📌]\s*(Exam Tip|Tip|Note)\s*[:：]?\s*/i, '').trim();
+      const rest = t.replace(/^[💡📌]\s*(Exam Tip|Tip|Note)\s*[::：]?\s*/i, '').trim();
       if (rest) out.examTip = rest;
       continue;
     }
 
-    // ── Content routing ─────────────────────────────────────────────────────
+    // ── [Formula/Rule] line: bracketed line in steps or trick section ────────
+    if ((sec === 'steps' || sec === 'trick') && /^\[.+\]$/.test(t)) {
+      if (sec === 'steps' && !out.formulaLine) {
+        out.formulaLine = t.slice(1, -1).trim();
+      } else if (sec === 'trick') {
+        out.speedTrick.push(t); // keep as-is for trick renderer
+      }
+      continue;
+    }
+
+    // ── Content routing ──────────────────────────────────────────────
     switch (sec) {
       case 'steps':   out.steps.push(t); break;
       case 'trick':   out.speedTrick.push(t); break;
@@ -78,9 +89,9 @@ function parse(raw: string): ParsedSolution {
     }
   }
 
-  // ── Post-process: strip leading step numbers ─────────────────────────────
+  // ── Post-process: strip leading step numbers ──────────────────────────────────
   out.steps = out.steps
-    .map(s => s.replace(/^(step\s*)?\d+[\.):\-\s]+\s*/i, '').trim())
+    .map(s => s.replace(/^(step\s*)?\d+[.):\-\s]+\s*/i, '').trim())
     .filter(Boolean);
 
   return out;
@@ -300,25 +311,33 @@ export function SolutionDisplay({ solution, isVisible, onToggle, alwaysShow = fa
                 </div>
               )}
 
-              {/* ══ 📝 STEP-BY-STEP ═════════════════════════════════════════ */}
+              {/* ══ 📝 SOLUTION ══════════════════════════════════════════════════ */}
               {p.steps.length > 0 && (
                 <div className="p-5 border-b border-slate-100">
-                  <div className="flex items-center gap-2.5 mb-4">
+                  <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm">
                       <FlaskConical size={15} className="text-white" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-black text-blue-700 uppercase tracking-widest">📝 Step-by-Step Solution</p>
-                      <p className="text-[10px] text-slate-400">Har step mein real calculation</p>
+                      <p className="text-[11px] font-black text-blue-700 uppercase tracking-widest">📝 Solution</p>
+                      <p className="text-[10px] text-slate-400">Real numbers only — no variables</p>
                     </div>
                   </div>
+                  {/* Formula/Rule Banner */}
+                  {p.formulaLine && (
+                    <div className="flex items-center gap-1.5 mb-3 px-3 py-2 rounded-xl bg-indigo-600 shadow">
+                      <span className="text-indigo-300 font-black text-base shrink-0">[</span>
+                      <p className="text-white font-black text-sm font-mono tracking-wide flex-1">{p.formulaLine}</p>
+                      <span className="text-indigo-300 font-black text-base shrink-0">]</span>
+                    </div>
+                  )}
                   <div className="space-y-2">
                     {p.steps.map((s, i) => <StepCard key={i} text={s} idx={i} />)}
                   </div>
                 </div>
               )}
 
-              {/* ══ ⚡ SPEED TRICK ══════════════════════════════════════════ */}
+              {/* ══ ⚡ TRICK ═══════════════════════════════════════════════════════ */}
               {p.speedTrick.length > 0 && (
                 <div className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 border-b border-amber-200">
                   <div className="flex items-start gap-3 mb-3">
@@ -326,20 +345,35 @@ export function SolutionDisplay({ solution, isVisible, onToggle, alwaysShow = fa
                       <Zap size={18} className="text-white" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-black text-amber-700 uppercase tracking-widest">⚡ Top Speed Trick</p>
-                      <p className="text-[10px] text-amber-600 font-bold">30 second mein solve karo ✓</p>
+                      <p className="text-[11px] font-black text-amber-700 uppercase tracking-widest">⚡ Trick</p>
+                      <p className="text-[10px] text-amber-600 font-bold">Formula → Numbers → Answer</p>
                     </div>
                     <div className="ml-auto bg-amber-400 text-amber-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-sm shrink-0">
                       ⏱ &lt;30 sec
                     </div>
                   </div>
                   <div className="bg-white/80 border border-amber-300/60 rounded-xl p-4 space-y-2 shadow-sm">
-                    {p.speedTrick.map((line, i) => (
-                      <p key={i} className="text-sm text-amber-950 font-semibold leading-relaxed">
-                        {i > 0 && p.speedTrick.length > 1 && <span className="text-amber-500 font-black mr-1">▶</span>}
-                        <HighlightedText text={line} />
-                      </p>
-                    ))}
+                    {p.speedTrick.map((line, i) => {
+                      const isFormulaLine = /^\[.+\]$/.test(line);
+                      if (isFormulaLine) return (
+                        <div key={i} className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-black shrink-0">[</span>
+                          <p className="text-sm font-black text-amber-900 font-mono flex-1">{line.slice(1, -1)}</p>
+                          <span className="text-amber-500 font-black shrink-0">]</span>
+                        </div>
+                      );
+                      if (i === (p.speedTrick[0] && /^\[/.test(p.speedTrick[0]) ? 1 : 0) && i > 0) return (
+                        <p key={i} className="text-sm font-mono font-bold text-amber-950 bg-amber-100/70 rounded-lg px-3 py-1.5 leading-relaxed">
+                          <HighlightedText text={line} />
+                        </p>
+                      );
+                      return (
+                        <p key={i} className="text-sm text-amber-950 font-semibold leading-relaxed">
+                          {i > 0 && <span className="text-amber-500 font-black mr-1">▶</span>}
+                          <HighlightedText text={line} />
+                        </p>
+                      );
+                    })}
                   </div>
                 </div>
               )}
