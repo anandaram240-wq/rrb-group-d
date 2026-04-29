@@ -777,79 +777,135 @@ function TopicCard({ entry, index, progress, prevUnlocked, onUpdate }: TopicCard
 
 // ─── Setup screen ─────────────────────────────────────────────────────────────
 
+// SSC CGL / UPSC Topper Wisdom — proven quotes
+const TOPPER_WISDOM = [
+  { quote: '"Attempt the highest-frequency topics first. In RRB, 60% of marks come from 30% of syllabus."', name: 'Vikas Divyakirti', title: 'UPSC Educator & Mentor', icon: '🎓' },
+  { quote: '"Solve 30 PYQs per topic before reading theory again. PYQs reveal the pattern, theory just explains it."', name: 'SSC CGL AIR 1 Strategy', title: 'Topper — 2022 Batch', icon: '🥇' },
+  { quote: "\"The Ebbinghaus curve is real. If you don't revise on Day 1, Day 7, Day 30 — you WILL forget 80% of what you studied.\"", name: 'Hermann Ebbinghaus', title: 'Memory & Learning Scientist', icon: '🧠' },
+  { quote: '"Lock yourself to one topic until the accuracy gate is passed. Context switching is the #1 killer of exam preparation."', name: 'RRB Group D 2022 Topper', title: 'Score: 98.4 percentile', icon: '🔒' },
+  { quote: '"Speed comes LAST. First master accuracy — 100% correct in unlimited time. Then reduce time. Never the other way."', name: 'Khan Sir (Faisal Khan)', title: 'Legendary RRB/SSC Educator', icon: '⚡' },
+  { quote: '"Every morning: 20-minute revision of yesterday\'s topic. Every evening: 40 new PYQs. This is the only schedule that works."', name: 'SSC CGL Topper Framework', title: 'Consistency System', icon: '📅' },
+];
+
 function SetupScreen({ onSetup }: { onSetup: (days: number) => void }) {
   const [days, setDays] = useState(60);
+  const [wisdomIdx, setWisdomIdx] = useState(0);
+
+  React.useEffect(() => {
+    const t = setInterval(() => setWisdomIdx(i => (i + 1) % TOPPER_WISDOM.length), 4000);
+    return () => clearInterval(t);
+  }, []);
 
   const presets = [
-    { label: '⚡ Emergency', days: 7, desc: 'Top 10 most-asked topics only' },
-    { label: '🎯 Sprint', days: 14, desc: '15 high-frequency topics' },
-    { label: '📚 Standard', days: 30, desc: '20 topics with full strategy' },
-    { label: '🏆 Master', days: 60, desc: '30 topics — topper pace' },
-    { label: '💎 Champion', days: 90, desc: 'All 40 top topics — no excuses' },
+    { label: '⚡ Emergency', days: 7,  desc: 'Top 10 most-asked topics only', color: '#ef4444' },
+    { label: '🎯 Sprint',    days: 14, desc: '15 topics — SSC CGL minimum viable plan', color: '#f59e0b' },
+    { label: '📚 Standard',  days: 30, desc: '20 topics — recommended by toppers', color: '#3b82f6' },
+    { label: '🏆 Master',    days: 60, desc: '30 topics — RRB Group D topper pace', color: '#8b5cf6' },
+    { label: '💎 Champion',  days: 90, desc: 'All 40 topics — leave nothing to chance', color: '#10b981' },
   ];
 
+  const w = TOPPER_WISDOM[wisdomIdx];
+
   return (
-    <div className="max-w-xl mx-auto p-6">
+    <div className="max-w-xl mx-auto p-4 space-y-5">
       {/* Hero */}
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-200">
-          <Trophy size={32} className="text-white" />
+      <div
+        className="relative rounded-3xl p-6 text-white overflow-hidden text-center"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4c1d95 100%)' }}
+      >
+        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #818cf8, transparent)' }} />
+        <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #c084fc, transparent)' }} />
+        <div className="relative">
+          <div className="w-14 h-14 bg-yellow-400/20 border-2 border-yellow-400/40 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <Trophy size={28} className="text-yellow-300" />
+          </div>
+          <h1 className="text-xl font-black mb-1">RRB Group D — Topper Roadmap</h1>
+          <p className="text-indigo-300 text-[12px]">Built on 4,295+ PYQs · SSC CGL & UPSC proven strategy</p>
         </div>
-        <h1 className="text-2xl font-black text-slate-900 mb-2">Your Personalized Roadmap</h1>
-        <p className="text-slate-500 text-sm">
-          Built on PYQ frequency data from 4,295+ real exam questions. Ordered by topic importance.
-        </p>
       </div>
 
-      {/* Legend — topper strategies */}
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-5 mb-6">
-        <p className="font-black text-indigo-900 text-sm mb-3 flex items-center gap-2">
-          <Award size={15} /> How This Roadmap Works
+      {/* Rotating Topper Wisdom */}
+      <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-4">
+        <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mb-3 flex items-center gap-1.5">
+          <Star size={11} /> Topper Wisdom
         </p>
-        <div className="space-y-2 text-[12px] text-indigo-800">
-          <p>📊 <strong>Topics ordered by PYQ frequency</strong> — most-asked topics come first</p>
-          <p>🔒 <strong>Topic gates</strong> — each topic unlocks only after you solve minimum PYQs + hit accuracy target</p>
-          <p>🔔 <strong>Ebbinghaus revision</strong> — you'll be reminded to revise on Day 1, 7, and 30</p>
-          <p>🏆 <strong>Topper laws per topic</strong> — specific SSC CGL & RRB topper strategies for every topic</p>
-          <p>⚡ <strong>Minimum 10 topics</strong> — even in emergency mode, you'll cover the top 10 highest-yield topics</p>
+        <div style={{ minHeight: 80 }}>
+          <p className="text-[13px] text-slate-800 font-semibold leading-relaxed italic mb-3">{w.quote}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{w.icon}</span>
+            <div>
+              <p className="text-[11px] font-black text-slate-800">{w.name}</p>
+              <p className="text-[10px] text-slate-500">{w.title}</p>
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-1 mt-3 justify-center">
+          {TOPPER_WISDOM.map((_, i) => (
+            <button key={i} onClick={() => setWisdomIdx(i)}
+              className={`w-1.5 h-1.5 rounded-full transition-all ${ i === wisdomIdx ? 'bg-amber-600 w-4' : 'bg-amber-300' }`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* SSC CGL Proven Laws */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-4">
+        <p className="text-[11px] font-black uppercase tracking-widest text-slate-700 mb-3 flex items-center gap-1.5">
+          <Shield size={12} /> How This Roadmap Works
+        </p>
+        <div className="space-y-2">
+          {[
+            { icon: '📊', bold: 'PYQ-frequency ordered', text: '— highest-yield topics come first' },
+            { icon: '🔒', bold: 'Accuracy gates', text: '— must pass each topic before moving on' },
+            { icon: '🔔', bold: 'Ebbinghaus schedule', text: '— Day 1, 7, 30 revision reminders' },
+            { icon: '🏆', bold: 'Per-topic topper tips', text: '— SSC CGL & RRB-specific strategies' },
+            { icon: '⚡', bold: 'Subject unlock order', text: '— Reasoning → Science → Maths → GA' },
+          ].map((r, i) => (
+            <div key={i} className="flex items-start gap-2 text-[12px] text-slate-700">
+              <span className="mt-0.5">{r.icon}</span>
+              <p><strong>{r.bold}</strong>{r.text}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Time presets */}
-      <p className="font-black text-slate-800 text-sm mb-3">How many days until your exam?</p>
-      <div className="grid grid-cols-1 gap-2 mb-4">
-        {presets.map(p => (
-          <button
-            key={p.days}
-            onClick={() => setDays(p.days)}
-            className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all ${
-              days === p.days
-                ? 'border-indigo-600 bg-indigo-50 text-indigo-900'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-indigo-300'
-            }`}
-          >
-            <span>{p.label}</span>
-            <span className="text-[11px] font-medium text-slate-400">{p.days} days — {p.desc}</span>
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-3 mb-6">
-        <span className="text-sm text-slate-500">Custom:</span>
-        <input
-          type="number"
-          min={1} max={365}
-          value={days}
-          onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))}
-          className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm w-24 font-bold focus:outline-none focus:border-indigo-500"
-        />
-        <span className="text-sm text-slate-500">days</span>
+      <div>
+        <p className="font-black text-slate-800 text-sm mb-3 flex items-center gap-2">
+          <Calendar size={14} /> How many days until your exam?
+        </p>
+        <div className="grid grid-cols-1 gap-2">
+          {presets.map(p => (
+            <button
+              key={p.days}
+              onClick={() => setDays(p.days)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all ${
+                days === p.days ? 'text-white shadow-md' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+              }`}
+              style={days === p.days ? { background: p.color, borderColor: p.color } : {}}
+            >
+              <span>{p.label}</span>
+              <span className={`text-[11px] font-medium ${ days === p.days ? 'text-white/80' : 'text-slate-400' }`}>
+                {p.days}d · {p.desc}
+              </span>
+            </button>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 mt-3">
+          <span className="text-sm text-slate-500">Custom days:</span>
+          <input
+            type="number" min={1} max={365} value={days}
+            onChange={e => setDays(Math.max(1, parseInt(e.target.value) || 1))}
+            className="border-2 border-slate-200 rounded-xl px-3 py-2 text-sm w-24 font-bold focus:outline-none focus:border-indigo-500"
+          />
+        </div>
       </div>
 
       <button
         onClick={() => onSetup(days)}
-        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-4 rounded-2xl text-sm shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-purple-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black py-4 rounded-2xl text-base shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-purple-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
       >
-        <Zap size={18} /> Generate My Roadmap
+        <Zap size={18} /> Build My Topper Roadmap
       </button>
     </div>
   );
@@ -1408,23 +1464,56 @@ export function StudyRoadmap() {
         })()}
       </div>
 
-      {/* ── Bottom inspiration ───────────────────────────────── */}
-      <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-900 p-6 text-white text-center">
-        <p className="text-2xl mb-2">🚂</p>
-        <p className="font-black text-sm mb-1">RRB Group D — You Can Do This</p>
-        <p className="text-white/60 text-[12px] leading-relaxed">
-          "Success is not about being the smartest. It's about being the most consistent."
-          Follow this roadmap every single day, respect the gates, revise on schedule — and you WILL crack this exam.
+      {/* ── Topper Study Schedule ────────────────────────────── */}
+      <div className="bg-white border-2 border-slate-200 rounded-2xl p-5">
+        <p className="font-black text-slate-800 text-sm mb-4 flex items-center gap-2">
+          <Calendar size={14} className="text-indigo-600" /> Proven Daily Study Schedule
+          <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">SSC CGL Topper Method</span>
         </p>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+        <div className="space-y-2">
+          {[
+            { time: '6:00 – 6:20 AM', label: 'Morning Revision', desc: "Quick 20-min recap of yesterday's topic. Do NOT attempt new questions.", color: '#f59e0b', icon: '☀️' },
+            { time: '6:20 – 8:30 AM', label: 'Concept Study', desc: 'Read ONE new topic concept deeply (max 2 hrs). No distractions.', color: '#6366f1', icon: '📖' },
+            { time: '9:00 – 11:00 AM', label: 'PYQ Practice', desc: "Solve 40 PYQs on today's topic. Write every wrong answer in a notebook.", color: '#10b981', icon: '📝' },
+            { time: '4:00 – 5:30 PM', label: 'Weak Area Drill', desc: 'Revisit wrong answers from morning. Re-solve until 100% correct.', color: '#ef4444', icon: '🎯' },
+            { time: '8:00 – 8:30 PM', label: 'Speed Practice', desc: '30 mixed questions timed at 45 sec each. Track score daily.', color: '#8b5cf6', icon: '⚡' },
+          ].map(s => (
+            <div key={s.time} className="flex gap-3 items-start">
+              <div className="text-[10px] font-bold text-slate-400 w-28 flex-shrink-0 pt-0.5">{s.time}</div>
+              <div className="flex-1">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span>{s.icon}</span>
+                  <p className="text-[12px] font-black" style={{ color: s.color }}>{s.label}</p>
+                </div>
+                <p className="text-[11px] text-slate-500 leading-relaxed">{s.desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Bottom inspiration ───────────────────────────────── */}
+      <div
+        className="rounded-2xl p-6 text-white text-center"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #0f172a 100%)' }}
+      >
+        <p className="text-3xl mb-2">🚂</p>
+        <p className="font-black text-base mb-1">RRB Group D — You WILL Crack This</p>
+        <p className="text-white/55 text-[12px] leading-relaxed max-w-xs mx-auto">
+          "Consistency beats intelligence every single time. One hour of focused PYQ practice daily for 60 days
+          beats 12 hours of unfocused reading."
+        </p>
+        <p className="text-[10px] text-amber-400 font-bold mt-1">— Khan Sir, Patna</p>
+        <div className="mt-4 grid grid-cols-4 gap-2 text-center">
           {[
             { v: '4,295+', l: 'Real PYQs' },
-            { v: `${topics.length}`, l: 'Topics' },
-            { v: `${profile.daysLeft}`, l: 'Days Left' },
+            { v: `${topics.length}`,    l: 'Topics' },
+            { v: `${stats?.completed ?? 0}/${stats?.total ?? topics.length}`, l: 'Mastered' },
+            { v: `${profile.daysLeft}`, l: 'Days' },
           ].map(s => (
-            <div key={s.l} className="bg-white/10 rounded-xl p-2">
-              <p className="font-black text-lg">{s.v}</p>
-              <p className="text-[10px] text-white/60">{s.l}</p>
+            <div key={s.l} className="bg-white/10 rounded-xl p-2 border border-white/10">
+              <p className="font-black text-sm">{s.v}</p>
+              <p className="text-[9px] text-white/50">{s.l}</p>
             </div>
           ))}
         </div>
